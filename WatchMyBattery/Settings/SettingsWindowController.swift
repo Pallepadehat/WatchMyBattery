@@ -29,10 +29,14 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
     private func makeWindow() -> NSWindow {
         let controller = NSHostingController(rootView: SettingsView(model: model))
-        controller.sizingOptions = [.preferredContentSize]
         let window = NSWindow(contentViewController: controller)
         window.title = String(localized: "WatchMyBattery Settings")
-        window.styleMask = [.titled, .closable, .fullSizeContentView]
+        // Resizable in height only; the form scrolls when it's taller than the window.
+        window.styleMask = [.titled, .closable, .resizable, .fullSizeContentView]
+        window.setContentSize(CGSize(width: 460, height: min(560, (NSScreen.main?.visibleFrame.height ?? 700) - 80)))
+        window.contentMinSize = CGSize(width: 460, height: 420)
+        window.standardWindowButton(.zoomButton)?.isEnabled = false
+        window.contentMaxSize = CGSize(width: 460, height: 2000)
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
         window.isMovableByWindowBackground = true

@@ -98,8 +98,9 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 500)
-        .fixedSize(horizontal: false, vertical: true)
+        .scrollContentBackground(.hidden)
+        .frame(width: 460)
+        .frame(minHeight: 420, idealHeight: 560, maxHeight: .infinity)
     }
 }
 
@@ -113,10 +114,10 @@ private struct AppHeader: View {
         HStack(spacing: 14) {
             Image(nsImage: NSApp.applicationIconImage)
                 .resizable()
-                .frame(width: 64, height: 64)
+                .frame(width: 52, height: 52)
             VStack(alignment: .leading, spacing: 2) {
                 Text("WatchMyBattery")
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.system(size: 17, weight: .semibold))
                 Text("Your battery, and who's draining it.")
                     .foregroundStyle(.secondary)
                 Text("Version \(version)")
@@ -125,7 +126,7 @@ private struct AppHeader: View {
             }
             Spacer()
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, 2)
     }
 }
 
@@ -222,7 +223,7 @@ private struct MenuBarSample: View {
         }
         .foregroundStyle(.white)
         .frame(maxWidth: .infinity)
-        .frame(height: 44)
+        .frame(height: 38)
         .background(
             LinearGradient(
                 colors: [Color(red: 0.16, green: 0.2, blue: 0.5), Color(red: 0.32, green: 0.16, blue: 0.5)],

@@ -18,10 +18,13 @@ struct BatteryGauge: View {
     let quit: (AppUsage) -> Void
 
     @State private var draggedApp: AppUsage.ID?
+    @Environment(\.colorScheme) private var colorScheme
 
     private static let height: CGFloat = 72
-    private static let terminalSize = CGSize(width: 6, height: 28)
-    private static let terminalGap: CGFloat = 5
+    /// Rounded like the menu bar icon, leaving a flat end for the terminal.
+    private static let cornerRadius: CGFloat = 22
+    private static let terminalSize = CGSize(width: 6, height: 26)
+    private static let terminalGap: CGFloat = 2
     private static let labelHeight: CGFloat = 14
     /// Room "4:50" needs in the white part.
     private static let labelWidth: CGFloat = 84
@@ -39,9 +42,13 @@ struct BatteryGauge: View {
                 }
                 .frame(height: Self.height)
 
-                RoundedRectangle(cornerRadius: 3, style: .continuous)
-                    .fill(.secondary.opacity(0.6))
-                    .frame(width: Self.terminalSize.width, height: Self.terminalSize.height)
+                // The terminal: a half-round nub right against the body, as in the menu bar icon.
+                UnevenRoundedRectangle(
+                    bottomTrailingRadius: Self.terminalSize.width, topTrailingRadius: Self.terminalSize.width,
+                    style: .continuous
+                )
+                .fill(colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.28))
+                .frame(width: Self.terminalSize.width, height: Self.terminalSize.height)
             }
             Color.clear.frame(height: Self.labelHeight)
         }
@@ -86,7 +93,7 @@ struct BatteryGauge: View {
                 .transition(.asymmetric(insertion: .opacity, removal: .scale(scale: 0.2, anchor: .leading).combined(with: .opacity)))
             }
         }
-        .clipShape(.capsule(style: .continuous))
+        .clipShape(.rect(cornerRadius: Self.cornerRadius, style: .continuous))
     }
 
     /// White, or green while charging and red when low if colours are on.
