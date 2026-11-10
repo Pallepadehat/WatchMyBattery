@@ -11,7 +11,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 IDENTITIES=$(security find-identity -v -p codesigning)  # a variable, not `| grep -q`, which can trip pipefail
-TEAM=$(sed -nE 's/^[[:space:]]*DEVELOPMENT_TEAM[[:space:]]*=[[:space:]]*([A-Z0-9]+).*/\1/p' Config/Local.xcconfig 2>/dev/null | head -1)
+# Local.xcconfig is optional; without it there's no team (and no failing pipeline).
+TEAM=""
+if [[ -f Config/Local.xcconfig ]]; then
+  TEAM=$(sed -nE 's/^[[:space:]]*DEVELOPMENT_TEAM[[:space:]]*=[[:space:]]*([A-Z0-9]+).*/\1/p' Config/Local.xcconfig | head -1)
+fi
 
 SIGNING=()
 if [[ "${WATCHMYBATTERY_SIGN:-}" == "developer-id" ]]; then
