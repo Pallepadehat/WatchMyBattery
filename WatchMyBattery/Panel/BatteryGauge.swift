@@ -224,28 +224,23 @@ private struct AppSlice: View {
         .accessibilityAction(named: "Quit \(app.name)") { quit(app) }
     }
 
+    /// Starts the drag; `DragToQuitController` follows it from there and reports how it ended.
     private var dragToQuit: some Gesture {
         DragGesture(minimumDistance: 3, coordinateSpace: .global)
             .onChanged { _ in
-                let pointer = NSEvent.mouseLocation
                 let controller = DragToQuitController.shared
-                if draggedApp != app.id {
-                    let panelFrame = NSApp.windows.lazy.compactMap { $0 as? BatteryPanel }.first?.cardFrame ?? .zero
-                    controller.begin(app, at: pointer, panelFrame: panelFrame)
-                    NSCursor.closedHand.set()
-                    withAnimation(.snappy(duration: 0.2)) { draggedApp = app.id }
-                    focusedApp = app
+                guard !controller.isDragging, draggedApp == nil else { return }
+                let panelFrame = NSApp.windows.lazy.compactMap { $0 as? BatteryPanel }.first?.cardFrame ?? .zero
+                let app = app
+                controller.begin(app, at: NSEvent.mouseLocation, panelFrame: panelFrame) { quits in
+                    NSCursor.arrow.set()
+                    if quits { quit(app) }
+                    withAnimation(.snappy(duration: 0.25).delay(quits ? 0 : 0.18)) { draggedApp = nil }
+                    focusedApp = nil
                 }
-                controller.move(to: pointer)
-            }
-            .onEnded { _ in
-                let quits = DragToQuitController.shared.end(at: NSEvent.mouseLocation)
-                NSCursor.arrow.set()
-                if quits {
-                    quit(app)
-                }
-                withAnimation(.snappy(duration: 0.25).delay(quits ? 0 : 0.18)) { draggedApp = nil }
-                focusedApp = nil
+                NSCursor.closedHand.set()
+                withAnimation(.snappy(duration: 0.2)) { draggedApp = app.id }
+                focusedApp = app
             }
     }
 }

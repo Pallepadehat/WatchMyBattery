@@ -23,7 +23,7 @@
     },
   ],
   "files": [
-    { "kind": "folder", "path": "WatchMyBattery", "opaque-folders": [ "App", "Debug", "DragToQuit", "Energy", "MenuBar", "Panel", "Settings", "Support" ], "target-membership": [ "WatchMyBattery" ] },
+    { "kind": "folder", "path": "WatchMyBattery", "target-membership": [ "WatchMyBattery" ] },
     {
       "kind": "group",
       "name": "Products",
