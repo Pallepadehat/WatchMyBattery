@@ -1,0 +1,110 @@
+# Contributing to WatchMyBattery
+
+Thanks for wanting to help! Bug fixes, polish, performance work, better estimates and new ideas are all welcome.
+
+## Getting started
+
+1. Fork and clone the repository.
+2. Open `WatchMyBattery.xcodeproj` in Xcode 27 or later and press **⌘R**. (The app itself runs on macOS 14 and later.)
+3. Run the logic tests:
+
+   ```sh
+   cd Packages/BatteryKit
+   swift test
+   ```
+
+No Apple developer team is needed to build. See "Building" in the [README](README.md) if you want to sign with yours.
+
+## Branches
+
+| Branch | What it's for |
+| --- | --- |
+| `develop` | The default branch. All work lands here, through pull requests. |
+| `main` | Production. It only ever gets merges from `develop`, and every release is made from it. |
+| `feature/…` | New features, for example `feature/time-to-full`. |
+| `fix/…` | Bug fixes, for example `fix/slice-drag-on-second-display`. |
+| `chore/…` | Everything else: tooling, CI, docs, dependency bumps. |
+
+Both `develop` and `main` are protected: changes go through a pull request, and CI (**Lint**, **BatteryKit tests** and **Build app**) has to pass.
+
+So the usual flow is:
+
+```sh
+git switch develop
+git pull
+git switch -c fix/whatever-you-are-fixing
+# …work, commit…
+git push -u origin fix/whatever-you-are-fixing
+```
+
+Then open a pull request **into `develop`**.
+
+## Before you open a pull request
+
+- `swift test` passes in `Packages/BatteryKit`.
+- `swift format lint --strict -r WatchMyBattery Packages/BatteryKit scripts` reports nothing. Run `swift format -i -r WatchMyBattery Packages/BatteryKit scripts` to fix formatting automatically.
+- The app builds without warnings.
+- WatchMyBattery should stay idle while its panel is closed. If you touch the menu bar icon, notifications or sampling, check CPU and **Energy Impact** in Activity Monitor with a **Release** build.
+- For visual changes, include a screenshot or a short recording.
+
+For bigger changes, open an issue first so we can agree on the approach.
+
+## Code style
+
+- Swift 6 language mode. The app target defaults to main-actor isolation.
+- Keep logic in `BatteryKit`: plain value types, no AppKit or SwiftUI, with unit tests. Anything you can test without a real battery belongs there.
+- Name things for what they are, and add a doc comment explaining *why* whenever the code alone doesn't make it obvious.
+- No polling. React to IOPowerSources notifications, and sample processes only while the panel is open.
+- Be honest about estimates in the UI: round sensibly and don't show more precision than the numbers have.
+
+## Making a release
+
+Releases are made by the maintainer from a Mac with the signing certificate, **from `main`**:
+
+1. On `develop`, bump `MARKETING_VERSION` in the Xcode project (Target › General › Version).
+2. Move the `[Unreleased]` entries in `CHANGELOG.md` into a new `## [x.y.z] - date` section, add its link at the bottom, and merge to `develop` through a pull request.
+3. Open a pull request from `develop` into `main` and merge it.
+4. Check out `main`, pull, and run `./scripts/release.sh`. It refuses to run on any other branch. It builds the app, packs it into `WatchMyBattery.dmg`, has Apple notarize it, makes the signed `appcast.xml`, tags the commit `vx.y.z` and publishes a GitHub release with both files attached. The app and `install.sh` always pick up the newest release.
+
+To only make the disk image, run `./scripts/make-dmg.sh` (add `--notarize` for a notarized one).
+
+### One-time setup: notarizing
+
+Notarizing needs a **Developer ID Application** certificate in your keychain, your team ID in `Config/Local.xcconfig` (copy `Config/Local.xcconfig.example`), and a saved notarytool login:
+
+```sh
+xcrun notarytool store-credentials watchmybattery-notary \
+  --apple-id <your Apple ID> --team-id <your team ID>
+```
+
+It asks for an [app-specific password](https://account.apple.com) and keeps it in your keychain. To use a different profile name, set `WATCHMYBATTERY_NOTARY_PROFILE`.
+
+Without a Developer ID certificate, run `./scripts/release.sh --without-notarizing`. It signs with the best certificate you have, and `install.sh` still opens the app without a warning, but people downloading the .dmg in a browser will see Gatekeeper's warning.
+
+### One-time setup: the Sparkle key
+
+Each release carries `appcast.xml`, which is how the app finds updates ([Sparkle](https://sparkle-project.org)). It's signed with an EdDSA key called `WatchMyBattery` that lives in the maintainer's login keychain; its public half is `SUPublicEDKey` in `Config/Info.plist`. Sparkle's tools come with the Swift package, so build once (`./scripts/build.sh`) to fetch them, then:
+
+```sh
+# Make the key (once, ever). It prints the public key: put it in SUPublicEDKey in Config/Info.plist.
+build/DerivedData/SourcePackages/artifacts/sparkle/Sparkle/bin/generate_keys --account WatchMyBattery
+
+# Print the public key again later.
+build/DerivedData/SourcePackages/artifacts/sparkle/Sparkle/bin/generate_keys --account WatchMyBattery -p
+
+# Back up the private key, then store the file somewhere safe (a password manager) and delete it.
+build/DerivedData/SourcePackages/artifacts/sparkle/Sparkle/bin/generate_keys --account WatchMyBattery -x watchmybattery-sparkle-key.txt
+
+# Restore it on a new Mac.
+build/DerivedData/SourcePackages/artifacts/sparkle/Sparkle/bin/generate_keys --account WatchMyBattery -f watchmybattery-sparkle-key.txt
+```
+
+**Back the key up.** Without it, copies already out there can't update: they only accept updates signed with that key. Never commit it (`.gitignore` ignores `*sparkle-key*.txt` as a safety net). Keep signing releases with the same Developer ID certificate too, since Sparkle also checks that an update comes from the same developer.
+
+## Reporting bugs
+
+Use the [bug report form](../../issues/new?template=bug_report.yml). Your macOS version and Mac model help a lot, and for estimate bugs, a screenshot of the panel next to Activity Monitor's Energy tab is gold.
+
+## Code of conduct
+
+This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md). By taking part, you agree to uphold it.
