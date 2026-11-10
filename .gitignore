@@ -1,0 +1,20 @@
+# Xcode
+xcuserdata/
+DerivedData/
+*.xcuserstate
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# macOS
+.DS_Store
+
+# Personal signing settings (see Config/Local.xcconfig.example)
+Config/Local.xcconfig
+
+# Build output (scripts/build.sh, scripts/make-dmg.sh, scripts/release.sh)
+build/
+
+# A backed-up Sparkle private key must never be committed (see CONTRIBUTING.md, "Making a release")
+*sparkle-key*.txt
