@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/logo.png" width="160" alt="WatchMyBattery icon: a white battery on a deep blue tile, its fill ending in purple, blue and pink app slices">
+  <img src="docs/logo.png" width="160" alt="WatchMyBattery icon: the menu bar battery, full, with 100 cut out of it, on a plain white tile">
 </p>
 
 <h1 align="center">WatchMyBattery</h1>
@@ -172,8 +172,12 @@ swift test
 | [`Packages/BatteryKit`](Packages/BatteryKit) | The testable logic: battery state, per-app energy, and the time estimates. |
 | [`WatchMyBattery`](WatchMyBattery) | The app: the menu bar icon, the panel, settings and updates. |
 | [`Config`](Config) | Signing settings and `Info.plist` (including Sparkle's feed URL and public key). |
-| [`scripts`](scripts) | Building, packaging and releasing, plus `generate-icon.swift`, which draws the app icon and logo. |
+| [`scripts`](scripts) | Building, packaging and releasing, plus `generate-icon.swift`, which writes the app icon (`WatchMyBattery/AppIcon.icon`, an Icon Composer icon) and logo, and `generate-social-preview.swift`, which draws the GitHub social preview. |
 | [`install.sh`](install.sh) | The one-command installer. |
+
+## Roadmap
+
+What's coming next is in [ROADMAP.md](ROADMAP.md).
 
 ## Contributing
 

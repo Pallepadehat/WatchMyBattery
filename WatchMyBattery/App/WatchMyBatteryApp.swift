@@ -26,6 +26,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         model.start()
         statusItem = StatusItemController(model: model)
+        #if DEBUG
+            if CommandLine.arguments.contains("--show-settings") {
+                model.openSettings()
+                return
+            }
+            if CommandLine.arguments.contains("--show-panel") {
+                // Give the menu bar a moment to place the icon, so the panel lines up under it.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.statusItem?.showPanel() }
+                return
+            }
+        #endif
         if !model.settings.hasSeenWelcome {
             model.settings.hasSeenWelcome = true
             statusItem?.showPanel()

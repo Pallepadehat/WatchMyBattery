@@ -46,4 +46,9 @@ import Testing
             #expect(layout.fillWidth <= 288.0001)
         }
     }
+
+    @Test func roomIsKeptForTheLabel() {
+        let layout = GaugeLayout(width: 200, level: 1, shares: [0.1, 0.1, 0.1, 0.1], minimumSliceWidth: 40, labelWidth: 80)
+        #expect(layout.sliceWidths.count == 3)
+    }
 }
