@@ -69,48 +69,71 @@ final class BatteryPanelController: NSObject, NSWindowDelegate {
     // MARK: - Building and placing
 
     private func makePanel() -> BatteryPanel {
-        let content = BatteryPanelView(model: model, close: { [weak self] in self?.close() })
+        let panel = BatteryPanel()
+        let close: () -> Void = { [weak self] in self?.close() }
+        // SwiftUI reports the content's size, and the panel follows it: when an
+        // app slice appears or the tip is dismissed, the panel grows or shrinks
+        // downward, its top staying under the menu bar.
+        let content = BatteryPanelView(model: model, close: close)
+            .onGeometryChange(for: CGSize.self) {
+                $0.size
+            } action: { [weak panel] size in
+                panel?.fit(contentSize: size)
+            }
         let hosting = NSHostingView(rootView: content)
-        hosting.sizingOptions = [.preferredContentSize]
-        let panel = BatteryPanel(content: hosting)
+        hosting.sizingOptions = []
+        // The glass view would otherwise hand its own insets to SwiftUI as a safe area, pushing the content around.
+        hosting.safeAreaRegions = []
+        panel.install(hosting)
+        // The first size, measured up front so the panel opens at the right height.
+        panel.setCardSize(
+            NSHostingController(rootView: BatteryPanelView(model: model, close: close))
+                .sizeThatFits(in: CGSize(width: BatteryPanelView.width, height: 2000)))
         panel.delegate = self
         return panel
     }
 
     /// Under the menu bar icon, the way menus line up, but kept on screen.
-    private func position(_ panel: NSPanel) {
+    private func position(_ panel: BatteryPanel) {
         guard let button = statusItem.button, let buttonWindow = button.window else { return }
         let buttonFrame = buttonWindow.convertToScreen(button.convert(button.bounds, to: nil))
         let screen = buttonWindow.screen ?? NSScreen.main
         let visible = screen?.visibleFrame ?? .zero
-        let size = panel.frame.size
+        let width = panel.cardFrame.width
         var x = buttonFrame.minX
-        x = min(x, visible.maxX - size.width - 8)
+        x = min(x, visible.maxX - width - 8)
         x = max(x, visible.minX + 8)
-        panel.setFrameTopLeftPoint(CGPoint(x: x, y: buttonFrame.minY - 6))
+        panel.moveCard(topLeft: CGPoint(x: x, y: buttonFrame.minY - 6))
     }
 }
 
-/// A rounded, glassy panel that hosts SwiftUI content and grows downward as
-/// its content's height changes, keeping its top edge under the menu bar.
+/// A rounded, glassy panel that hosts SwiftUI content. It grows and shrinks
+/// downward, keeping its top edge under the menu bar.
+///
+/// The visible card sits inside the window with a transparent margin around
+/// it, so the glass's soft shadow has room to fade out instead of being cut
+/// off square at the window's edges.
 final class BatteryPanel: NSPanel {
-    static let cornerRadius: CGFloat = 16
+    static let cornerRadius: CGFloat = 18
+    /// Room around the card for its shadow. Clicks there pass through to whatever's behind.
+    static let margin: CGFloat = 24
 
-    init(content: NSView) {
-        super.init(contentRect: CGRect(x: 0, y: 0, width: 320, height: 300), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: true)
+    private var content: NSView?
+
+    init() {
+        super.init(
+            contentRect: CGRect(x: 0, y: 0, width: BatteryPanelView.width + Self.margin * 2, height: 300),
+            styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         isOpaque = false
         backgroundColor = .clear
-        hasShadow = true
+        // The glass (or the material below macOS 26) draws its own rounded shadow.
+        hasShadow = false
         level = .popUpMenu
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .ignoresCycle]
         hidesOnDeactivate = false
         isReleasedWhenClosed = false
         animationBehavior = .none
         isMovable = false
-
-        let background = Self.makeBackground(around: content)
-        contentView = background
-        setContentSize(content.fittingSize)
     }
 
     override var canBecomeKey: Bool { true }
@@ -121,39 +144,58 @@ final class BatteryPanel: NSPanel {
         (delegate as? BatteryPanelController)?.close()
     }
 
-    /// Keeps the top edge where it is when the content resizes the window.
-    override func setFrame(_ frameRect: NSRect, display flag: Bool) {
-        var frame = frameRect
-        if isVisible, frame.height != self.frame.height {
-            frame.origin.y = self.frame.maxY - frame.height
-        }
-        super.setFrame(frame, display: flag)
-    }
+    /// The visible card, in screen coordinates.
+    var cardFrame: CGRect { frame.insetBy(dx: Self.margin, dy: Self.margin) }
 
-    /// Liquid Glass where available, the menu material before that.
-    private static func makeBackground(around content: NSView) -> NSView {
+    /// Puts `content` on a Liquid Glass card (the menu material before macOS 26).
+    func install(_ content: NSView) {
+        let container = NSView(frame: CGRect(origin: .zero, size: frame.size))
+        let background: NSView
         if #available(macOS 26.0, *) {
             let glass = NSGlassEffectView()
-            glass.cornerRadius = cornerRadius
+            glass.cornerRadius = Self.cornerRadius
             glass.contentView = content
-            return glass
+            background = glass
+        } else {
+            let effect = NSVisualEffectView()
+            effect.material = .menu
+            effect.blendingMode = .behindWindow
+            effect.state = .active
+            effect.wantsLayer = true
+            effect.layer?.cornerRadius = Self.cornerRadius
+            effect.layer?.cornerCurve = .continuous
+            effect.layer?.masksToBounds = true
+            effect.addSubview(content)
+            background = effect
         }
-        let effect = NSVisualEffectView()
-        effect.material = .menu
-        effect.blendingMode = .behindWindow
-        effect.state = .active
-        effect.wantsLayer = true
-        effect.layer?.cornerRadius = cornerRadius
-        effect.layer?.cornerCurve = .continuous
-        effect.layer?.masksToBounds = true
-        content.translatesAutoresizingMaskIntoConstraints = false
-        effect.addSubview(content)
-        NSLayoutConstraint.activate([
-            content.leadingAnchor.constraint(equalTo: effect.leadingAnchor),
-            content.trailingAnchor.constraint(equalTo: effect.trailingAnchor),
-            content.topAnchor.constraint(equalTo: effect.topAnchor),
-            content.bottomAnchor.constraint(equalTo: effect.bottomAnchor),
-        ])
-        return effect
+        background.frame = container.bounds.insetBy(dx: Self.margin, dy: Self.margin)
+        background.autoresizingMask = [.width, .height]
+        content.frame = background.bounds
+        content.autoresizingMask = [.width, .height]
+        container.addSubview(background)
+        contentView = container
+        self.content = content
+    }
+
+    /// Sizes the card, keeping the top edge where it is.
+    func setCardSize(_ size: CGSize) {
+        let size = CGSize(width: ceil(size.width), height: ceil(size.height))
+        let windowSize = CGSize(width: size.width + Self.margin * 2, height: size.height + Self.margin * 2)
+        let top = frame.maxY
+        setFrame(CGRect(x: frame.minX, y: top - windowSize.height, width: windowSize.width, height: windowSize.height), display: true)
+        content?.frame = CGRect(origin: .zero, size: size)
+    }
+
+    /// Puts the card's top-left corner at `point`.
+    func moveCard(topLeft point: CGPoint) {
+        setFrameTopLeftPoint(CGPoint(x: point.x - Self.margin, y: point.y + Self.margin))
+    }
+
+    /// Follows the content's size as SwiftUI reports it.
+    func fit(contentSize size: CGSize) {
+        guard size.width > 0, size.height > 0, CGSize(width: ceil(size.width), height: ceil(size.height)) != cardFrame.size
+        else { return }
+        // Not in the middle of SwiftUI's layout pass, which is where size changes are reported.
+        DispatchQueue.main.async { [self] in setCardSize(size) }
     }
 }

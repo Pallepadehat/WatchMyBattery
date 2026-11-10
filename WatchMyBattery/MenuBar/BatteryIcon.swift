@@ -16,11 +16,15 @@ struct BatteryIcon: Equatable {
     var isLowPowerModeOn: Bool
 
     init(snapshot: BatterySnapshot, settings: AppSettings) {
+        self.init(snapshot: snapshot, percentageStyle: settings.percentageStyle, usesColor: settings.usesColor)
+    }
+
+    init(snapshot: BatterySnapshot, percentageStyle: PercentageStyle, usesColor: Bool) {
         level = snapshot.level
         percentage = snapshot.percentage
         chargeState = snapshot.chargeState
-        showsPercentageInside = settings.percentageStyle == .inside
-        usesColor = settings.usesColor
+        showsPercentageInside = percentageStyle == .inside
+        self.usesColor = usesColor
         isLowPowerModeOn = snapshot.isLowPowerModeOn
     }
 

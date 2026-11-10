@@ -27,9 +27,11 @@ public struct GaugeLayout: Equatable, Sendable {
         }
     }
 
+    /// - Parameter labelWidth: room kept free for the time label, in the fill
+    ///   or in the empty part after it; slices that would take it are left out.
     public init(
-        width: CGFloat, level: Double, shares: [Double], minimumSliceWidth: CGFloat = 30,
-        minimumBaseWidth: CGFloat = 6
+        width: CGFloat, level: Double, shares: [Double], minimumSliceWidth: CGFloat = 36,
+        minimumBaseWidth: CGFloat = 6, labelWidth: CGFloat = 0
     ) {
         let width = max(width, 0)
         let charge = width * CGFloat(min(max(level, 0), 1))
@@ -37,7 +39,7 @@ public struct GaugeLayout: Equatable, Sendable {
         for share in shares {
             let slice = max(charge * CGFloat(min(max(share, 0), 1)), minimumSliceWidth)
             // Stop adding slices once they'd squeeze the label out of the battery.
-            guard minimumBaseWidth + slices.reduce(0, +) + slice <= width else { break }
+            guard max(minimumBaseWidth, labelWidth) + slices.reduce(0, +) + slice <= width else { break }
             slices.append(slice)
         }
         let used = slices.reduce(0, +)
