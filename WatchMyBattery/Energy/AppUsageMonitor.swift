@@ -101,7 +101,8 @@ final class AppUsageMonitor {
         }
         appInfo.forget(except: Set(appPower.values.keys))
 
-        if next != apps { apps = next }
+        // Keep the slices still while one is being dragged, so the drag isn't pulled out from under the pointer.
+        if next != apps, !DragToQuitController.shared.isDragging { apps = next }
         isWarmingUp = false
     }
 }

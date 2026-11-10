@@ -9,6 +9,10 @@ import SwiftUI
 /// icon follows the pointer in a small floating window of its own. Let go
 /// outside the panel and it vanishes in a puff of smoke; let go inside and it
 /// slides back where it came from.
+///
+/// SwiftUI only starts the drag. From then on, the controller follows the
+/// mouse itself with an AppKit event monitor, so the drag always finishes,
+/// even if the slice it started from is redrawn or goes away mid-drag.
 final class DragToQuitController {
     static let shared = DragToQuitController()
 
@@ -20,6 +24,9 @@ final class DragToQuitController {
     private var window: NSPanel?
     private var startPoint: CGPoint = .zero
     private var panelFrame: CGRect = .zero
+    private var eventMonitor: Any?
+    /// Called when the drag finishes: `true` when it should quit the app.
+    private var completion: ((Bool) -> Void)?
 
     private static let windowSize = CGSize(width: 180, height: 150)
     /// How far past the panel's edge the pointer has to go.
@@ -32,12 +39,17 @@ final class DragToQuitController {
 
     // MARK: - Driving the drag
 
-    /// Starts following the pointer with the app's icon. `point` is in screen coordinates.
-    func begin(_ app: AppUsage, at point: CGPoint, panelFrame: CGRect) {
+    /// Starts following the pointer with the app's icon, until the mouse
+    /// button comes up. `point` and `panelFrame` are in screen coordinates.
+    /// `completion` gets `true` when the icon was dropped outside the panel,
+    /// meaning the app should quit.
+    func begin(_ app: AppUsage, at point: CGPoint, panelFrame: CGRect, completion: @escaping (Bool) -> Void) {
+        guard !isDragging else { return }
         isDragging = true
         isArmed = false
         startPoint = point
         self.panelFrame = panelFrame
+        self.completion = completion
         ghost.reset(icon: app.icon, name: app.name, tint: app.tint)
 
         let window = self.window ?? makeWindow()
@@ -45,10 +57,25 @@ final class DragToQuitController {
         window.setFrameOrigin(origin(for: point))
         window.alphaValue = 1
         window.orderFrontRegardless()
+
+        // The mouse is captured by our panel for the whole drag, so these
+        // arrive even while the pointer is far outside it.
+        eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged, .leftMouseUp]) { [weak self] event in
+            MainActor.assumeIsolated {
+                if event.type == .leftMouseUp {
+                    self?.finish()
+                } else {
+                    self?.move(to: NSEvent.mouseLocation)
+                }
+            }
+            return event
+        }
     }
 
-    func move(to point: CGPoint) {
+    private func move(to point: CGPoint) {
         guard isDragging, let window else { return }
+        // A missed mouse-up (the button let go while another app took over, say) still ends the drag.
+        guard NSEvent.pressedMouseButtons & 1 == 1 else { return finish() }
         window.setFrameOrigin(origin(for: point))
         let armed = !panelFrame.insetBy(dx: -Self.armingMargin, dy: -Self.armingMargin).contains(point)
         if armed != isArmed {
@@ -58,22 +85,18 @@ final class DragToQuitController {
         }
     }
 
-    /// Ends the drag. Returns `true` when it ended outside the panel, meaning
-    /// the app should quit; the icon then goes up in smoke. Otherwise it flies
-    /// back to `home` (or where the drag started).
-    @discardableResult
-    func end(at point: CGPoint, home: CGPoint? = nil, playsSound: Bool = true) -> Bool {
-        guard isDragging, let window else { return false }
-        move(to: point)
-        isDragging = false
-        let quits = isArmed
-        isArmed = false
+    /// Ends the drag where the pointer is: outside the panel the icon goes up
+    /// in smoke and the app quits; inside, it flies back to where it started.
+    private func finish() {
+        guard isDragging, let window else { return }
+        let point = NSEvent.mouseLocation
+        let armed = !panelFrame.insetBy(dx: -Self.armingMargin, dy: -Self.armingMargin).contains(point)
+        stopFollowing()
+        window.setFrameOrigin(origin(for: point))
 
-        if quits {
-            if playsSound {
-                Self.poofSound?.stop()
-                Self.poofSound?.play()
-            }
+        if armed {
+            Self.poofSound?.stop()
+            Self.poofSound?.play()
             ghost.poofCount += 1
             withAnimation(.easeOut(duration: 0.3)) { ghost.isPoofing = true }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self] in self?.hide() }
@@ -81,21 +104,33 @@ final class DragToQuitController {
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = 0.22
                 context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-                window.animator().setFrameOrigin(origin(for: home ?? startPoint))
+                window.animator().setFrameOrigin(origin(for: startPoint))
                 window.animator().alphaValue = 0.2
             } completionHandler: { [weak self] in
                 MainActor.assumeIsolated { self?.hide() }
             }
         }
-        return quits
+
+        let completion = self.completion
+        self.completion = nil
+        completion?(armed)
     }
 
     /// Drops the drag without quitting anything (when the panel closes underneath it, say).
     func cancel() {
         guard isDragging else { return }
+        stopFollowing()
+        hide()
+        let completion = self.completion
+        self.completion = nil
+        completion?(false)
+    }
+
+    private func stopFollowing() {
+        if let eventMonitor { NSEvent.removeMonitor(eventMonitor) }
+        eventMonitor = nil
         isDragging = false
         isArmed = false
-        hide()
     }
 
     // MARK: - The floating icon

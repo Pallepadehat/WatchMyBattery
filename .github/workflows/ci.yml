@@ -23,6 +23,15 @@ jobs:
       - uses: actions/checkout@v7
       - name: Check formatting
         run: swift format lint --strict -r WatchMyBattery Packages/BatteryKit scripts
+      # Xcode sometimes marks source folders "opaque" when the project is opened, which turns the Swift files into
+      # resources and leaves the app with nothing to compile. The app build below can't run on the runners yet, so
+      # catch it here.
+      - name: Check the project compiles its sources
+        run: |
+          if grep -q '"opaque-folders"' WatchMyBattery.xcodeproj/project.xcproj; then
+            echo "::error file=WatchMyBattery.xcodeproj/project.xcproj::Source folders are marked opaque-folders, so they won't compile. Remove the \"opaque-folders\" key."
+            exit 1
+          fi
 
   test:
     name: BatteryKit tests

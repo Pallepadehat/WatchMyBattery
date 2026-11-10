@@ -45,6 +45,7 @@ final class BatteryPanelController: NSObject, NSWindowDelegate {
 
     func close() {
         guard let panel, isShown else { return }
+        DragToQuitController.shared.cancel()
         if let outsideClickMonitor { NSEvent.removeMonitor(outsideClickMonitor) }
         outsideClickMonitor = nil
         statusItem.button?.highlight(false)
