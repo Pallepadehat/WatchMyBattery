@@ -12,8 +12,8 @@ enum PercentageStyle: String, CaseIterable, Identifiable {
     var title: LocalizedStringResource {
         switch self {
         case .hidden: "Hidden"
-        case .inside: "Inside the battery"
-        case .beside: "Next to the battery"
+        case .inside: "Inside"
+        case .beside: "Beside"
         }
     }
 }

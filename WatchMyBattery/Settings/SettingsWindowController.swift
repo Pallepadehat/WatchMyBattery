@@ -34,6 +34,8 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         window.title = String(localized: "WatchMyBattery Settings")
         window.styleMask = [.titled, .closable, .fullSizeContentView]
         window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
         window.delegate = self
         return window

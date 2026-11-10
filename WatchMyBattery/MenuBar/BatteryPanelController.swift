@@ -36,8 +36,6 @@ final class BatteryPanelController: NSObject, NSWindowDelegate {
             panel.animator().alphaValue = 1
         }
         statusItem.button?.highlight(true)
-        // The shadow follows what's drawn; work it out again once the rounded glass is on screen.
-        DispatchQueue.main.async { panel.invalidateShadow() }
 
         // Clicks in other apps (and on the desktop) close it, the way a menu would.
         outsideClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
@@ -152,6 +150,8 @@ final class BatteryPanel: NSPanel {
             glass.cornerRadius = Self.cornerRadius
             glass.contentView = content
             background = glass
+            // The window's shadow is worked out as a rectangle around the glass, which shows as square corners.
+            hasShadow = false
         } else {
             let effect = NSVisualEffectView()
             effect.material = .menu

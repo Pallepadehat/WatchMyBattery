@@ -1,124 +1,234 @@
 import BatteryKit
 import SwiftUI
 
+/// Settings, laid out like a pane of System Settings.
 struct SettingsView: View {
     let model: AppModel
 
     var body: some View {
         @Bindable var settings = model.settings
         @Bindable var updater = model.updater
+
         Form {
             Section {
-                MenuBarPreview(snapshot: model.battery.snapshot, settings: model.settings)
-                    .listRowInsets(EdgeInsets())
+                AppHeader(version: model.updater.currentVersion)
             }
 
-            Section("Menu Bar") {
-                Picker("Percentage", selection: $settings.percentageStyle) {
-                    ForEach(PercentageStyle.allCases) { style in
-                        Text(style.title).tag(style)
+            Section {
+                PercentageStylePicker(snapshot: model.battery.snapshot, settings: settings)
+                    .listRowInsets(EdgeInsets(top: 14, leading: 14, bottom: 14, trailing: 14))
+                Toggle(isOn: $settings.usesColor) {
+                    SettingLabel("Colorful States", symbol: "paintpalette.fill", color: .orange) {
+                        Text("Green while charging, yellow in Low Power Mode, red when low.")
                     }
                 }
-                Toggle(isOn: $settings.usesColor) {
-                    Text("Colorful states")
-                    Text("Green while charging, yellow in Low Power Mode, red when low.")
-                }
                 LabeledContent {
-                    Button("Open Control Center Settings") { model.openControlCenterSettings() }
+                    Button("Open…") { model.openControlCenterSettings() }
                 } label: {
-                    Text("Hide the built-in battery")
-                    Text("Control Center › Battery › Don't Show in Menu Bar")
+                    SettingLabel("Hide the Built-in Battery", symbol: "menubar.rectangle", color: .gray) {
+                        Text("Control Center › Battery › Don't Show in Menu Bar")
+                    }
                 }
+            } header: {
+                Text("Menu Bar")
             }
 
             Section("Panel") {
-                Picker("Center of the battery", selection: $settings.centerLabel) {
+                Picker(selection: $settings.centerLabel) {
                     ForEach(CenterLabel.allCases) { label in
                         Text(label.title).tag(label)
                     }
+                } label: {
+                    SettingLabel("Inside the Battery", symbol: "battery.75percent", color: .green)
                 }
-                Stepper(value: $settings.maximumApps, in: AppSettings.appCountRange) {
-                    LabeledContent("Apps shown", value: model.settings.maximumApps.formatted())
+                Picker(selection: $settings.maximumApps) {
+                    ForEach(AppSettings.appCountRange, id: \.self) { count in
+                        Text(count.formatted()).tag(count)
+                    }
+                } label: {
+                    SettingLabel("Apps Shown", symbol: "square.stack.3d.up.fill", color: .purple)
                 }
                 Toggle(isOn: $settings.confirmsQuit) {
-                    Text("Ask before quitting")
-                    Text("When you drag an app out of the panel.")
+                    SettingLabel("Ask Before Quitting", symbol: "hand.raised.fill", color: .red) {
+                        Text("When you drag an app out of the battery.")
+                    }
                 }
             }
 
             Section("General") {
-                Toggle(
-                    "Open at login",
-                    isOn: Binding(get: { model.launchAtLogin.isEnabled }, set: { model.launchAtLogin.setEnabled($0) }))
+                Toggle(isOn: Binding(get: { model.launchAtLogin.isEnabled }, set: { model.launchAtLogin.setEnabled($0) })) {
+                    SettingLabel("Open at Login", symbol: "power", color: .gray)
+                }
             }
 
             Section {
-                Toggle("Check for updates automatically", isOn: $updater.checksAutomatically)
-                Toggle("Download and install updates automatically", isOn: $updater.downloadsAutomatically)
-                    .disabled(!model.updater.checksAutomatically)
+                Toggle(isOn: $updater.checksAutomatically) {
+                    SettingLabel("Check for Updates Automatically", symbol: "arrow.triangle.2.circlepath", color: .blue)
+                }
+                Toggle(isOn: $updater.downloadsAutomatically) {
+                    SettingLabel("Install Updates Automatically", symbol: "arrow.down.circle.fill", color: .blue)
+                }
+                .disabled(!updater.checksAutomatically)
                 LabeledContent {
                     Button("Check Now") { model.updater.checkNow() }
                         .disabled(!model.updater.canCheckForUpdates)
                 } label: {
-                    Text("Version \(model.updater.currentVersion)")
-                    if let lastCheck = model.updater.lastCheck {
-                        Text("Last checked \(lastCheck, format: .relative(presentation: .named))")
+                    SettingLabel("Updates", symbol: "sparkles", color: .indigo) {
+                        if let lastCheck = model.updater.lastCheck {
+                            Text("Last checked \(lastCheck, format: .relative(presentation: .named))")
+                        } else {
+                            Text("Version \(model.updater.currentVersion)")
+                        }
                     }
                 }
             } header: {
                 Text("Updates")
             } footer: {
                 HStack {
-                    Link("WatchMyBattery on GitHub", destination: URL(string: "https://github.com/Pallepadehat/WatchMyBattery")!)
+                    Link(destination: URL(string: "https://github.com/Pallepadehat/WatchMyBattery")!) {
+                        Label("Source Code on GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
+                    }
                     Spacer()
                     Button("Quit WatchMyBattery") { NSApp.terminate(nil) }
+                        .buttonStyle(.link)
                 }
                 .font(.callout)
-                .padding(.top, 6)
+                .foregroundStyle(.secondary)
+                .padding(.top, 8)
             }
         }
         .formStyle(.grouped)
-        .frame(width: 460)
+        .frame(width: 500)
         .fixedSize(horizontal: false, vertical: true)
     }
 }
 
-/// How the menu bar will look, on a light and a dark menu bar.
-private struct MenuBarPreview: View {
-    let snapshot: BatterySnapshot
-    let settings: AppSettings
+// MARK: - Header
+
+/// The app's icon, name and version, like the top of an About pane.
+private struct AppHeader: View {
+    let version: String
 
     var body: some View {
-        HStack(spacing: 0) {
-            bar(.light)
-            bar(.dark)
+        HStack(spacing: 14) {
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
+                .frame(width: 64, height: 64)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("WatchMyBattery")
+                    .font(.system(size: 20, weight: .semibold))
+                Text("Your battery, and who's draining it.")
+                    .foregroundStyle(.secondary)
+                Text("Version \(version)")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+            Spacer()
         }
-        .frame(height: 64)
+        .padding(.vertical, 6)
+    }
+}
+
+// MARK: - Rows
+
+/// A row title with a coloured icon badge, the way System Settings labels its rows.
+private struct SettingLabel<Subtitle: View>: View {
+    let title: LocalizedStringKey
+    let symbol: String
+    let color: Color
+    let subtitle: Subtitle
+
+    init(_ title: LocalizedStringKey, symbol: String, color: Color, @ViewBuilder subtitle: () -> Subtitle) {
+        self.title = title
+        self.symbol = symbol
+        self.color = color
+        self.subtitle = subtitle()
     }
 
-    private func bar(_ scheme: ColorScheme) -> some View {
-        let icon = BatteryIcon(snapshot: snapshot, settings: settings)
-        return HStack(spacing: 5) {
-            if settings.percentageStyle == .beside {
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: symbol)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 24, height: 24)
+                .background(color.gradient, in: .rect(cornerRadius: 6, style: .continuous))
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                subtitle
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
+extension SettingLabel where Subtitle == EmptyView {
+    init(_ title: LocalizedStringKey, symbol: String, color: Color) {
+        self.init(title, symbol: symbol, color: color) { EmptyView() }
+    }
+}
+
+// MARK: - Percentage style
+
+/// Three menu bars side by side, one per percentage style; click one to choose it.
+private struct PercentageStylePicker: View {
+    let snapshot: BatterySnapshot
+    @Bindable var settings: AppSettings
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ForEach(PercentageStyle.allCases) { style in
+                Button {
+                    withAnimation(.snappy) { settings.percentageStyle = style }
+                } label: {
+                    VStack(spacing: 8) {
+                        MenuBarSample(snapshot: snapshot, settings: settings, style: style)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                                    .strokeBorder(Color.accentColor, lineWidth: settings.percentageStyle == style ? 2.5 : 0)
+                                    .padding(-3)
+                            )
+                        Text(style.title)
+                            .font(.caption)
+                            .foregroundStyle(settings.percentageStyle == style ? .primary : .secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(settings.percentageStyle == style ? .isSelected : [])
+            }
+        }
+    }
+}
+
+/// A slice of menu bar over a wallpaper, showing the battery in one style.
+private struct MenuBarSample: View {
+    let snapshot: BatterySnapshot
+    let settings: AppSettings
+    let style: PercentageStyle
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        let icon = BatteryIcon(snapshot: snapshot, percentageStyle: style, usesColor: settings.usesColor).image()
+        HStack(spacing: 4) {
+            if style == .beside {
                 Text(snapshot.level, format: .percent.precision(.fractionLength(0)))
-                    .font(.system(size: 13))
+                    .font(.system(size: 12))
                     .monospacedDigit()
             }
-            Image(nsImage: icon.image())
-                .renderingMode(icon.image().isTemplate ? .template : .original)
+            Image(nsImage: icon)
+                .renderingMode(icon.isTemplate ? .template : .original)
         }
-        .foregroundStyle(scheme == .dark ? .white : .black)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 4)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity)
+        .frame(height: 44)
         .background(
             LinearGradient(
-                colors: scheme == .dark
-                    ? [Color(red: 0.12, green: 0.14, blue: 0.32), Color(red: 0.2, green: 0.1, blue: 0.4)]
-                    : [Color(red: 0.75, green: 0.85, blue: 1), Color(red: 0.9, green: 0.85, blue: 1)],
-                startPoint: .topLeading, endPoint: .bottomTrailing)
+                colors: [Color(red: 0.16, green: 0.2, blue: 0.5), Color(red: 0.32, green: 0.16, blue: 0.5)],
+                startPoint: .topLeading, endPoint: .bottomTrailing),
+            in: .rect(cornerRadius: 8, style: .continuous)
         )
-        .environment(\.colorScheme, scheme)
-        .animation(.snappy, value: settings.percentageStyle)
+        .environment(\.colorScheme, .dark)
     }
 }
