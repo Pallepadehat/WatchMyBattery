@@ -193,7 +193,6 @@ private struct AppSlice: View {
                 .resizable()
                 .interpolation(.high)
                 .frame(width: 24, height: 24)
-                .shadow(color: .black.opacity(0.2), radius: 1.5, y: 0.5)
                 .scaleEffect(isHovered ? 1.12 : 1)
                 .opacity(isDragged ? 0 : 1)
         }
