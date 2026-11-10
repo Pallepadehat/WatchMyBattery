@@ -1,0 +1,33 @@
+{
+  "fill" : {
+    "automatic-gradient" : "srgb:1.00000,1.00000,1.00000,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "fill-specializations" : [
+            { "value" : { "solid" : "srgb:0.11000,0.11000,0.11500,1.00000" } },
+            { "appearance" : "dark", "value" : { "solid" : "srgb:1.00000,1.00000,1.00000,1.00000" } }
+          ],
+          "glass" : false,
+          "image-name" : "battery.png",
+          "name" : "battery"
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.25
+      },
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : [
+      "macOS"
+    ]
+  }
+}

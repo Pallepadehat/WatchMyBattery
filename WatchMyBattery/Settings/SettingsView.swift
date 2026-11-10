@@ -175,6 +175,7 @@ extension SettingLabel where Subtitle == EmptyView {
 private struct PercentageStylePicker: View {
     let snapshot: BatterySnapshot
     @Bindable var settings: AppSettings
+    @State private var wallpaper = Wallpaper()
 
     var body: some View {
         HStack(spacing: 12) {
@@ -183,7 +184,7 @@ private struct PercentageStylePicker: View {
                     withAnimation(.snappy) { settings.percentageStyle = style }
                 } label: {
                     VStack(spacing: 8) {
-                        MenuBarSample(snapshot: snapshot, settings: settings, style: style)
+                        MenuBarSample(snapshot: snapshot, settings: settings, style: style, wallpaper: wallpaper)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 9, style: .continuous)
                                     .strokeBorder(Color.accentColor, lineWidth: settings.percentageStyle == style ? 2.5 : 0)
@@ -200,15 +201,16 @@ private struct PercentageStylePicker: View {
                 .accessibilityAddTraits(settings.percentageStyle == style ? .isSelected : [])
             }
         }
+        .task { await wallpaper.load() }
     }
 }
 
-/// A slice of menu bar over a wallpaper, showing the battery in one style.
+/// A slice of menu bar over your own desktop picture, showing the battery in one style.
 private struct MenuBarSample: View {
     let snapshot: BatterySnapshot
     let settings: AppSettings
     let style: PercentageStyle
-    @Environment(\.colorScheme) private var colorScheme
+    let wallpaper: Wallpaper
 
     var body: some View {
         let icon = BatteryIcon(snapshot: snapshot, percentageStyle: style, usesColor: settings.usesColor).image()
@@ -221,15 +223,19 @@ private struct MenuBarSample: View {
             Image(nsImage: icon)
                 .renderingMode(icon.isTemplate ? .template : .original)
         }
-        .foregroundStyle(.white)
+        .foregroundStyle(wallpaper.isDark ? Color.white : Color.black)
         .frame(maxWidth: .infinity)
         .frame(height: 38)
-        .background(
-            LinearGradient(
-                colors: [Color(red: 0.16, green: 0.2, blue: 0.5), Color(red: 0.32, green: 0.16, blue: 0.5)],
-                startPoint: .topLeading, endPoint: .bottomTrailing),
-            in: .rect(cornerRadius: 8, style: .continuous)
-        )
-        .environment(\.colorScheme, .dark)
+        .background {
+            if let image = wallpaper.image {
+                Image(nsImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Color(white: 0.2)
+            }
+        }
+        .clipShape(.rect(cornerRadius: 8, style: .continuous))
+        .environment(\.colorScheme, wallpaper.isDark ? .dark : .light)
     }
 }
