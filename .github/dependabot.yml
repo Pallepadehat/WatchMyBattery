@@ -8,4 +8,4 @@ updates:
       interval: weekly
     commit-message:
       prefix: chore
-    labels: [dependencies]
+    labels: [dependencies, "area: build"]
