@@ -2,15 +2,15 @@
 
 What's planned next. Each item has an issue, where the details and discussion live; the [milestones](https://github.com/Pallepadehat/WatchMyBattery/milestones) show progress. Ideas welcome: [open an issue](https://github.com/Pallepadehat/WatchMyBattery/issues/new/choose).
 
-## 0.1.1: polish and the first public release
+## 0.1.1: the first public release ✅
 
-**Fixes**
+Released. A new icon, a polished panel and Settings in light and dark mode, and a fix for drag to quit getting stuck ([#7](https://github.com/Pallepadehat/WatchMyBattery/issues/7)). See the [changelog](CHANGELOG.md).
 
-- [x] Dragging an app out to quit it gets stuck ([#7](https://github.com/Pallepadehat/WatchMyBattery/issues/7))
+## 0.1.2: polish
 
 **Release**
 
-- [ ] Publish the first signed and notarized release, with Sparkle updates ([#8](https://github.com/Pallepadehat/WatchMyBattery/issues/8))
+- [ ] Sign with Developer ID and notarize releases ([#8](https://github.com/Pallepadehat/WatchMyBattery/issues/8))
 
 **The panel**
 
