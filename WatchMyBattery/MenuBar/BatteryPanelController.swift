@@ -36,6 +36,8 @@ final class BatteryPanelController: NSObject, NSWindowDelegate {
             panel.animator().alphaValue = 1
         }
         statusItem.button?.highlight(true)
+        // The shadow follows what's drawn; work it out again once the rounded glass is on screen.
+        DispatchQueue.main.async { panel.invalidateShadow() }
 
         // Clicks in other apps (and on the desktop) close it, the way a menu would.
         outsideClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
@@ -69,10 +71,26 @@ final class BatteryPanelController: NSObject, NSWindowDelegate {
     // MARK: - Building and placing
 
     private func makePanel() -> BatteryPanel {
-        let content = BatteryPanelView(model: model, close: { [weak self] in self?.close() })
+        let panel = BatteryPanel()
+        let close: () -> Void = { [weak self] in self?.close() }
+        // SwiftUI reports the content's size, and the panel follows it: when an
+        // app slice appears or the tip is dismissed, the panel grows or shrinks
+        // downward, its top staying under the menu bar.
+        let content = BatteryPanelView(model: model, close: close)
+            .onGeometryChange(for: CGSize.self) {
+                $0.size
+            } action: { [weak panel] size in
+                panel?.fit(contentSize: size)
+            }
         let hosting = NSHostingView(rootView: content)
-        hosting.sizingOptions = [.preferredContentSize]
-        let panel = BatteryPanel(content: hosting)
+        hosting.sizingOptions = []
+        // The glass view would otherwise hand its own insets to SwiftUI as a safe area, pushing the content around.
+        hosting.safeAreaRegions = []
+        panel.install(hosting)
+        // The first size, measured up front so the panel opens at the right height.
+        panel.setContentSize(
+            NSHostingController(rootView: BatteryPanelView(model: model, close: close))
+                .sizeThatFits(in: CGSize(width: BatteryPanelView.width, height: 2000)))
         panel.delegate = self
         return panel
     }
@@ -91,13 +109,17 @@ final class BatteryPanelController: NSObject, NSWindowDelegate {
     }
 }
 
-/// A rounded, glassy panel that hosts SwiftUI content and grows downward as
-/// its content's height changes, keeping its top edge under the menu bar.
+/// A rounded, glassy panel that hosts SwiftUI content. It grows and shrinks
+/// downward, keeping its top edge under the menu bar.
 final class BatteryPanel: NSPanel {
-    static let cornerRadius: CGFloat = 16
+    static let cornerRadius: CGFloat = 18
 
-    init(content: NSView) {
-        super.init(contentRect: CGRect(x: 0, y: 0, width: 320, height: 300), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: true)
+    private var content: NSView?
+
+    init() {
+        super.init(
+            contentRect: CGRect(x: 0, y: 0, width: BatteryPanelView.width, height: 300),
+            styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         isOpaque = false
         backgroundColor = .clear
         hasShadow = true
@@ -107,10 +129,6 @@ final class BatteryPanel: NSPanel {
         isReleasedWhenClosed = false
         animationBehavior = .none
         isMovable = false
-
-        let background = Self.makeBackground(around: content)
-        contentView = background
-        setContentSize(content.fittingSize)
     }
 
     override var canBecomeKey: Bool { true }
@@ -121,39 +139,51 @@ final class BatteryPanel: NSPanel {
         (delegate as? BatteryPanelController)?.close()
     }
 
-    /// Keeps the top edge where it is when the content resizes the window.
-    override func setFrame(_ frameRect: NSRect, display flag: Bool) {
-        var frame = frameRect
-        if isVisible, frame.height != self.frame.height {
-            frame.origin.y = self.frame.maxY - frame.height
-        }
-        super.setFrame(frame, display: flag)
-    }
-
-    /// Liquid Glass where available, the menu material before that.
-    private static func makeBackground(around content: NSView) -> NSView {
+    /// Puts `content` on a Liquid Glass background (the menu material before macOS 26).
+    ///
+    /// The background sits inside a plain container rather than being the
+    /// window's content view itself; AppKit then keeps it sized with the
+    /// window through ordinary autoresizing.
+    func install(_ content: NSView) {
+        let container = NSView(frame: CGRect(origin: .zero, size: frame.size))
+        let background: NSView
         if #available(macOS 26.0, *) {
             let glass = NSGlassEffectView()
-            glass.cornerRadius = cornerRadius
+            glass.cornerRadius = Self.cornerRadius
             glass.contentView = content
-            return glass
+            background = glass
+        } else {
+            let effect = NSVisualEffectView()
+            effect.material = .menu
+            effect.blendingMode = .behindWindow
+            effect.state = .active
+            effect.wantsLayer = true
+            effect.layer?.cornerRadius = Self.cornerRadius
+            effect.layer?.cornerCurve = .continuous
+            effect.layer?.masksToBounds = true
+            effect.addSubview(content)
+            background = effect
         }
-        let effect = NSVisualEffectView()
-        effect.material = .menu
-        effect.blendingMode = .behindWindow
-        effect.state = .active
-        effect.wantsLayer = true
-        effect.layer?.cornerRadius = cornerRadius
-        effect.layer?.cornerCurve = .continuous
-        effect.layer?.masksToBounds = true
-        content.translatesAutoresizingMaskIntoConstraints = false
-        effect.addSubview(content)
-        NSLayoutConstraint.activate([
-            content.leadingAnchor.constraint(equalTo: effect.leadingAnchor),
-            content.trailingAnchor.constraint(equalTo: effect.trailingAnchor),
-            content.topAnchor.constraint(equalTo: effect.topAnchor),
-            content.bottomAnchor.constraint(equalTo: effect.bottomAnchor),
-        ])
-        return effect
+        background.frame = container.bounds
+        background.autoresizingMask = [.width, .height]
+        content.frame = background.bounds
+        content.autoresizingMask = [.width, .height]
+        container.addSubview(background)
+        contentView = container
+        self.content = content
+    }
+
+    /// Resizes to the content, keeping the top edge where it is.
+    func fit(contentSize size: CGSize) {
+        guard size.width > 0, size.height > 0 else { return }
+        let size = CGSize(width: ceil(size.width), height: ceil(size.height))
+        guard size != frame.size else { return }
+        // Not in the middle of SwiftUI's layout pass, which is where size changes are reported.
+        DispatchQueue.main.async { [self] in
+            let top = frame.maxY
+            setFrame(CGRect(x: frame.minX, y: top - size.height, width: size.width, height: size.height), display: true)
+            content?.frame = CGRect(origin: .zero, size: size)
+            invalidateShadow()
+        }
     }
 }

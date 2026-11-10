@@ -17,119 +17,134 @@ struct BatteryGauge: View {
     let quit: (AppUsage) -> Void
 
     @State private var draggedApp: AppUsage.ID?
+    @Environment(\.colorScheme) private var colorScheme
 
-    private static let height: CGFloat = 72
-    private static let terminalWidth: CGFloat = 5
+    /// Solid white on dark, black on light, like the menu bar icon. Explicit
+    /// colours, because glass would tint `.primary` into a washed-out grey.
+    private var ink: Color { colorScheme == .dark ? .white : .black }
+
+    // MARK: Geometry: the menu bar icon, scaled up
+
+    /// The menu bar icon's proportions (about 2:1), just bigger.
+    private static let size = CGSize(width: 196, height: 84)
+    private static var height: CGFloat { size.height }
+    private static var cornerRadius: CGFloat { size.height * 0.3 }
+    private static let terminalSize = CGSize(width: 6, height: 26)
+    /// Room "4:50" needs.
+    private static let labelWidth: CGFloat = 80
     private static let terminalGap: CGFloat = 3
-    private static let labelHeight: CGFloat = 16
+    /// The thin gap between the charge and each app, cut through the pill.
+    static let seam: CGFloat = 2
+    /// How strongly the drained part shows, the same as in the menu bar.
+    private static let emptyOpacity = 0.2
 
     var body: some View {
-        VStack(spacing: 5) {
-            HStack(spacing: Self.terminalGap) {
-                GeometryReader { geometry in
-                    let layout = layout(width: geometry.size.width)
-                    ZStack(alignment: .leading) {
-                        Capsule(style: .continuous)
-                            .fill(.primary.opacity(0.08))
+        HStack(spacing: Self.terminalGap) {
+            GeometryReader { geometry in
+                let layout = layout(width: geometry.size.width)
+                ZStack(alignment: .leading) {
+                    // The drained part, after the charge.
+                    Rectangle()
+                        .fill(ink.opacity(Self.emptyOpacity))
+                        .padding(.leading, layout.fillWidth + Self.seam)
 
-                        fill(layout)
+                    cells(layout)
 
-                        if !labelFitsInFill(layout) {
-                            centerText(onFill: false)
-                                .frame(width: max(geometry.size.width - layout.fillWidth, 0))
-                                .offset(x: layout.fillWidth)
-                        }
-
-                        Capsule(style: .continuous)
-                            .strokeBorder(.primary.opacity(0.14), lineWidth: 1)
-                    }
-                    .clipShape(.capsule(style: .continuous))
-                    .overlay(alignment: .topLeading) {
-                        costLabels(layout)
-                            .offset(y: Self.height + 5)
+                    if !labelFitsInFill(layout) {
+                        centerText
+                            .frame(width: max(geometry.size.width - layout.fillWidth - Self.seam, 0))
+                            .offset(x: layout.fillWidth + Self.seam)
                     }
                 }
-                .frame(height: Self.height)
-
-                UnevenRoundedRectangle(bottomTrailingRadius: 3, topTrailingRadius: 3, style: .continuous)
-                    .fill(.primary.opacity(snapshot.level >= 0.995 ? 0.5 : 0.2))
-                    .frame(width: Self.terminalWidth, height: Self.height * 0.36)
+                .clipShape(.rect(cornerRadius: Self.cornerRadius, style: .continuous))
             }
-            Color.clear.frame(height: Self.labelHeight)
+            .frame(width: Self.size.width, height: Self.size.height)
+
+            terminal
         }
+        .frame(maxWidth: .infinity)
         .accessibilityElement(children: .contain)
+    }
+
+    /// The small half-round nub.
+    private var terminal: some View {
+        UnevenRoundedRectangle(bottomTrailingRadius: Self.terminalSize.width, topTrailingRadius: Self.terminalSize.width)
+            .fill(ink.opacity(snapshot.level >= 0.995 ? 1 : Self.emptyOpacity * 1.6))
+            .frame(width: Self.terminalSize.width, height: Self.terminalSize.height)
     }
 
     // MARK: - Layout
 
     private func layout(width: CGFloat) -> GaugeLayout {
-        GaugeLayout(width: width, level: snapshot.level, shares: apps.map { estimates.share(of: $0.watts) })
+        GaugeLayout(
+            width: width, level: snapshot.level, shares: apps.map { estimates.share(of: $0.watts) }, labelWidth: Self.labelWidth)
     }
 
-    // MARK: - Fill
+    // MARK: - Charge and apps
 
-    private func fill(_ layout: GaugeLayout) -> some View {
-        HStack(spacing: 0) {
-            ZStack {
-                Rectangle().fill(baseFill)
-                if labelFitsInFill(layout) {
-                    centerText(onFill: true)
-                        .padding(.horizontal, 6)
+    /// The charge, then one cell per app, separated by thin seams.
+    private func cells(_ layout: GaugeLayout) -> some View {
+        HStack(spacing: Self.seam) {
+            Rectangle()
+                .fill(chargeFill)
+                .overlay {
+                    if labelFitsInFill(layout) {
+                        centerText
+                            .padding(.horizontal, 6)
+                            .blendMode(.destinationOut)
+                    }
                 }
-            }
-            .frame(width: layout.baseWidth)
+                .compositingGroup()
+                .frame(width: max(layout.baseWidth - Self.seam, 0))
 
             ForEach(Array(zip(apps.prefix(layout.sliceWidths.count), layout.sliceWidths)), id: \.0.id) { app, width in
                 AppSlice(
                     app: app,
+                    cost: costText(for: app),
                     isDragged: draggedApp == app.id,
                     focusedApp: $focusedApp,
                     draggedApp: $draggedApp,
                     quit: quit
                 )
-                .frame(width: width)
+                .frame(width: max(width - Self.seam, 0))
                 .transition(.asymmetric(insertion: .opacity, removal: .scale(scale: 0.2, anchor: .leading).combined(with: .opacity)))
             }
         }
         .frame(width: layout.fillWidth, alignment: .leading)
-        .clipShape(UnevenRoundedRectangle(bottomTrailingRadius: 8, topTrailingRadius: 8, style: .continuous))
-        .shadow(color: .black.opacity(0.18), radius: 3, x: 1)
     }
 
-    private var baseFill: AnyShapeStyle {
-        guard usesColor else { return AnyShapeStyle(Color.white) }
-        switch snapshot.chargeState {
-        case .charging:
-            return AnyShapeStyle(LinearGradient(colors: [Color(red: 0.3, green: 0.85, blue: 0.45), .green], startPoint: .leading, endPoint: .trailing))
-        case .discharging where snapshot.percentage <= BatteryIcon.lowPercentage:
-            return AnyShapeStyle(LinearGradient(colors: [Color(red: 1, green: 0.42, blue: 0.38), .red], startPoint: .leading, endPoint: .trailing))
+    /// The charge: solid like the menu bar icon, green while charging and red when low.
+    private var chargeFill: AnyShapeStyle {
+        switch (usesColor, snapshot.chargeState) {
+        case (true, .charging):
+            AnyShapeStyle(Color.green)
+        case (true, .discharging) where snapshot.percentage <= BatteryIcon.lowPercentage:
+            AnyShapeStyle(Color.red)
         default:
-            return AnyShapeStyle(Color.white)
+            AnyShapeStyle(ink)
         }
-    }
-
-    private var isTintedFill: Bool {
-        usesColor && (snapshot.isCharging || (snapshot.chargeState == .discharging && snapshot.percentage <= BatteryIcon.lowPercentage))
     }
 
     /// Room for "4:50" in the plain part of the fill; otherwise it moves to the empty part.
     private func labelFitsInFill(_ layout: GaugeLayout) -> Bool {
-        layout.baseWidth >= 66
+        layout.baseWidth >= Self.labelWidth
     }
 
-    private func centerText(onFill: Bool) -> some View {
+    /// The time (or percentage). On the charge it's cut out of the pill, like
+    /// the number in the menu bar icon; on the drained part it's drawn plainly.
+    private var centerText: some View {
         HStack(spacing: 3) {
             if snapshot.isCharging {
-                Image(systemName: "bolt.fill").font(.system(size: 15, weight: .bold))
+                Image(systemName: "bolt.fill").font(.system(size: 17, weight: .bold))
             } else if snapshot.chargeState == .notCharging {
-                Image(systemName: "powerplug.fill").font(.system(size: 14, weight: .semibold))
+                Image(systemName: "powerplug.fill").font(.system(size: 16, weight: .semibold))
             }
             Text(centerString)
-                .font(.system(size: 21, weight: .semibold, design: .rounded))
+                .font(.system(size: 26, weight: .semibold))
                 .monospacedDigit()
                 .contentTransition(.numericText())
         }
-        .foregroundStyle(onFill ? AnyShapeStyle(isTintedFill ? Color.white : Color.black.opacity(0.85)) : AnyShapeStyle(.primary))
+        .foregroundStyle(ink)
         .lineLimit(1)
         .minimumScaleFactor(0.5)
     }
@@ -145,26 +160,7 @@ struct BatteryGauge: View {
         }
     }
 
-    // MARK: - Labels under the slices
-
-    private func costLabels(_ layout: GaugeLayout) -> some View {
-        ZStack(alignment: .topLeading) {
-            ForEach(Array(zip(apps.prefix(layout.sliceWidths.count), zip(layout.sliceOffsets, layout.sliceWidths))), id: \.0.id) {
-                app, frame in
-                Text(costText(for: app))
-                    .font(.system(size: 10.5, weight: .medium))
-                    .monospacedDigit()
-                    .foregroundStyle(focusedApp?.id == app.id ? .primary : .secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .frame(width: frame.1 + 2)
-                    .offset(x: frame.0 - 1)
-                    .opacity(draggedApp == app.id ? 0 : 1)
-            }
-        }
-        .contentTransition(.numericText())
-        .allowsHitTesting(false)
-    }
+    // MARK: - Costs
 
     private func costText(for app: AppUsage) -> String {
         if estimates.appliesToTime {
@@ -178,6 +174,8 @@ struct BatteryGauge: View {
 /// One app's slice: its colour, its icon, and the drag that quits it.
 private struct AppSlice: View {
     let app: AppUsage
+    /// What the app costs: "−48m" on battery, its watts on the adapter.
+    let cost: String
     let isDragged: Bool
     @Binding var focusedApp: AppUsage?
     @Binding var draggedApp: AppUsage.ID?
@@ -188,20 +186,28 @@ private struct AppSlice: View {
     var body: some View {
         ZStack {
             Rectangle()
-                .fill(app.tint.gradient)
-                .overlay(.white.opacity(isHovered && !isDragged ? 0.14 : 0))
-                .opacity(isDragged ? 0.35 : 1)
+                .fill(app.tint)
+                .overlay(.white.opacity(isHovered && !isDragged ? 0.16 : 0))
+                .opacity(isDragged ? 0.25 : 1)
 
-            Image(nsImage: app.icon)
-                .resizable()
-                .interpolation(.high)
-                .frame(width: 22, height: 22)
-                .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
-                .scaleEffect(isHovered ? 1.15 : 1)
-                .opacity(isDragged ? 0 : 1)
-        }
-        .overlay(alignment: .leading) {
-            Rectangle().fill(.black.opacity(0.18)).frame(width: 1)
+            VStack(spacing: 3) {
+                Image(nsImage: app.icon)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: 22, height: 22)
+                    .shadow(color: .black.opacity(0.2), radius: 1.5, y: 0.5)
+                    .scaleEffect(isHovered ? 1.12 : 1)
+                Text(cost)
+                    .font(.system(size: 10, weight: .semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.25), radius: 0.5, y: 0.5)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .padding(.horizontal, 2)
+                    .contentTransition(.numericText())
+            }
+            .opacity(isDragged ? 0 : 1)
         }
         .contentShape(.rect)
         .onHover { hovering in

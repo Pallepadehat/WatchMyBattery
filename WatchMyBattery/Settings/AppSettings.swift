@@ -68,7 +68,7 @@ final class AppSettings {
         didSet { defaults.set(hasSeenWelcome, forKey: Key.hasSeenWelcome) }
     }
 
-    static let appCountRange = 2...6
+    static let appCountRange = 1...4
 
     @ObservationIgnored private let defaults: UserDefaults
 
@@ -78,7 +78,7 @@ final class AppSettings {
             Key.percentageStyle: PercentageStyle.hidden.rawValue,
             Key.usesColor: true,
             Key.centerLabel: CenterLabel.timeRemaining.rawValue,
-            Key.maximumApps: 4,
+            Key.maximumApps: 3,
             Key.confirmsQuit: false,
             Key.showsReplaceTip: true,
             Key.hasSeenWelcome: false,
