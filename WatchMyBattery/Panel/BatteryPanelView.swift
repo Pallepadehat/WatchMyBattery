@@ -219,11 +219,13 @@ struct MenuRow: View {
                 .padding(.horizontal, 11)
                 .padding(.vertical, 4)
                 .contentShape(.rect)
+                // The menu highlight: the accent colour with white text, in light and dark alike.
                 .background(
-                    RoundedRectangle(cornerRadius: 7, style: .continuous)
-                        .fill(isHovered ? AnyShapeStyle(.selection) : AnyShapeStyle(.clear))
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Color.accentColor)
+                        .opacity(isHovered ? 1 : 0)
                 )
-                .foregroundStyle(isHovered ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
+                .foregroundStyle(isHovered ? Color.white : Color.primary)
         }
         .buttonStyle(.plain)
         .onHover { isHovered = $0 }

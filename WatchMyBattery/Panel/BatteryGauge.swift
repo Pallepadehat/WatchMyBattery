@@ -96,17 +96,23 @@ struct BatteryGauge: View {
         .clipShape(.rect(cornerRadius: Self.cornerRadius, style: .continuous))
     }
 
-    /// White, or green while charging and red when low if colours are on.
+    /// Like the menu bar icon: white on dark, near-black on light. Green while
+    /// charging and red when low, if colours are on.
     private var baseFill: Color {
-        guard usesColor else { return .white }
-        switch snapshot.chargeState {
-        case .charging: return Color(red: 0.2, green: 0.78, blue: 0.35)
-        case .discharging where snapshot.percentage <= BatteryIcon.lowPercentage: return Color(red: 0.95, green: 0.27, blue: 0.23)
-        default: return .white
+        if usesColor {
+            switch snapshot.chargeState {
+            case .charging: return Color(red: 0.2, green: 0.78, blue: 0.35)
+            case .discharging where snapshot.percentage <= BatteryIcon.lowPercentage: return Color(red: 0.95, green: 0.27, blue: 0.23)
+            default: break
+            }
         }
+        return colorScheme == .dark ? .white : Color(white: 0.12)
     }
 
-    private var isTinted: Bool { baseFill != .white }
+    /// The label is dark only on the white fill of dark mode.
+    private var labelColor: Color {
+        baseFill == .white ? Color.black.opacity(0.85) : .white
+    }
 
     private var centerText: some View {
         HStack(spacing: 4) {
@@ -120,7 +126,7 @@ struct BatteryGauge: View {
                 .monospacedDigit()
                 .contentTransition(.numericText())
         }
-        .foregroundStyle(isTinted ? Color.white : Color.black.opacity(0.85))
+        .foregroundStyle(labelColor)
         .lineLimit(1)
         .minimumScaleFactor(0.6)
         .padding(.horizontal, 8)
@@ -225,7 +231,7 @@ private struct AppSlice: View {
                 let pointer = NSEvent.mouseLocation
                 let controller = DragToQuitController.shared
                 if draggedApp != app.id {
-                    let panelFrame = NSApp.windows.first { $0 is BatteryPanel }?.frame ?? .zero
+                    let panelFrame = NSApp.windows.lazy.compactMap { $0 as? BatteryPanel }.first?.cardFrame ?? .zero
                     controller.begin(app, at: pointer, panelFrame: panelFrame)
                     NSCursor.closedHand.set()
                     withAnimation(.snappy(duration: 0.2)) { draggedApp = app.id }

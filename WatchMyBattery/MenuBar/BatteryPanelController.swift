@@ -86,7 +86,7 @@ final class BatteryPanelController: NSObject, NSWindowDelegate {
         hosting.safeAreaRegions = []
         panel.install(hosting)
         // The first size, measured up front so the panel opens at the right height.
-        panel.setContentSize(
+        panel.setCardSize(
             NSHostingController(rootView: BatteryPanelView(model: model, close: close))
                 .sizeThatFits(in: CGSize(width: BatteryPanelView.width, height: 2000)))
         panel.delegate = self
@@ -94,33 +94,40 @@ final class BatteryPanelController: NSObject, NSWindowDelegate {
     }
 
     /// Under the menu bar icon, the way menus line up, but kept on screen.
-    private func position(_ panel: NSPanel) {
+    private func position(_ panel: BatteryPanel) {
         guard let button = statusItem.button, let buttonWindow = button.window else { return }
         let buttonFrame = buttonWindow.convertToScreen(button.convert(button.bounds, to: nil))
         let screen = buttonWindow.screen ?? NSScreen.main
         let visible = screen?.visibleFrame ?? .zero
-        let size = panel.frame.size
+        let width = panel.cardFrame.width
         var x = buttonFrame.minX
-        x = min(x, visible.maxX - size.width - 8)
+        x = min(x, visible.maxX - width - 8)
         x = max(x, visible.minX + 8)
-        panel.setFrameTopLeftPoint(CGPoint(x: x, y: buttonFrame.minY - 6))
+        panel.moveCard(topLeft: CGPoint(x: x, y: buttonFrame.minY - 6))
     }
 }
 
 /// A rounded, glassy panel that hosts SwiftUI content. It grows and shrinks
 /// downward, keeping its top edge under the menu bar.
+///
+/// The visible card sits inside the window with a transparent margin around
+/// it, so the glass's soft shadow has room to fade out instead of being cut
+/// off square at the window's edges.
 final class BatteryPanel: NSPanel {
     static let cornerRadius: CGFloat = 18
+    /// Room around the card for its shadow. Clicks there pass through to whatever's behind.
+    static let margin: CGFloat = 24
 
     private var content: NSView?
 
     init() {
         super.init(
-            contentRect: CGRect(x: 0, y: 0, width: BatteryPanelView.width, height: 300),
+            contentRect: CGRect(x: 0, y: 0, width: BatteryPanelView.width + Self.margin * 2, height: 300),
             styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         isOpaque = false
         backgroundColor = .clear
-        hasShadow = true
+        // The glass (or the material below macOS 26) draws its own rounded shadow.
+        hasShadow = false
         level = .popUpMenu
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .ignoresCycle]
         hidesOnDeactivate = false
@@ -137,11 +144,10 @@ final class BatteryPanel: NSPanel {
         (delegate as? BatteryPanelController)?.close()
     }
 
-    /// Puts `content` on a Liquid Glass background (the menu material before macOS 26).
-    ///
-    /// The background sits inside a plain container rather than being the
-    /// window's content view itself; AppKit then keeps it sized with the
-    /// window through ordinary autoresizing.
+    /// The visible card, in screen coordinates.
+    var cardFrame: CGRect { frame.insetBy(dx: Self.margin, dy: Self.margin) }
+
+    /// Puts `content` on a Liquid Glass card (the menu material before macOS 26).
     func install(_ content: NSView) {
         let container = NSView(frame: CGRect(origin: .zero, size: frame.size))
         let background: NSView
@@ -150,8 +156,6 @@ final class BatteryPanel: NSPanel {
             glass.cornerRadius = Self.cornerRadius
             glass.contentView = content
             background = glass
-            // The window's shadow is worked out as a rectangle around the glass, which shows as square corners.
-            hasShadow = false
         } else {
             let effect = NSVisualEffectView()
             effect.material = .menu
@@ -164,7 +168,7 @@ final class BatteryPanel: NSPanel {
             effect.addSubview(content)
             background = effect
         }
-        background.frame = container.bounds
+        background.frame = container.bounds.insetBy(dx: Self.margin, dy: Self.margin)
         background.autoresizingMask = [.width, .height]
         content.frame = background.bounds
         content.autoresizingMask = [.width, .height]
@@ -173,17 +177,25 @@ final class BatteryPanel: NSPanel {
         self.content = content
     }
 
-    /// Resizes to the content, keeping the top edge where it is.
-    func fit(contentSize size: CGSize) {
-        guard size.width > 0, size.height > 0 else { return }
+    /// Sizes the card, keeping the top edge where it is.
+    func setCardSize(_ size: CGSize) {
         let size = CGSize(width: ceil(size.width), height: ceil(size.height))
-        guard size != frame.size else { return }
+        let windowSize = CGSize(width: size.width + Self.margin * 2, height: size.height + Self.margin * 2)
+        let top = frame.maxY
+        setFrame(CGRect(x: frame.minX, y: top - windowSize.height, width: windowSize.width, height: windowSize.height), display: true)
+        content?.frame = CGRect(origin: .zero, size: size)
+    }
+
+    /// Puts the card's top-left corner at `point`.
+    func moveCard(topLeft point: CGPoint) {
+        setFrameTopLeftPoint(CGPoint(x: point.x - Self.margin, y: point.y + Self.margin))
+    }
+
+    /// Follows the content's size as SwiftUI reports it.
+    func fit(contentSize size: CGSize) {
+        guard size.width > 0, size.height > 0, CGSize(width: ceil(size.width), height: ceil(size.height)) != cardFrame.size
+        else { return }
         // Not in the middle of SwiftUI's layout pass, which is where size changes are reported.
-        DispatchQueue.main.async { [self] in
-            let top = frame.maxY
-            setFrame(CGRect(x: frame.minX, y: top - size.height, width: size.width, height: size.height), display: true)
-            content?.frame = CGRect(origin: .zero, size: size)
-            invalidateShadow()
-        }
+        DispatchQueue.main.async { [self] in setCardSize(size) }
     }
 }
