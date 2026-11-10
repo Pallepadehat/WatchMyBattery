@@ -1,7 +1,7 @@
 import AppKit
 import BatteryKit
-import Observation
 import OSLog
+import Observation
 import SwiftUI
 
 /// Finds the apps using the most energy, while someone's looking.
@@ -94,9 +94,10 @@ final class AppUsageMonitor {
         for (pid, watts) in appPower.values.sorted(by: { $0.value > $1.value }) {
             guard next.count < maximumApps, watts >= Self.minimumWatts else { break }
             guard quitting[pid] == nil, let info = appInfo.info(for: pid) else { continue }
-            next.append(AppUsage(
-                id: pid, name: info.name, bundleIdentifier: info.bundleIdentifier, icon: info.icon, tint: info.tint,
-                watts: watts))
+            next.append(
+                AppUsage(
+                    id: pid, name: info.name, bundleIdentifier: info.bundleIdentifier, icon: info.icon, tint: info.tint,
+                    watts: watts))
         }
         appInfo.forget(except: Set(appPower.values.keys))
 

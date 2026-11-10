@@ -66,7 +66,8 @@ private struct PoofView: View {
                     .fill(
                         RadialGradient(
                             colors: [.white, .white.opacity(0.6), tint.opacity(0.25), .clear], center: .center,
-                            startRadius: 0, endRadius: puff.size / 1.6))
+                            startRadius: 0, endRadius: puff.size / 1.6)
+                    )
                     .frame(width: puff.size, height: puff.size)
                     .keyframeAnimator(initialValue: Frame(), trigger: trigger) { content, frame in
                         content

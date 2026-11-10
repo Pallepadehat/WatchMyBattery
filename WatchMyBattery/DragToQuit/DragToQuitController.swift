@@ -70,7 +70,10 @@ final class DragToQuitController {
         isArmed = false
 
         if quits {
-            if playsSound { Self.poofSound?.stop(); Self.poofSound?.play() }
+            if playsSound {
+                Self.poofSound?.stop()
+                Self.poofSound?.play()
+            }
             ghost.poofCount += 1
             withAnimation(.easeOut(duration: 0.3)) { ghost.isPoofing = true }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self] in self?.hide() }

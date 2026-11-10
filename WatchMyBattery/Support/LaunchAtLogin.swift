@@ -1,5 +1,5 @@
-import Observation
 import OSLog
+import Observation
 import ServiceManagement
 
 /// Opens WatchMyBattery when you log in, through a login item that shows up
