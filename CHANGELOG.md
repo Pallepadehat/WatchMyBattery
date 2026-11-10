@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-10
+
+The first public release.
+
 ### Changed
 
 - A new, simpler app icon: the menu bar battery, full, with "100" cut out of it. It follows macOS's light, dark and tinted icon styles.
@@ -30,5 +34,6 @@ The first release.
 - Automatic updates with Sparkle, from EdDSA-signed releases.
 - One-command install, and build, packaging and release scripts.
 
-[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Pallepadehat/WatchMyBattery/releases/tag/v0.1.0
