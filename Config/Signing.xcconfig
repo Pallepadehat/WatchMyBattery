@@ -1,0 +1,9 @@
+// Code signing for WatchMyBattery.
+//
+// Builds work out of the box without a team ("Sign to Run Locally").
+// To sign with your own Apple developer team, copy Local.xcconfig.example to
+// Local.xcconfig (git-ignored) and fill in your team ID.
+
+CODE_SIGN_STYLE = Automatic
+
+#include? "Local.xcconfig"
