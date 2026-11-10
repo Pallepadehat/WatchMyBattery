@@ -1,0 +1,47 @@
+name: Bug report
+description: Something isn't working as it should.
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you see, and what did you expect to see instead? Screenshots or screen recordings help a lot.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Unplug the charger
+        2. Open the panel and drag Safari's slice out
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: estimates
+    attributes:
+      label: For estimates that look wrong
+      description: >-
+        What did the panel show, and what did Activity Monitor's Energy tab show at the same time?
+        A screenshot of both side by side is ideal.
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: macOS 27.2
+    validations:
+      required: true
+  - type: input
+    id: mac
+    attributes:
+      label: Mac
+      placeholder: MacBook Air 13" (M3, 2024)
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: WatchMyBattery version
+      description: Shown in Settings.
