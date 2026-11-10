@@ -175,6 +175,10 @@ swift test
 | [`scripts`](scripts) | Building, packaging and releasing, plus `generate-icon.swift`, which writes the app icon (`WatchMyBattery/AppIcon.icon`, an Icon Composer icon) and logo, and `generate-social-preview.swift`, which draws the GitHub social preview. |
 | [`install.sh`](install.sh) | The one-command installer. |
 
+## Roadmap
+
+What's coming next is in [ROADMAP.md](ROADMAP.md).
+
 ## Contributing
 
 Contributions are very welcome: bug fixes, polish, better estimates, and ideas. Work lands on the `develop` branch through pull requests. Start with [CONTRIBUTING.md](CONTRIBUTING.md), and please follow the [code of conduct](CODE_OF_CONDUCT.md). Security issues go through [private reporting](SECURITY.md).
