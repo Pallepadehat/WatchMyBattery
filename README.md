@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/logo.png" width="160" alt="WatchMyBattery icon: a white battery on a deep blue tile, its fill ending in purple, blue and pink app slices">
+  <img src="docs/logo.png" width="160" alt="WatchMyBattery icon: a glass battery on a deep indigo tile, its white charge ending in pink, orange and amber app slices">
 </p>
 
 <h1 align="center">WatchMyBattery</h1>
