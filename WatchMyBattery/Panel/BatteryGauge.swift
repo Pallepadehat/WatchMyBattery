@@ -14,10 +14,23 @@ struct BatteryGauge: View {
     let estimates: Estimates
     let centerLabel: CenterLabel
     let usesColor: Bool
+    /// Play the charging animation (the setting is on, the panel is open, and it's charging).
+    let animatesCharging: Bool
     @Binding var focusedApp: AppUsage?
+    /// Quits right away (asking first only if the user wants that): a drag out of the panel.
     let quit: (AppUsage) -> Void
+    /// Always asks first: ⌫ on a slice, where a stray key press shouldn't cost unsaved work.
+    let confirmQuit: (AppUsage) -> Void
+    /// Never give this app a slice again.
+    let exclude: ((AppUsage) -> Void)?
 
     @State private var draggedApp: AppUsage.ID?
+    /// The slice with focus (Tab moves between slices).
+    @FocusState private var focusedSlice: AppUsage.ID?
+    /// The focused slice, but only once the keyboard put it there. SwiftUI
+    /// focuses the first slice by itself when the panel opens, which shouldn't
+    /// draw a ring, preview anything, or let ⌫ quit that app.
+    @State private var keyboardSlice: AppUsage.ID?
     @Environment(\.colorScheme) private var colorScheme
 
     private static let height: CGFloat = 72
@@ -53,6 +66,16 @@ struct BatteryGauge: View {
             Color.clear.frame(height: Self.labelHeight)
         }
         .accessibilityElement(children: .contain)
+        .onChange(of: focusedSlice) { old, new in
+            let fromKeyboard = NSApp.currentEvent?.type == .keyDown
+            keyboardSlice = fromKeyboard ? new : nil
+            // Keyboard focus previews the time quitting would give back, like hovering does.
+            if fromKeyboard, let new, let app = apps.first(where: { $0.id == new }) {
+                focusedApp = app
+            } else if let old, focusedApp?.id == old, draggedApp == nil {
+                focusedApp = nil
+            }
+        }
     }
 
     // MARK: - Layout
@@ -60,14 +83,7 @@ struct BatteryGauge: View {
     /// Each app's share of the pill: its cost out of all the time there'd be
     /// without it. On the adapter, where time doesn't apply, its share of the power draw.
     private func layout(width: CGFloat) -> GaugeLayout {
-        let shares: [Double]
-        if estimates.appliesToTime, let timeRemaining = snapshot.timeRemaining {
-            let costs = apps.map { estimates.timeGained(byQuitting: $0.watts) }
-            let total = timeRemaining + costs.reduce(0, +)
-            shares = costs.map { total > 0 ? $0 / total : 0 }
-        } else {
-            shares = apps.map { estimates.share(of: $0.watts) }
-        }
+        let shares = estimates.sliceShares(forAppsDrawing: apps.map(\.watts))
         return GaugeLayout(width: width, level: 1, shares: shares, minimumSliceWidth: 36, labelWidth: Self.labelWidth)
     }
 
@@ -77,23 +93,59 @@ struct BatteryGauge: View {
         HStack(spacing: 0) {
             ZStack {
                 Rectangle().fill(baseFill)
+                if showsChargingAnimation {
+                    ChargingWave(color: waveColor, brightens: baseFill != .white)
+                        .transition(.opacity)
+                }
                 centerText
             }
+            .chargingAnimation(showsChargingAnimation)
             .frame(width: layout.baseWidth)
 
-            ForEach(Array(zip(apps.prefix(layout.sliceWidths.count), layout.sliceWidths)), id: \.0.id) { app, width in
+            let visible = Array(apps.prefix(layout.sliceWidths.count))
+            ForEach(Array(zip(visible, layout.sliceWidths)), id: \.0.id) { app, width in
                 AppSlice(
                     app: app,
+                    costDescription: costDescription(for: app),
                     isDragged: draggedApp == app.id,
+                    isKeyboardFocused: keyboardSlice == app.id,
                     focusedApp: $focusedApp,
                     draggedApp: $draggedApp,
-                    quit: quit
+                    quit: quit,
+                    exclude: app.bundleIdentifier == nil ? nil : exclude
                 )
                 .frame(width: width)
+                .focusable()
+                .focusEffectDisabled()
+                .focused($focusedSlice, equals: app.id)
+                .onKeyPress(keys: [.delete, .deleteForward]) { _ in
+                    guard keyboardSlice == app.id else { return .ignored }
+                    confirmQuit(app)
+                    return .handled
+                }
+                .onKeyPress(keys: [.leftArrow, .rightArrow]) { press in
+                    guard let index = visible.firstIndex(where: { $0.id == app.id }) else { return .ignored }
+                    let next = press.key == .leftArrow ? index - 1 : index + 1
+                    guard visible.indices.contains(next) else { return .ignored }
+                    focusedSlice = visible[next].id
+                    keyboardSlice = visible[next].id
+                    return .handled
+                }
                 .transition(.asymmetric(insertion: .opacity, removal: .scale(scale: 0.2, anchor: .leading).combined(with: .opacity)))
             }
         }
         .clipShape(.rect(cornerRadius: Self.cornerRadius, style: .continuous))
+    }
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var showsChargingAnimation: Bool {
+        animatesCharging && snapshot.isCharging && !reduceMotion
+    }
+
+    /// White light on a dark or green battery; a green wave on a white one, where white light wouldn't show.
+    private var waveColor: Color {
+        baseFill == .white ? Color(red: 0.2, green: 0.78, blue: 0.35) : .white
     }
 
     /// Like the menu bar icon: white on dark, near-black on light. Green while
@@ -117,7 +169,9 @@ struct BatteryGauge: View {
     private var centerText: some View {
         HStack(spacing: 4) {
             if snapshot.isCharging {
-                Image(systemName: "bolt.fill").font(.system(size: 18, weight: .bold))
+                Image(systemName: "bolt.fill")
+                    .font(.system(size: 18, weight: .bold))
+                    .modifier(ChargingGlow(color: baseFill == .white ? waveColor : .white))
             } else if snapshot.chargeState == .notCharging {
                 Image(systemName: "powerplug.fill").font(.system(size: 17, weight: .semibold))
             }
@@ -163,6 +217,20 @@ struct BatteryGauge: View {
         .allowsHitTesting(false)
     }
 
+    /// What VoiceOver reads for a slice: "costs 48 minutes", or its power draw on the adapter.
+    private func costDescription(for app: AppUsage) -> String {
+        if estimates.appliesToTime {
+            let cost = estimates.timeGained(byQuitting: app.watts)
+            guard cost >= 60 else { return String(localized: "costs less than a minute") }
+            let formatter = DateComponentsFormatter()
+            formatter.unitsStyle = .full
+            formatter.allowedUnits = cost >= 3600 ? [.hour, .minute] : [.minute]
+            return String(localized: "costs \(formatter.string(from: (cost / 60).rounded() * 60) ?? "")")
+        }
+        let watts = app.watts.formatted(.number.precision(.fractionLength(1)))
+        return String(localized: "uses \(watts) watts")
+    }
+
     private func costText(for app: AppUsage) -> String {
         if estimates.appliesToTime {
             let cost = estimates.timeGained(byQuitting: app.watts)
@@ -175,10 +243,13 @@ struct BatteryGauge: View {
 /// One app's slice: its colour, its icon, and the drag that quits it.
 private struct AppSlice: View {
     let app: AppUsage
+    let costDescription: String
     let isDragged: Bool
+    let isKeyboardFocused: Bool
     @Binding var focusedApp: AppUsage?
     @Binding var draggedApp: AppUsage.ID?
     let quit: (AppUsage) -> Void
+    let exclude: ((AppUsage) -> Void)?
 
     @State private var isHovered = false
 
@@ -193,9 +264,18 @@ private struct AppSlice: View {
                 .resizable()
                 .interpolation(.high)
                 .frame(width: 24, height: 24)
-                .scaleEffect(isHovered ? 1.12 : 1)
+                .scaleEffect(isHovered || isKeyboardFocused ? 1.12 : 1)
                 .opacity(isDragged ? 0 : 1)
         }
+        // The keyboard focus ring, drawn inside the slice so the pill's rounded clip doesn't cut it off.
+        .overlay {
+            if isKeyboardFocused {
+                Rectangle()
+                    .strokeBorder(Color.accentColor, lineWidth: 2.5)
+                    .overlay(Rectangle().strokeBorder(.white.opacity(0.7), lineWidth: 1).padding(2.5))
+            }
+        }
+        .animation(.snappy(duration: 0.18), value: isKeyboardFocused)
         .overlay(alignment: .leading) {
             Rectangle().fill(.black.opacity(0.15)).frame(width: 1)
         }
@@ -216,12 +296,19 @@ private struct AppSlice: View {
             Button("Show \(app.name)") {
                 NSRunningApplication(processIdentifier: app.id)?.activate()
             }
+            if let exclude {
+                Divider()
+                Button("Don't Show \(app.name) in the Battery") { exclude(app) }
+            }
         }
         .help(app.name)
         .accessibilityElement()
         .accessibilityLabel(app.name)
-        .accessibilityHint("Drag out of the panel to quit")
+        .accessibilityValue(costDescription)
+        .accessibilityHint("Drag out of the panel, or press Delete, to quit")
+        .accessibilityAddTraits(.isButton)
         .accessibilityAction(named: "Quit \(app.name)") { quit(app) }
+        .accessibilityAction(named: "Show \(app.name)") { NSRunningApplication(processIdentifier: app.id)?.activate() }
     }
 
     /// Starts the drag; `DragToQuitController` follows it from there and reports how it ended.

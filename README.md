@@ -34,12 +34,20 @@
 **Drag an app out to quit it**
 - Pull an app's slice out of the panel and let go. The app quits with a *poof*, like removing an icon from the Dock.
 - While you hover over or drag a slice, the **Time left** row previews what you'd gain: **4:50 +1:10**.
-- Optionally asks before quitting, so a stray drag never costs you unsaved work.
+- Optionally asks before quitting, so a stray drag never costs you unsaved work. If an app doesn't quit (it's asking about unsaved changes, say), the panel tells you and can bring it forward.
+- Works with the keyboard and VoiceOver too: Tab between slices, Delete to quit one.
+- Hide apps you never want to quit by accident, like Music or your VPN.
+
+**Battery health, and a heads-up when it runs low**
+- Condition, maximum capacity and cycle count, quietly, under the time.
+- An optional notification at the levels you choose, naming the hungriest app, with a button that quits it.
+- A soft glow flows into the battery while it charges, in the menu bar and the panel. Turn it off if you prefer a still icon.
+- In English and Danish.
 
 **Light on your battery** (it would be a bit silly otherwise)
 - No polling: battery changes arrive as notifications from macOS.
 - Apps are sampled only while the panel is open.
-- The menu bar icon is redrawn only when something you can see changes.
+- The menu bar icon is redrawn only when something you can see changes. The charging animation is a short sweep every few seconds, only while charging, and it stops while the displays sleep.
 
 ## Install
 
@@ -105,6 +113,8 @@ The numbers in the panel are **estimates**. They're good at answering "what's ea
 
 **Battery level, charging state and time remaining** come from IOPowerSources, the same source macOS uses for its own battery menu, so the percentage and the time left match what the system shows.
 
+**Battery health** (condition, maximum capacity and cycle count) comes from `system_profiler SPPowerDataType`, which is where System Settings' figures come from too. It runs at most every few hours, in the background, when the panel opens. If it isn't available, the cycle count and an approximate capacity come from the battery controller instead.
+
 **How much power each app is using.** The kernel keeps a running energy counter for every process (`ri_energy_nj` from `proc_pid_rusage`, `RUSAGE_INFO_V6`, in nanojoules). While the panel is open, WatchMyBattery reads it for every process at regular intervals and divides the change by the time between readings, which gives each process's average power over that interval. Processes are grouped by their **responsible app**, so a browser's helper and renderer processes count toward the browser, the same grouping Activity Monitor uses.
 
 **How much power the whole Mac is using.** The battery's own controller reports its voltage and current (the `AppleSmartBattery` entry in the IORegistry). Voltage × current is the power flowing out of the battery right now, for everything: apps, the display, the radios, the system itself.
@@ -132,15 +142,15 @@ So treat **−48m** as "this app is a big reason your battery is draining", not 
 
 ## Settings
 
-| Setting | Options |
+Settings is laid out like System Settings, with a pane for each part:
+
+| Pane | Settings |
 | --- | --- |
-| Percentage in the menu bar | Hidden, inside the battery, or beside it |
-| Coloured states | Red when low and green when charging, or monochrome (a template image that follows the menu bar's appearance) |
-| Centre of the battery in the panel | Time remaining or percentage |
-| Apps to show | How many of the top energy users get a slice |
-| Ask before quitting | Confirm before an app you drag out quits |
-| Launch at login | Start WatchMyBattery when you log in |
-| Automatic updates | Check for and install updates automatically |
+| General | Open at login, language (System, English or Dansk), shortcuts to hide the built-in battery and to System Settings › Battery |
+| Menu Bar | Percentage hidden, inside the battery or beside it; coloured states (red when low, green when charging) or monochrome; the charging animation |
+| Panel | Time remaining or percentage in the centre of the battery, how many apps get a slice, asking before quitting, and hidden apps that never get a slice |
+| Notifications | A low battery notification, and the levels it's sent at |
+| Updates | Check now, and check for and install updates automatically |
 
 ## Updates
 

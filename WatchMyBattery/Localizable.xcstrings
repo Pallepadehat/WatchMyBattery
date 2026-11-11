@@ -1,0 +1,1194 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ didn't quit" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ blev ikke afsluttet"
+          }
+        }
+      }
+    },
+    "%@ is using the most energy." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ bruger mest energi."
+          }
+        }
+      }
+    },
+    "%@ is using the most energy. Quitting it would give you about %@ more." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ bruger mest energi. Hvis du afslutter appen, får du ca. %@ mere."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ is using the most energy. Quitting it would give you about %2$@ more."
+          }
+        }
+      }
+    },
+    "%@ will close. If it has unsaved changes, it will ask what to do with them." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ lukkes. Hvis der er ændringer, der ikke er arkiveret, spørger appen, hvad der skal ske med dem."
+          }
+        }
+      }
+    },
+    "%@ · MIT License" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · MIT-licens"
+          }
+        }
+      }
+    },
+    "%lld cycles" : {
+      "localizations" : {
+        "da" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld cyklus"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld cyklusser"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld cycle"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld cycles"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "A notification naming the app using the most energy, with a button to quit it." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En notifikation, der nævner den app, der bruger mest energi, med en knap til at afslutte den."
+          }
+        }
+      }
+    },
+    "A soft glow flows into the battery while it charges, here and in the panel." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Et blødt lys strømmer ind i batteriet, mens det oplader, her og i panelet."
+          }
+        }
+      }
+    },
+    "About" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Om"
+          }
+        }
+      }
+    },
+    "About %@ left." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ca. %@ tilbage."
+          }
+        }
+      }
+    },
+    "Add…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilføj…"
+          }
+        }
+      }
+    },
+    "Apps" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps"
+          }
+        }
+      }
+    },
+    "Apps Shown" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Viste apps"
+          }
+        }
+      }
+    },
+    "Ask Before Quitting" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spørg før afslutning"
+          }
+        }
+      }
+    },
+    "Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteri"
+          }
+        }
+      }
+    },
+    "Battery %lld%%, %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteri %lld %%, %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Battery %1$lld%%, %2$@"
+          }
+        }
+      }
+    },
+    "Battery Health" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteritilstand"
+          }
+        }
+      }
+    },
+    "Battery Settings" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriindstillinger"
+          }
+        }
+      }
+    },
+    "Battery Settings…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriindstillinger…"
+          }
+        }
+      }
+    },
+    "Battery at %lld%%" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteri på %lld %%"
+          }
+        }
+      }
+    },
+    "Beside" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ved siden af"
+          }
+        }
+      }
+    },
+    "Calculating…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beregner…"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuller"
+          }
+        }
+      }
+    },
+    "Charging Animation" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opladningsanimation"
+          }
+        }
+      }
+    },
+    "Check Now" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Søg nu"
+          }
+        }
+      }
+    },
+    "Check for Updates Automatically" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Søg automatisk efter opdateringer"
+          }
+        }
+      }
+    },
+    "Check for Updates…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Søg efter opdateringer…"
+          }
+        }
+      }
+    },
+    "Checking for updates…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Søger efter opdateringer…"
+          }
+        }
+      }
+    },
+    "Choose apps that should never get a slice of the battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vælg apps, der aldrig skal have en bid af batteriet."
+          }
+        }
+      }
+    },
+    "Colorful States" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farver"
+          }
+        }
+      }
+    },
+    "Control Center › Battery › Don't Show in Menu Bar" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontrolcenter › Batteri › Vis ikke på menulinjen"
+          }
+        }
+      }
+    },
+    "Dismiss" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Luk"
+          }
+        }
+      }
+    },
+    "Don't Show %@ in the Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis ikke %@ i batteriet"
+          }
+        }
+      }
+    },
+    "Don't ask again" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spørg ikke igen"
+          }
+        }
+      }
+    },
+    "Drag out of the panel, or press Delete, to quit" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Træk ud af panelet, eller tryk på Slet, for at afslutte"
+          }
+        }
+      }
+    },
+    "Fully charged" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fuldt opladet"
+          }
+        }
+      }
+    },
+    "General" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generelt"
+          }
+        }
+      }
+    },
+    "Green while charging, yellow in Low Power Mode, red when low." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grøn under opladning, gul i strømsparetilstand, rød når det er lavt."
+          }
+        }
+      }
+    },
+    "Hidden" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skjult"
+          }
+        }
+      }
+    },
+    "Hidden Apps" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skjulte apps"
+          }
+        }
+      }
+    },
+    "Hide" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skjul"
+          }
+        }
+      }
+    },
+    "Hide the Built-in Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skjul det indbyggede batteri"
+          }
+        }
+      }
+    },
+    "Hide the built-in one: Control Center › Battery › Don't Show in Menu Bar." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skjul det indbyggede: Kontrolcenter › Batteri › Vis ikke på menulinjen."
+          }
+        }
+      }
+    },
+    "Inside" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indeni"
+          }
+        }
+      }
+    },
+    "Inside the Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inde i batteriet"
+          }
+        }
+      }
+    },
+    "Install" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer"
+          }
+        }
+      }
+    },
+    "Install Updates Automatically" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer opdateringer automatisk"
+          }
+        }
+      }
+    },
+    "Install…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer…"
+          }
+        }
+      }
+    },
+    "It may be asking what to do with unsaved changes." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den spørger måske, hvad der skal ske med ændringer, der ikke er arkiveret."
+          }
+        }
+      }
+    },
+    "Language" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprog"
+          }
+        }
+      }
+    },
+    "Look" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Udseende"
+          }
+        }
+      }
+    },
+    "Low Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lavt batteri"
+          }
+        }
+      }
+    },
+    "Low Power Mode" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømsparetilstand"
+          }
+        }
+      }
+    },
+    "Low Power Mode, battery health and charging, in System Settings." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømsparetilstand, batteritilstand og opladning i Systemindstillinger."
+          }
+        }
+      }
+    },
+    "Maximum capacity is how much charge the battery holds compared with when it was new. A charge cycle is using 100% of its capacity, in total, not necessarily all at once." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maksimal kapacitet er, hvor meget strøm batteriet kan rumme i forhold til, da det var nyt. En opladningscyklus er, når 100 % af kapaciteten er brugt i alt, ikke nødvendigvis på én gang."
+          }
+        }
+      }
+    },
+    "Menu Bar" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menulinje"
+          }
+        }
+      }
+    },
+    "Never shown in the battery, so they can't be quit by accident." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vises aldrig i batteriet, så de ikke kan afsluttes ved et uheld."
+          }
+        }
+      }
+    },
+    "Normal" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        }
+      }
+    },
+    "Not charging" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplader ikke"
+          }
+        }
+      }
+    },
+    "Notifications" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifikationer"
+          }
+        }
+      }
+    },
+    "Notifications are turned off for WatchMyBattery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifikationer er slået fra for WatchMyBattery."
+          }
+        }
+      }
+    },
+    "Notify At" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Giv besked ved"
+          }
+        }
+      }
+    },
+    "Once a day. Nothing about you is sent." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Én gang om dagen. Der sendes intet om dig."
+          }
+        }
+      }
+    },
+    "Open Control Center Settings" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbn indstillinger for Kontrolcenter"
+          }
+        }
+      }
+    },
+    "Open at Login" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbn ved login"
+          }
+        }
+      }
+    },
+    "Open…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbn…"
+          }
+        }
+      }
+    },
+    "Panel" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Panel"
+          }
+        }
+      }
+    },
+    "Percentage" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Procent"
+          }
+        }
+      }
+    },
+    "Plug in soon." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilslut snart strøm."
+          }
+        }
+      }
+    },
+    "Power Source: Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømkilde: Batteri"
+          }
+        }
+      }
+    },
+    "Power Source: Power Adapter" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømkilde: Strømforsyning"
+          }
+        }
+      }
+    },
+    "Quit" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afslut"
+          }
+        }
+      }
+    },
+    "Quit %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afslut %@"
+          }
+        }
+      }
+    },
+    "Quit %@?" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afslut %@?"
+          }
+        }
+      }
+    },
+    "Quit WatchMyBattery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afslut WatchMyBattery"
+          }
+        }
+      }
+    },
+    "Relaunch Now" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Genstart nu"
+          }
+        }
+      }
+    },
+    "Report a Bug" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rapporter en fejl"
+          }
+        }
+      }
+    },
+    "Service Recommended" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Service anbefales"
+          }
+        }
+      }
+    },
+    "Settings…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indstillinger…"
+          }
+        }
+      }
+    },
+    "Show %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis %@"
+          }
+        }
+      }
+    },
+    "Show in the battery again" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis i batteriet igen"
+          }
+        }
+      }
+    },
+    "Source Code on GitHub" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kildekode på GitHub"
+          }
+        }
+      }
+    },
+    "Start WatchMyBattery when you log in." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start WatchMyBattery, når du logger ind."
+          }
+        }
+      }
+    },
+    "System Default" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Systemets standard"
+          }
+        }
+      }
+    },
+    "The apps using the most energy each get a slice." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De apps, der bruger mest energi, får hver en bid."
+          }
+        }
+      }
+    },
+    "This Mac doesn't have a battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denne Mac har ikke et batteri."
+          }
+        }
+      }
+    },
+    "Time left" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tid tilbage"
+          }
+        }
+      }
+    },
+    "Time remaining" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resterende tid"
+          }
+        }
+      }
+    },
+    "Tip: press Tab to move between slices with the keyboard, and Delete to quit one." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tip: Tryk på Tab for at gå mellem bidderne med tastaturet, og på Slet for at afslutte en."
+          }
+        }
+      }
+    },
+    "Two batteries in your menu bar?" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To batterier på menulinjen?"
+          }
+        }
+      }
+    },
+    "Until full" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indtil fuldt"
+          }
+        }
+      }
+    },
+    "Update available" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opdatering tilgængelig"
+          }
+        }
+      }
+    },
+    "Updates" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opdateringer"
+          }
+        }
+      }
+    },
+    "Version %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@"
+          }
+        }
+      }
+    },
+    "Version %@ is available." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@ er tilgængelig."
+          }
+        }
+      }
+    },
+    "Version %@ is ready to install." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@ er klar til at blive installeret."
+          }
+        }
+      }
+    },
+    "Version %@ · Last checked %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@ · Sidst søgt %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Version %1$@ · Last checked %2$@"
+          }
+        }
+      }
+    },
+    "WatchMyBattery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WatchMyBattery"
+          }
+        }
+      }
+    },
+    "WatchMyBattery %@ is the latest version." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WatchMyBattery %@ er den nyeste version."
+          }
+        }
+      }
+    },
+    "WatchMyBattery Settings" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indstillinger for WatchMyBattery"
+          }
+        }
+      }
+    },
+    "WatchMyBattery Settings…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indstillinger for WatchMyBattery…"
+          }
+        }
+      }
+    },
+    "WatchMyBattery switches language when it opens again." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WatchMyBattery skifter sprog, når den åbnes igen."
+          }
+        }
+      }
+    },
+    "What's New" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nyheder"
+          }
+        }
+      }
+    },
+    "When you drag an app out of the battery. Delete on a selected slice always asks." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når du trækker en app ud af batteriet. Slet på en valgt bid spørger altid."
+          }
+        }
+      }
+    },
+    "Without %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uden %@"
+          }
+        }
+      }
+    },
+    "Your battery, and who's draining it." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dit batteri, og hvem der dræner det."
+          }
+        }
+      }
+    },
+    "charging" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "oplader"
+          }
+        }
+      }
+    },
+    "costs %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "koster %@"
+          }
+        }
+      }
+    },
+    "costs less than a minute" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "koster under et minut"
+          }
+        }
+      }
+    },
+    "fully charged" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fuldt opladet"
+          }
+        }
+      }
+    },
+    "macOS" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS"
+          }
+        }
+      }
+    },
+    "not charging" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "oplader ikke"
+          }
+        }
+      }
+    },
+    "on battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "på batteri"
+          }
+        }
+      }
+    },
+    "uses %@ watts" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bruger %@ watt"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

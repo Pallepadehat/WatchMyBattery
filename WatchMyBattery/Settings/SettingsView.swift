@@ -1,132 +1,347 @@
 import BatteryKit
 import SwiftUI
+import UniformTypeIdentifiers
 
-/// Settings, laid out like a pane of System Settings.
+/// The panes of Settings, in the sidebar.
+enum SettingsPane: String, CaseIterable, Identifiable {
+    case general, menuBar, panel, notifications, updates, about
+
+    var id: Self { self }
+
+    var title: LocalizedStringKey {
+        switch self {
+        case .general: "General"
+        case .menuBar: "Menu Bar"
+        case .panel: "Panel"
+        case .notifications: "Notifications"
+        case .updates: "Updates"
+        case .about: "About"
+        }
+    }
+
+    var titleString: String {
+        switch self {
+        case .general: String(localized: "General")
+        case .menuBar: String(localized: "Menu Bar")
+        case .panel: String(localized: "Panel")
+        case .notifications: String(localized: "Notifications")
+        case .updates: String(localized: "Updates")
+        case .about: String(localized: "About")
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .general: "gearshape.fill"
+        case .menuBar: "rectangle.topthird.inset.filled"
+        case .panel: "bolt.batteryblock.fill"
+        case .notifications: "bell.fill"
+        case .updates: "arrow.triangle.2.circlepath"
+        case .about: "info"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .general: .gray
+        case .menuBar: .blue
+        case .panel: .green
+        case .notifications: .red
+        case .updates: .indigo
+        case .about: .orange
+        }
+    }
+}
+
+/// Settings, laid out like System Settings: a sidebar of panes, each a short grouped form.
 struct SettingsView: View {
     let model: AppModel
 
     var body: some View {
-        @Bindable var settings = model.settings
-        @Bindable var updater = model.updater
+        @Bindable var model = model
+        NavigationSplitView {
+            List(SettingsPane.allCases, selection: $model.settingsPane) { pane in
+                HStack(spacing: 8) {
+                    SettingIcon(symbol: pane.symbol, color: pane.color, size: 22)
+                    Text(pane.title)
+                }
+                .padding(.vertical, 2)
+                .tag(pane)
+            }
+            .navigationSplitViewColumnWidth(min: 180, ideal: 190, max: 220)
+            .toolbar(removing: .sidebarToggle)
+        } detail: {
+            Group {
+                switch model.settingsPane ?? .general {
+                case .general: GeneralPane(model: model)
+                case .menuBar: MenuBarPane(model: model)
+                case .panel: PanelPane(model: model)
+                case .notifications: NotificationsPane(model: model)
+                case .updates: UpdatesPane(model: model)
+                case .about: AboutPane(model: model)
+                }
+            }
+            .formStyle(.grouped)
+            .navigationTitle(model.settingsPane?.title ?? "General")
+            // The title bar names the pane, as in System Settings.
+            .background(WindowTitle(title: model.settingsPane?.titleString ?? ""))
+        }
+        .frame(minWidth: 700, idealWidth: 720, minHeight: 480, idealHeight: 560)
+    }
+}
 
+/// Sets the title of the window it's in.
+private struct WindowTitle: NSViewRepresentable {
+    let title: String
+
+    func makeNSView(context: Context) -> NSView { NSView() }
+
+    func updateNSView(_ view: NSView, context: Context) {
+        let title = title
+        DispatchQueue.main.async { view.window?.title = title }
+    }
+}
+
+// MARK: - Panes
+
+private struct GeneralPane: View {
+    let model: AppModel
+    @State private var language = AppLanguage.chosen
+
+    var body: some View {
         Form {
             Section {
-                AppHeader(version: model.updater.currentVersion)
+                Toggle(isOn: Binding(get: { model.launchAtLogin.isEnabled }, set: { model.launchAtLogin.setEnabled($0) })) {
+                    SettingLabel("Open at Login", symbol: "power", color: .gray) {
+                        Text("Start WatchMyBattery when you log in.")
+                    }
+                }
+                Picker(selection: $language) {
+                    ForEach(AppLanguage.allCases) { language in
+                        Text(language.title).tag(language)
+                    }
+                } label: {
+                    SettingLabel("Language", symbol: "globe", color: .blue)
+                }
+                .onChange(of: language) { _, language in AppLanguage.choose(language) }
+                if language != AppLanguage.current {
+                    LabeledContent {
+                        Button("Relaunch Now") { AppLanguage.relaunch() }
+                            .buttonStyle(.borderedProminent)
+                    } label: {
+                        Label("WatchMyBattery switches language when it opens again.", systemImage: "arrow.clockwise.circle.fill")
+                            .labelStyle(InlineIconLabelStyle(color: .accentColor))
+                            .font(.callout)
+                    }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+            }
+            .animation(.snappy, value: language)
+
+            Section {
+                LabeledContent {
+                    Button("Open…") { model.openControlCenterSettings() }
+                } label: {
+                    SettingLabel("Hide the Built-in Battery", symbol: "rectangle.topthird.inset.filled", color: .gray) {
+                        Text("Control Center › Battery › Don't Show in Menu Bar")
+                    }
+                }
+                LabeledContent {
+                    Button("Open…") { model.openBatterySettings() }
+                } label: {
+                    SettingLabel("Battery Settings", symbol: "bolt.batteryblock.fill", color: .green) {
+                        Text("Low Power Mode, battery health and charging, in System Settings.")
+                    }
+                }
+            } header: {
+                Text("macOS")
             }
 
             Section {
+                HStack {
+                    Spacer()
+                    Button("Quit WatchMyBattery", role: .destructive) { NSApp.terminate(nil) }
+                }
+            }
+        }
+    }
+}
+
+private struct MenuBarPane: View {
+    let model: AppModel
+
+    var body: some View {
+        @Bindable var settings = model.settings
+        Form {
+            Section {
                 PercentageStylePicker(snapshot: model.battery.snapshot, settings: settings)
                     .listRowInsets(EdgeInsets(top: 14, leading: 14, bottom: 14, trailing: 14))
+            } header: {
+                Text("Percentage")
+            }
+            Section {
                 Toggle(isOn: $settings.usesColor) {
                     SettingLabel("Colorful States", symbol: "paintpalette.fill", color: .orange) {
                         Text("Green while charging, yellow in Low Power Mode, red when low.")
                     }
                 }
-                LabeledContent {
-                    Button("Open…") { model.openControlCenterSettings() }
-                } label: {
-                    SettingLabel("Hide the Built-in Battery", symbol: "menubar.rectangle", color: .gray) {
-                        Text("Control Center › Battery › Don't Show in Menu Bar")
+                Toggle(isOn: $settings.showsChargingAnimation) {
+                    SettingLabel("Charging Animation", symbol: "bolt.fill", color: .green) {
+                        Text("A soft glow flows into the battery while it charges, here and in the panel.")
                     }
                 }
             } header: {
-                Text("Menu Bar")
+                Text("Look")
             }
+        }
+    }
+}
 
-            Section("Panel") {
+private struct PanelPane: View {
+    let model: AppModel
+
+    var body: some View {
+        @Bindable var settings = model.settings
+        Form {
+            Section {
                 Picker(selection: $settings.centerLabel) {
                     ForEach(CenterLabel.allCases) { label in
                         Text(label.title).tag(label)
                     }
                 } label: {
-                    SettingLabel("Inside the Battery", symbol: "battery.75percent", color: .green)
+                    SettingLabel("Inside the Battery", symbol: "textformat.123", color: .green)
                 }
                 Picker(selection: $settings.maximumApps) {
                     ForEach(AppSettings.appCountRange, id: \.self) { count in
                         Text(count.formatted()).tag(count)
                     }
                 } label: {
-                    SettingLabel("Apps Shown", symbol: "square.stack.3d.up.fill", color: .purple)
-                }
-                Toggle(isOn: $settings.confirmsQuit) {
-                    SettingLabel("Ask Before Quitting", symbol: "hand.raised.fill", color: .red) {
-                        Text("When you drag an app out of the battery.")
-                    }
-                }
-            }
-
-            Section("General") {
-                Toggle(isOn: Binding(get: { model.launchAtLogin.isEnabled }, set: { model.launchAtLogin.setEnabled($0) })) {
-                    SettingLabel("Open at Login", symbol: "power", color: .gray)
-                }
-            }
-
-            Section {
-                Toggle(isOn: $updater.checksAutomatically) {
-                    SettingLabel("Check for Updates Automatically", symbol: "arrow.triangle.2.circlepath", color: .blue)
-                }
-                Toggle(isOn: $updater.downloadsAutomatically) {
-                    SettingLabel("Install Updates Automatically", symbol: "arrow.down.circle.fill", color: .blue)
-                }
-                .disabled(!updater.checksAutomatically)
-                LabeledContent {
-                    Button("Check Now") { model.updater.checkNow() }
-                        .disabled(!model.updater.canCheckForUpdates)
-                } label: {
-                    SettingLabel("Updates", symbol: "sparkles", color: .indigo) {
-                        if let lastCheck = model.updater.lastCheck {
-                            Text("Last checked \(lastCheck, format: .relative(presentation: .named))")
-                        } else {
-                            Text("Version \(model.updater.currentVersion)")
-                        }
+                    SettingLabel("Apps Shown", symbol: "square.stack.3d.up.fill", color: .purple) {
+                        Text("The apps using the most energy each get a slice.")
                     }
                 }
             } header: {
-                Text("Updates")
-            } footer: {
-                HStack {
-                    Link(destination: URL(string: "https://github.com/Pallepadehat/WatchMyBattery")!) {
-                        Label("Source Code on GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
+                Text("Battery")
+            }
+            Section {
+                Toggle(isOn: $settings.confirmsQuit) {
+                    SettingLabel("Ask Before Quitting", symbol: "hand.raised.fill", color: .red) {
+                        Text("When you drag an app out of the battery. Delete on a selected slice always asks.")
                     }
-                    Spacer()
-                    Button("Quit WatchMyBattery") { NSApp.terminate(nil) }
-                        .buttonStyle(.link)
                 }
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .padding(.top, 8)
+                HiddenAppsRow(model: model)
+            } header: {
+                Text("Apps")
+            } footer: {
+                Text("Tip: press Tab to move between slices with the keyboard, and Delete to quit one.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
             }
         }
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
-        .frame(width: 460)
-        .frame(minHeight: 420, idealHeight: 560, maxHeight: .infinity)
     }
 }
 
-// MARK: - Header
-
-/// The app's icon, name and version, like the top of an About pane.
-private struct AppHeader: View {
-    let version: String
+private struct NotificationsPane: View {
+    let model: AppModel
 
     var body: some View {
-        HStack(spacing: 14) {
-            Image(nsImage: NSApp.applicationIconImage)
-                .resizable()
-                .frame(width: 52, height: 52)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("WatchMyBattery")
-                    .font(.system(size: 17, weight: .semibold))
-                Text("Your battery, and who's draining it.")
+        Form {
+            Section {
+                LowBatteryRows(model: model)
+            }
+        }
+    }
+}
+
+private struct UpdatesPane: View {
+    let model: AppModel
+
+    var body: some View {
+        @Bindable var updater = model.updater
+        Form {
+            Section {
+                UpdateCheckRow(updater: model.updater)
+            }
+            Section {
+                Toggle(isOn: $updater.checksAutomatically) {
+                    SettingLabel("Check for Updates Automatically", symbol: "arrow.triangle.2.circlepath", color: .blue) {
+                        Text("Once a day. Nothing about you is sent.")
+                    }
+                }
+                Toggle(isOn: $updater.downloadsAutomatically) {
+                    SettingLabel("Install Updates Automatically", symbol: "square.and.arrow.down.fill", color: .blue)
+                }
+                .disabled(!updater.checksAutomatically)
+            }
+        }
+    }
+}
+
+private struct AboutPane: View {
+    let model: AppModel
+
+    var body: some View {
+        Form {
+            Section {
+                VStack(spacing: 10) {
+                    Image(nsImage: NSApp.applicationIconImage)
+                        .resizable()
+                        .frame(width: 96, height: 96)
+                    Text("WatchMyBattery")
+                        .font(.system(size: 22, weight: .bold))
+                    Text("Your battery, and who's draining it.")
+                        .foregroundStyle(.secondary)
+                    Text("Version \(model.updater.currentVersion)")
+                        .font(.callout)
+                        .monospacedDigit()
+                        .foregroundStyle(.tertiary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+            }
+            Section {
+                AboutLink("Source Code on GitHub", symbol: "chevron.left.forwardslash.chevron.right", url: "https://github.com/Pallepadehat/WatchMyBattery")
+                AboutLink("What's New", symbol: "sparkles", url: "https://github.com/Pallepadehat/WatchMyBattery/blob/main/CHANGELOG.md")
+                AboutLink("Report a Bug", symbol: "ladybug.fill", url: "https://github.com/Pallepadehat/WatchMyBattery/issues/new/choose")
+            } footer: {
+                if let copyright = Bundle.main.object(forInfoDictionaryKey: "NSHumanReadableCopyright") as? String {
+                    Text("\(copyright) · MIT License")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 6)
+                }
+            }
+        }
+    }
+}
+
+private struct AboutLink: View {
+    let title: LocalizedStringKey
+    let symbol: String
+    let url: String
+
+    init(_ title: LocalizedStringKey, symbol: String, url: String) {
+        self.title = title
+        self.symbol = symbol
+        self.url = url
+    }
+
+    var body: some View {
+        Link(destination: URL(string: url)!) {
+            HStack(spacing: 10) {
+                Image(systemName: symbol)
+                    .frame(width: 22)
                     .foregroundStyle(.secondary)
-                Text("Version \(version)")
-                    .font(.caption)
+                Text(title)
+                Spacer()
+                Image(systemName: "arrow.up.forward")
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(.tertiary)
             }
-            Spacer()
+            .contentShape(.rect)
         }
-        .padding(.vertical, 2)
+        .buttonStyle(.plain)
     }
 }
 
@@ -148,11 +363,7 @@ private struct SettingLabel<Subtitle: View>: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: symbol)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: 24, height: 24)
-                .background(color.gradient, in: .rect(cornerRadius: 6, style: .continuous))
+            SettingIcon(symbol: symbol, color: color, size: 24)
             VStack(alignment: .leading, spacing: 1) {
                 Text(title)
                 subtitle
@@ -166,6 +377,263 @@ private struct SettingLabel<Subtitle: View>: View {
 extension SettingLabel where Subtitle == EmptyView {
     init(_ title: LocalizedStringKey, symbol: String, color: Color) {
         self.init(title, symbol: symbol, color: color) { EmptyView() }
+    }
+}
+
+/// A white symbol on a coloured rounded square, the way System Settings marks its rows and panes.
+///
+/// Symbols come in very different shapes (a wide battery, a tall bolt), so
+/// each is sized to fit the same box rather than drawn at one point size:
+/// that way a set of them looks even, like System Settings' sidebar.
+private struct SettingIcon: View {
+    let symbol: String
+    let color: Color
+    let size: CGFloat
+
+    var body: some View {
+        Image(systemName: symbol)
+            .font(.system(size: glyphSize, weight: .semibold))
+            .symbolRenderingMode(.monochrome)
+            .foregroundStyle(.white)
+            .frame(width: size, height: size)
+            .background {
+                RoundedRectangle(cornerRadius: size * 0.26, style: .continuous)
+                    .fill(color.gradient)
+                    // A hairline edge, so light colours hold their shape on a light background.
+                    .overlay(
+                        RoundedRectangle(cornerRadius: size * 0.26, style: .continuous)
+                            .strokeBorder(.black.opacity(0.08), lineWidth: 0.5))
+            }
+            .accessibilityHidden(true)
+    }
+
+    /// The point size at which the symbol's longer side fills about 62% of the box.
+    private var glyphSize: CGFloat {
+        let natural = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?.size ?? CGSize(width: 16, height: 16)
+        // Symbols are measured at 13 pt by default.
+        let longest = max(natural.width, natural.height, 1)
+        return size * 0.62 * 13 / longest
+    }
+}
+
+// MARK: - Updates
+
+/// "Check Now", with the answer right in the row: checking, up to date, a new version, or what went wrong.
+private struct UpdateCheckRow: View {
+    let updater: Updater
+
+    var body: some View {
+        LabeledContent {
+            switch updater.checkState {
+            case .checking:
+                ProgressView().controlSize(.small)
+            case .available:
+                Button("Install…") { updater.installUpdate() }
+                    .buttonStyle(.borderedProminent)
+            default:
+                Button("Check Now") { updater.checkNow() }
+                    .disabled(!updater.canCheckForUpdates)
+            }
+        } label: {
+            SettingLabel("Updates", symbol: "sparkles", color: .indigo) {
+                status
+                    .contentTransition(.opacity)
+            }
+        }
+        .animation(.snappy, value: updater.checkState)
+    }
+
+    @ViewBuilder private var status: some View {
+        switch updater.checkState {
+        case .checking:
+            Text("Checking for updates…")
+        case .upToDate:
+            Label("WatchMyBattery \(updater.currentVersion) is the latest version.", systemImage: "checkmark.circle.fill")
+                .labelStyle(InlineIconLabelStyle(color: .green))
+        case .available(let version):
+            Label("Version \(version) is available.", systemImage: "arrow.down.circle.fill")
+                .labelStyle(InlineIconLabelStyle(color: .accentColor))
+        case .failed(let message):
+            Label(message, systemImage: "exclamationmark.triangle.fill")
+                .labelStyle(InlineIconLabelStyle(color: .orange))
+                .lineLimit(2)
+        case .idle:
+            if let lastCheck = updater.lastCheck {
+                Text("Version \(updater.currentVersion) · Last checked \(lastCheck, format: .relative(presentation: .named))")
+            } else {
+                Text("Version \(updater.currentVersion)")
+            }
+        }
+    }
+}
+
+/// A small coloured icon before a caption.
+private struct InlineIconLabelStyle: LabelStyle {
+    let color: Color
+
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 4) {
+            configuration.icon.foregroundStyle(color)
+            configuration.title
+        }
+    }
+}
+
+// MARK: - Hidden apps
+
+/// Apps that never get a slice of the battery, with buttons to add and remove them.
+private struct HiddenAppsRow: View {
+    let model: AppModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            LabeledContent {
+                Button("Add…", action: add)
+            } label: {
+                SettingLabel("Hidden Apps", symbol: "eye.slash.fill", color: .gray) {
+                    Text("Never shown in the battery, so they can't be quit by accident.")
+                }
+            }
+            if !model.settings.excludedApps.isEmpty {
+                VStack(spacing: 0) {
+                    ForEach(model.settings.excludedApps, id: \.self) { bundleIdentifier in
+                        HiddenAppItem(bundleIdentifier: bundleIdentifier) {
+                            withAnimation(.snappy) { model.removeExclusion(bundleIdentifier) }
+                        }
+                    }
+                }
+                .padding(.leading, 34)
+            }
+        }
+    }
+
+    private func add() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.application]
+        panel.allowsMultipleSelection = true
+        panel.directoryURL = URL(fileURLWithPath: "/Applications")
+        panel.prompt = String(localized: "Hide")
+        panel.message = String(localized: "Choose apps that should never get a slice of the battery.")
+        guard panel.runModal() == .OK else { return }
+        withAnimation(.snappy) {
+            for url in panel.urls {
+                if let bundleIdentifier = Bundle(url: url)?.bundleIdentifier {
+                    model.settings.exclude(bundleIdentifier: bundleIdentifier)
+                }
+            }
+            model.usage.excludedApps = Set(model.settings.excludedApps)
+        }
+    }
+}
+
+private struct HiddenAppItem: View {
+    let bundleIdentifier: String
+    let remove: () -> Void
+
+    var body: some View {
+        let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier)
+        HStack(spacing: 8) {
+            if let url {
+                Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
+                    .resizable()
+                    .frame(width: 20, height: 20)
+            } else {
+                Image(systemName: "app.dashed")
+                    .frame(width: 20, height: 20)
+                    .foregroundStyle(.secondary)
+            }
+            Text(url.map { FileManager.default.displayName(atPath: $0.path).replacingOccurrences(of: ".app", with: "") } ?? bundleIdentifier)
+                .lineLimit(1)
+            Spacer()
+            Button(action: remove) {
+                Image(systemName: "minus.circle.fill")
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .help("Show in the battery again")
+            .accessibilityLabel("Show in the battery again")
+        }
+        .padding(.vertical, 3)
+        .transition(.opacity)
+    }
+}
+
+// MARK: - Low battery
+
+/// The low battery notification: on or off, and at which levels.
+private struct LowBatteryRows: View {
+    let model: AppModel
+
+    var body: some View {
+        @Bindable var settings = model.settings
+        Toggle(isOn: $settings.notifiesWhenLow) {
+            SettingLabel("Low Battery", symbol: "bolt.trianglebadge.exclamationmark.fill", color: .red) {
+                Text("A notification naming the app using the most energy, with a button to quit it.")
+            }
+        }
+        .onChange(of: settings.notifiesWhenLow) { _, on in
+            if on { Task { await model.notifier.requestAuthorization() } }
+        }
+        .task { await model.notifier.refreshAuthorization() }
+
+        if settings.notifiesWhenLow {
+            LabeledContent("Notify At") {
+                HStack(spacing: 4) {
+                    ForEach(AppSettings.lowBatteryChoices.reversed(), id: \.self) { level in
+                        LevelChip(level: level, isOn: settings.lowBatteryLevels.contains(level)) {
+                            toggle(level)
+                        }
+                    }
+                }
+            }
+            .padding(.leading, 34)
+
+            if model.notifier.isDenied {
+                LabeledContent {
+                    Button("Open…") { model.notifier.openNotificationSettings() }
+                } label: {
+                    Label("Notifications are turned off for WatchMyBattery.", systemImage: "exclamationmark.triangle.fill")
+                        .labelStyle(InlineIconLabelStyle(color: .orange))
+                        .font(.caption)
+                }
+                .padding(.leading, 34)
+            }
+        }
+    }
+
+    private func toggle(_ level: Int) {
+        var levels = Set(model.settings.lowBatteryLevels)
+        if levels.contains(level) {
+            // Keep at least one, or the switch above would be on for nothing.
+            guard levels.count > 1 else { return }
+            levels.remove(level)
+        } else {
+            levels.insert(level)
+        }
+        model.settings.lowBatteryLevels = levels.sorted(by: >)
+    }
+}
+
+/// "20%": one level to be notified at, on or off.
+private struct LevelChip: View {
+    let level: Int
+    let isOn: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(Double(level) / 100, format: .percent)
+                .font(.system(size: 11, weight: .medium))
+                .monospacedDigit()
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .foregroundStyle(isOn ? Color.white : Color.primary)
+                .background(isOn ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.quaternary), in: .capsule)
+                .contentShape(.capsule)
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isOn ? .isSelected : [])
+        .animation(.snappy(duration: 0.15), value: isOn)
     }
 }
 
@@ -213,7 +681,9 @@ private struct MenuBarSample: View {
     let wallpaper: Wallpaper
 
     var body: some View {
-        let icon = BatteryIcon(snapshot: snapshot, percentageStyle: style, usesColor: settings.usesColor).image()
+        let icon = BatteryIcon(
+            snapshot: snapshot, percentageStyle: style, usesColor: settings.usesColor, drawsForDarkBar: wallpaper.isDark
+        ).image()
         HStack(spacing: 4) {
             if style == .beside {
                 Text(snapshot.level, format: .percent.precision(.fractionLength(0)))
