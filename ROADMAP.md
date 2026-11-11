@@ -24,34 +24,38 @@ Released. A new icon, a polished panel and Settings in light and dark mode, and 
 
 - [ ] Show when an app won't quit, and why ([#9](https://github.com/Pallepadehat/WatchMyBattery/issues/9))
 - [ ] Keyboard and VoiceOver for app slices ([#13](https://github.com/Pallepadehat/WatchMyBattery/issues/13))
-- [ ] A keyboard shortcut to open the panel
+- [ ] Turn Low Power Mode on and off from the panel, and suggest it when the battery is low ([#24](https://github.com/Pallepadehat/WatchMyBattery/issues/24))
+
+**The menu bar**
+
+- [ ] A gentle charging animation in the menu bar and the panel ([#22](https://github.com/Pallepadehat/WatchMyBattery/issues/22))
+- [ ] A keyboard shortcut to open the panel ([#23](https://github.com/Pallepadehat/WatchMyBattery/issues/23))
 
 **Around it**
 
 - [ ] Low battery notification ([#12](https://github.com/Pallepadehat/WatchMyBattery/issues/12))
-- [ ] Turn Low Power Mode on and off from the panel, and suggest it when the battery is low
-- [ ] Shortcuts actions: battery level, time left, the hungriest app
+- [ ] Shortcuts actions: battery level, time left, the hungriest app ([#25](https://github.com/Pallepadehat/WatchMyBattery/issues/25))
 - [ ] Danish translation ([#14](https://github.com/Pallepadehat/WatchMyBattery/issues/14))
 
 ## 0.2.0: history
 
 **Behind the scenes**
 
-- [ ] Sample apps in the background while on battery, rarely and cheaply, and keep the last 24 hours
+- [ ] Sample apps in the background while on battery, rarely and cheaply, and keep the last 24 hours ([#26](https://github.com/Pallepadehat/WatchMyBattery/issues/26))
 
 **In the panel**
 
-- [ ] Energy history: which apps drained the battery over the last hours
-- [ ] A battery level chart for the last 24 hours, with charging periods marked
-- [ ] Time on battery since last charged, and the average drain per hour
+- [ ] Energy history: which apps drained the battery over the last hours ([#27](https://github.com/Pallepadehat/WatchMyBattery/issues/27))
+- [ ] A battery level chart for the last 24 hours, with charging periods marked ([#28](https://github.com/Pallepadehat/WatchMyBattery/issues/28))
+- [ ] Time on battery since last charged, and the average drain per hour ([#29](https://github.com/Pallepadehat/WatchMyBattery/issues/29))
 
 **Around it**
 
-- [ ] Alerts for runaway apps: a notification when an app has used a lot of power for a while, with a Quit button
+- [ ] Alerts for runaway apps: a notification when an app has used a lot of power for a while, with a Quit button ([#30](https://github.com/Pallepadehat/WatchMyBattery/issues/30))
 
 ## 0.3.0: accessories
 
-**The AirPods card**
+**The AirPods card** ([#31](https://github.com/Pallepadehat/WatchMyBattery/issues/31))
 
 - [ ] When AirPods or other Bluetooth headphones connect, a card slides in below the menu bar showing the battery of each earbud and the case, like on iPhone
 - [ ] A ring for each battery, filling up as the card appears, and the case's charging state
@@ -59,33 +63,32 @@ Released. A new icon, a polished panel and Settings in light and dark mode, and 
 
 **In the panel**
 
-- [ ] Battery levels of AirPods, Magic Mouse, Magic Keyboard and Magic Trackpad
-- [ ] Low battery notifications for accessories, with their own threshold
+- [ ] Battery levels of AirPods, Magic Mouse, Magic Keyboard and Magic Trackpad ([#32](https://github.com/Pallepadehat/WatchMyBattery/issues/32))
+- [ ] Low battery notifications for accessories, with their own threshold ([#33](https://github.com/Pallepadehat/WatchMyBattery/issues/33))
 
 ## 0.4.0: delight
 
 **Charging**
 
-- [ ] A charging animation when you plug in: the menu bar battery fills with a glow and shows the level and time until full
-- [ ] An optional chime when you plug in or unplug
-- [ ] Why charging is paused, for example by Optimized Battery Charging
-- [ ] The charger's wattage, and a hint when it's too weak to charge while you work
+- [ ] An optional chime when you plug in or unplug ([#34](https://github.com/Pallepadehat/WatchMyBattery/issues/34))
+- [ ] Why charging is paused, for example by Optimized Battery Charging ([#35](https://github.com/Pallepadehat/WatchMyBattery/issues/35))
+- [ ] The charger's wattage, and a hint when it's too weak to charge while you work ([#36](https://github.com/Pallepadehat/WatchMyBattery/issues/36))
 
 **The menu bar**
 
-- [ ] The Mac's total power draw in watts, as an extra label or its own menu bar style
-- [ ] More icon styles: a ring, the number alone, or time left instead of the percentage
+- [ ] The Mac's total power draw in watts, as an extra label or its own menu bar style ([#37](https://github.com/Pallepadehat/WatchMyBattery/issues/37))
+- [ ] More icon styles: a ring, the number alone, or time left instead of the percentage ([#38](https://github.com/Pallepadehat/WatchMyBattery/issues/38))
 
 ## 0.5.0: everywhere
 
 **Widgets and Shortcuts**
 
-- [ ] A widget for the desktop and Notification Center: the battery, time left and the hungriest apps
-- [ ] An accessories widget, with your AirPods and Magic devices
-- [ ] More Shortcuts actions and automations: run a shortcut when the battery drops below a level or the charger is connected
+- [ ] A widget for the desktop and Notification Center: the battery, time left and the hungriest apps ([#39](https://github.com/Pallepadehat/WatchMyBattery/issues/39))
+- [ ] An accessories widget, with your AirPods and Magic devices ([#40](https://github.com/Pallepadehat/WatchMyBattery/issues/40))
+- [ ] Shortcuts automations: run a shortcut when the battery drops below a level or the charger is connected ([#41](https://github.com/Pallepadehat/WatchMyBattery/issues/41))
 
 **Battery care**
 
-- [ ] Battery health over time: maximum capacity and cycle count, month by month
-- [ ] A weekly summary: battery time used, the apps that used the most, and how it compares with last week
-- [ ] Rules for low battery: turn on Low Power Mode or quit chosen apps at a level you pick
+- [ ] Battery health over time: maximum capacity and cycle count, month by month ([#42](https://github.com/Pallepadehat/WatchMyBattery/issues/42))
+- [ ] A weekly summary: battery time used, the apps that used the most, and how it compares with last week ([#43](https://github.com/Pallepadehat/WatchMyBattery/issues/43))
+- [ ] Rules for low battery: turn on Low Power Mode or quit chosen apps at a level you pick ([#44](https://github.com/Pallepadehat/WatchMyBattery/issues/44))
