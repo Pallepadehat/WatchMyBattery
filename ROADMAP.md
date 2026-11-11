@@ -44,21 +44,23 @@ Released. See the [changelog](CHANGELOG.md).
 
 - [x] Shortcuts actions: battery level, time left, the hungriest app ([#25](https://github.com/Pallepadehat/WatchMyBattery/issues/25))
 
-## 0.2.0: history
+## 0.2.0: history ✅
+
+Released. See the [changelog](CHANGELOG.md).
 
 **Behind the scenes**
 
-- [ ] Sample apps in the background while on battery, rarely and cheaply, and keep the last 24 hours ([#26](https://github.com/Pallepadehat/WatchMyBattery/issues/26))
+- [x] Sample apps in the background while on battery, rarely and cheaply, and keep the last 24 hours ([#26](https://github.com/Pallepadehat/WatchMyBattery/issues/26))
 
 **In the panel**
 
-- [ ] Energy history: which apps drained the battery over the last hours ([#27](https://github.com/Pallepadehat/WatchMyBattery/issues/27))
-- [ ] A battery level chart for the last 24 hours, with charging periods marked ([#28](https://github.com/Pallepadehat/WatchMyBattery/issues/28))
-- [ ] Time on battery since last charged, and the average drain per hour ([#29](https://github.com/Pallepadehat/WatchMyBattery/issues/29))
+- [x] Energy history: which apps drained the battery over the last hours ([#27](https://github.com/Pallepadehat/WatchMyBattery/issues/27))
+- [x] A battery level chart for the last 24 hours, with charging periods marked ([#28](https://github.com/Pallepadehat/WatchMyBattery/issues/28))
+- [x] Time on battery since last charged, and the average drain per hour ([#29](https://github.com/Pallepadehat/WatchMyBattery/issues/29))
 
 **Around it**
 
-- [ ] Alerts for runaway apps: a notification when an app has used a lot of power for a while, with a Quit button ([#30](https://github.com/Pallepadehat/WatchMyBattery/issues/30))
+- [x] Alerts for runaway apps: a notification when an app has used a lot of power for a while, with a Quit button ([#30](https://github.com/Pallepadehat/WatchMyBattery/issues/30))
 
 ## 0.3.0: accessories
 
