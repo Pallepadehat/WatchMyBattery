@@ -52,6 +52,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    func applicationWillTerminate(_ notification: Notification) {
+        model.stop()
+    }
+
     /// Opening the app again (from Finder or Spotlight) shows the panel, since there's no window to bring forward.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         statusItem?.showPanel()

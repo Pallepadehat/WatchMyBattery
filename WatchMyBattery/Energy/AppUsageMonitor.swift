@@ -193,7 +193,7 @@ struct QuitRefusal: Equatable {
 }
 
 /// Names, icons and colours of running apps, looked up once per process.
-private struct AppInfoCache {
+struct AppInfoCache {
     struct Info {
         let name: String
         let bundleIdentifier: String?

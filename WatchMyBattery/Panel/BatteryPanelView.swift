@@ -79,6 +79,19 @@ struct BatteryPanelView: View {
                     .padding(.top, 10)
                     .transition(.asymmetric(insertion: .scale(scale: 0.96, anchor: .top).combined(with: .opacity), removal: .opacity))
                 }
+
+                if model.settings.recordsHistory {
+                    @Bindable var settings = model.settings
+                    Divider()
+                        .padding(.horizontal, Self.inset)
+                        .padding(.top, 10)
+                    HistorySection(
+                        history: model.history.history, snapshot: snapshot, usesColor: model.settings.usesColor, isVisible: model.isPanelOpen,
+                        isExpanded: $settings.showsHistory
+                    )
+                    .padding(.horizontal, Self.inset)
+                    .padding(.top, 8)
+                }
             } else {
                 Text("This Mac doesn't have a battery.")
                     .foregroundStyle(.secondary)

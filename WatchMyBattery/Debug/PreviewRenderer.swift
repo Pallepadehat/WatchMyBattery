@@ -49,6 +49,7 @@
                     model.usage.preview(
                         apps: Array(apps.prefix(model.settings.maximumApps)), systemWatts: 14,
                         refusal: name == "half" ? QuitRefusal(id: apps[1].id, name: apps[1].name, icon: apps[1].icon) : nil)
+                    model.history.preview(sampleHistory(apps: sampleApps.map(\.path), now: snapshot))
                     let view = BatteryPanelView(model: model, close: {})
                         .background(scheme == .dark ? Color(white: 0.16) : Color(white: 0.94))
                         .clipShape(.rect(cornerRadius: 16))
@@ -132,6 +133,65 @@
             save(
                 VStack(spacing: 0) { ForEach(glintRows.indices, id: \.self) { glintRows[$0] } }.frame(width: 340),
                 to: folder.appending(path: "glint.png"))
+        }
+
+        /// A day that ends in `snapshot`: on battery overnight, charged in the morning, and unplugged two hours ago.
+        private static func sampleHistory(apps paths: [String], now snapshot: BatterySnapshot) -> BatteryHistory {
+            var history = BatteryHistory()
+            let now = Date()
+            func at(_ hoursAgo: Double) -> Date { now.addingTimeInterval(-hoursAgo * 3600) }
+            func level(_ percentage: Int, pluggedIn: Bool) -> BatterySnapshot {
+                BatterySnapshot(
+                    percentage: percentage, powerSource: pluggedIn ? .powerAdapter : .battery,
+                    chargeState: pluggedIn ? .charging : .discharging, timeRemaining: nil)
+            }
+            var hoursAgo = 23.5
+            var percentage = 88
+            // Evening and night on battery.
+            while hoursAgo > 13 {
+                history.record(level(percentage, pluggedIn: false), at: at(hoursAgo))
+                percentage -= hoursAgo > 18 ? 3 : 1
+                hoursAgo -= 0.5
+            }
+            // Charging in the morning.
+            while hoursAgo > 10.5 {
+                history.record(level(percentage, pluggedIn: true), at: at(hoursAgo))
+                percentage = min(percentage + 12, 100)
+                hoursAgo -= 0.25
+            }
+            // A while plugged in and full, then on battery down to now.
+            history.record(level(100, pluggedIn: true), at: at(hoursAgo))
+            let unplugged = snapshot.isPluggedIn ? 4.0 : 2.25
+            hoursAgo = 7
+            percentage = 100
+            while hoursAgo > unplugged + 0.1 {
+                history.record(level(percentage, pluggedIn: false), at: at(hoursAgo))
+                percentage -= 4
+                hoursAgo -= 0.4
+            }
+            history.record(level(percentage, pluggedIn: true), at: at(hoursAgo))
+            percentage = 100
+            history.record(level(100, pluggedIn: true), at: at(unplugged + 0.05))
+            history.record(level(100, pluggedIn: snapshot.isPluggedIn), at: at(unplugged))
+            let steps = 12
+            for step in 1...steps {
+                let fraction = Double(step) / Double(steps)
+                let value = 100 - Int(Double(100 - snapshot.percentage) * fraction)
+                history.record(level(value, pluggedIn: snapshot.isPluggedIn), at: at(unplugged * (1 - fraction) + 0.01))
+            }
+
+            let identities = paths.map { path in
+                BatteryHistory.AppIdentity(
+                    name: FileManager.default.displayName(atPath: path).replacingOccurrences(of: ".app", with: ""),
+                    bundleIdentifier: Bundle(path: path)?.bundleIdentifier)
+            }
+            let watts = [3.1, 1.7, 0.9, 0.4, 0.2]
+            for index in 0..<24 {
+                var joules: [BatteryHistory.AppIdentity: Double] = [:]
+                for (app, power) in zip(identities, watts) { joules[app] = power * 300 * (0.7 + 0.6 * Double((index * 7) % 5) / 4) }
+                history.record(joules: joules, seconds: 300, systemWatts: 9, at: at(Double(24 - index) * 0.08))
+            }
+            return history
         }
 
         /// Settings kept apart from the real app's, so rendering previews never changes them.
