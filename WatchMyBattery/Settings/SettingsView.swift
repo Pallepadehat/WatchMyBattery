@@ -262,6 +262,12 @@ private struct PanelPane: View {
             }
             Section {
                 HistoryRows(model: model)
+                Toggle(isOn: $settings.showsInsights) {
+                    SettingLabel("Insights", symbol: "lightbulb.fill", color: .yellow) {
+                        Text("A line in the panel when the battery won't last through a meeting, the Mac uses more power than usual, or a new app uses a lot.")
+                    }
+                }
+                .disabled(!settings.recordsHistory && !settings.warnsBeforeMeetings)
             } header: {
                 Text("History")
             }
@@ -279,6 +285,16 @@ private struct NotificationsPane: View {
             }
             Section {
                 RunawayAppRows(model: model)
+            }
+            Section {
+                MeetingWarningRows(model: model)
+                InsightRows(model: model)
+            } header: {
+                Text("Insights")
+            } footer: {
+                Text("Insights also show in the panel. They're worked out on this Mac, from what WatchMyBattery already measures.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
             }
         }
     }
@@ -840,7 +856,7 @@ private struct HistoryRows: View {
         Toggle(isOn: $settings.recordsHistory) {
             SettingLabel("Battery History", symbol: "chart.xyaxis.line", color: .green) {
                 Text(
-                    "The battery level, and which apps used it, over the last 24 hours. Apps are measured every few minutes while on battery, and the history stays on this Mac."
+                    "The battery level and the apps that used it over the last 24 hours, and a summary of the last two weeks. Apps are measured every few minutes while on battery, and the history stays on this Mac."
                 )
             }
         }
@@ -853,7 +869,7 @@ private struct HistoryRows: View {
         .confirmationDialog("Clear the battery history?", isPresented: $isConfirmingClear) {
             Button("Clear History", role: .destructive) { model.history.clear() }
         } message: {
-            Text("The chart and the apps that used the most battery start again from now.")
+            Text("The charts, the apps that used the most battery and what's usual for this Mac start again from now.")
         }
     }
 }
@@ -880,6 +896,115 @@ private struct RunawayAppRows: View {
                 .font(.caption)
                 .padding(.leading, 34)
         } else if settings.notifiesAboutRunawayApps, model.notifier.isDenied {
+            LabeledContent {
+                Button("Open…") { model.notifier.openNotificationSettings() }
+            } label: {
+                Label("Notifications are turned off for WatchMyBattery.", systemImage: "exclamationmark.triangle.fill")
+                    .labelStyle(InlineIconLabelStyle(color: .orange))
+                    .font(.caption)
+            }
+            .padding(.leading, 34)
+        }
+    }
+}
+
+// MARK: - Insights
+
+/// "Charge before your meeting": on or off, how far ahead, and calendar access.
+private struct MeetingWarningRows: View {
+    let model: AppModel
+
+    private var calendar: CalendarWatcher { model.insights.calendar }
+
+    var body: some View {
+        @Bindable var settings = model.settings
+        Toggle(isOn: $settings.warnsBeforeMeetings) {
+            SettingLabel("Charge Before Meetings", symbol: "calendar.badge.clock", color: .red) {
+                Text("When the battery won't last through your next meeting. Uses the Calendar app, and only reads when events start and end.")
+            }
+        }
+        .onChange(of: settings.warnsBeforeMeetings) { _, on in
+            guard on else { return }
+            Task {
+                await model.insights.calendar.start()
+                await model.notifier.requestAuthorization()
+            }
+        }
+        .task { calendar.refreshAccess() }
+
+        if settings.warnsBeforeMeetings {
+            Picker(selection: $settings.meetingWarningLead) {
+                ForEach(MeetingCheck.leadChoices, id: \.self) { minutes in
+                    Text(Self.leadTitle(minutes)).tag(minutes)
+                }
+            } label: {
+                Text("Warn")
+            }
+            .padding(.leading, 34)
+
+            if calendar.access == .denied {
+                LabeledContent {
+                    Button("Open…") { calendar.openPrivacySettings() }
+                } label: {
+                    Label("Calendar access is turned off for WatchMyBattery.", systemImage: "exclamationmark.triangle.fill")
+                        .labelStyle(InlineIconLabelStyle(color: .orange))
+                        .font(.caption)
+                }
+                .padding(.leading, 34)
+            } else if model.notifier.isDenied {
+                LabeledContent {
+                    Button("Open…") { model.notifier.openNotificationSettings() }
+                } label: {
+                    Label("Notifications are turned off, so it only shows in the panel.", systemImage: "exclamationmark.triangle.fill")
+                        .labelStyle(InlineIconLabelStyle(color: .orange))
+                        .font(.caption)
+                }
+                .padding(.leading, 34)
+            }
+        }
+    }
+
+    /// "30 minutes before", "1 hour before", "1 hour, 30 minutes before".
+    private static func leadTitle(_ minutes: Int) -> String {
+        let duration = Duration.seconds(minutes * 60).formatted(.units(allowed: [.hours, .minutes], width: .wide))
+        return String(localized: "\(duration) before")
+    }
+}
+
+/// "More than usual" and "a new app", which need the history's two weeks.
+private struct InsightRows: View {
+    let model: AppModel
+
+    var body: some View {
+        @Bindable var settings = model.settings
+        Toggle(isOn: $settings.notifiesAboutUnusualDrain) {
+            SettingLabel("More Than Usual", symbol: "chart.line.uptrend.xyaxis", color: .purple) {
+                Text(
+                    "When the Mac uses clearly more power than it usually does at this time of day, and which app is behind it. Once it knows what's usual, after about a week."
+                )
+            }
+        }
+        .disabled(!settings.recordsHistory)
+        .onChange(of: settings.notifiesAboutUnusualDrain) { _, on in
+            if on { Task { await model.notifier.requestAuthorization() } }
+        }
+
+        Toggle(isOn: $settings.notifiesAboutNewApps) {
+            SettingLabel("New Apps Using a Lot", symbol: "sparkles", color: .blue) {
+                Text("When an app that hadn't used much battery in the last two weeks is now among the hungriest.")
+            }
+        }
+        .disabled(!settings.recordsHistory)
+        .onChange(of: settings.notifiesAboutNewApps) { _, on in
+            if on { Task { await model.notifier.requestAuthorization() } }
+        }
+
+        if !settings.recordsHistory {
+            Label("Needs Battery History, in Settings › Panel.", systemImage: "info.circle.fill")
+                .labelStyle(InlineIconLabelStyle(color: .secondary))
+                .font(.caption)
+                .padding(.leading, 34)
+        } else if settings.notifiesAboutUnusualDrain || settings.notifiesAboutNewApps, model.notifier.isDenied {
             LabeledContent {
                 Button("Open…") { model.notifier.openNotificationSettings() }
             } label: {

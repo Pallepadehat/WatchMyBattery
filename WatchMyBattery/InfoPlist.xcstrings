@@ -1,0 +1,24 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "NSCalendarsFullAccessUsageDescription" : {
+      "comment" : "Shown when macOS asks for calendar access, once \"Charge Before Meetings\" is turned on.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WatchMyBattery læser, hvornår dine møder starter og slutter, så den kan advare dig, når batteriet ikke holder et møde igennem. Den læser aldrig, hvad de handler om, og intet forlader din Mac."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WatchMyBattery reads when your meetings start and end, to warn you when the battery won't last through one. It never reads what they're about, and nothing leaves your Mac."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -1,3 +1,4 @@
+import BatteryKit
 import Foundation
 import Observation
 
@@ -29,6 +30,21 @@ enum CenterLabel: String, CaseIterable, Identifiable {
         switch self {
         case .timeRemaining: "Time remaining"
         case .percentage: "Percentage"
+        }
+    }
+}
+
+/// How far back the panel's history looks.
+enum HistoryRange: String, CaseIterable, Identifiable {
+    case day
+    case tenDays
+
+    var id: Self { self }
+
+    var title: LocalizedStringResource {
+        switch self {
+        case .day: "24 Hours"
+        case .tenDays: "10 Days"
         }
     }
 }
@@ -94,6 +110,36 @@ final class AppSettings {
         didSet { defaults.set(notifiesAboutRunawayApps, forKey: Key.notifiesAboutRunawayApps) }
     }
 
+    /// The panel's history shows the last day, or the last ten.
+    var historyRange: HistoryRange {
+        didSet { defaults.set(historyRange.rawValue, forKey: Key.historyRange) }
+    }
+
+    /// Insights ("More than usual", a new app, a meeting) show in the panel.
+    var showsInsights: Bool {
+        didSet { defaults.set(showsInsights, forKey: Key.showsInsights) }
+    }
+
+    /// Warn when the battery won't last through the next meeting on the calendar.
+    var warnsBeforeMeetings: Bool {
+        didSet { defaults.set(warnsBeforeMeetings, forKey: Key.warnsBeforeMeetings) }
+    }
+
+    /// How many minutes before a meeting to warn, one of ``MeetingCheck/leadChoices``.
+    var meetingWarningLead: Int {
+        didSet { defaults.set(meetingWarningLead, forKey: Key.meetingWarningLead) }
+    }
+
+    /// Send a notification when the Mac uses clearly more power than usual for the time of day.
+    var notifiesAboutUnusualDrain: Bool {
+        didSet { defaults.set(notifiesAboutUnusualDrain, forKey: Key.notifiesAboutUnusualDrain) }
+    }
+
+    /// Send a notification when a new app is among the hungriest.
+    var notifiesAboutNewApps: Bool {
+        didSet { defaults.set(notifiesAboutNewApps, forKey: Key.notifiesAboutNewApps) }
+    }
+
     /// The tip about hiding the built-in battery icon, until it's dismissed.
     var showsReplaceTip: Bool {
         didSet { defaults.set(showsReplaceTip, forKey: Key.showsReplaceTip) }
@@ -147,6 +193,12 @@ final class AppSettings {
             Key.recordsHistory: true,
             Key.showsHistory: true,
             Key.notifiesAboutRunawayApps: false,
+            Key.historyRange: HistoryRange.day.rawValue,
+            Key.showsInsights: true,
+            Key.warnsBeforeMeetings: false,
+            Key.meetingWarningLead: MeetingCheck.defaultLead,
+            Key.notifiesAboutUnusualDrain: false,
+            Key.notifiesAboutNewApps: false,
             Key.showsReplaceTip: true,
             Key.hasSeenWelcome: false,
         ])
@@ -163,6 +215,13 @@ final class AppSettings {
         recordsHistory = defaults.bool(forKey: Key.recordsHistory)
         showsHistory = defaults.bool(forKey: Key.showsHistory)
         notifiesAboutRunawayApps = defaults.bool(forKey: Key.notifiesAboutRunawayApps)
+        historyRange = HistoryRange(rawValue: defaults.string(forKey: Key.historyRange) ?? "") ?? .day
+        showsInsights = defaults.bool(forKey: Key.showsInsights)
+        warnsBeforeMeetings = defaults.bool(forKey: Key.warnsBeforeMeetings)
+        let lead = defaults.integer(forKey: Key.meetingWarningLead)
+        meetingWarningLead = MeetingCheck.leadChoices.contains(lead) ? lead : MeetingCheck.defaultLead
+        notifiesAboutUnusualDrain = defaults.bool(forKey: Key.notifiesAboutUnusualDrain)
+        notifiesAboutNewApps = defaults.bool(forKey: Key.notifiesAboutNewApps)
         showsReplaceTip = defaults.bool(forKey: Key.showsReplaceTip)
         hasSeenWelcome = defaults.bool(forKey: Key.hasSeenWelcome)
         panelShortcut = defaults.data(forKey: Key.panelShortcut).flatMap { try? JSONDecoder().decode(Hotkey.self, from: $0) }
@@ -192,6 +251,12 @@ final class AppSettings {
         static let recordsHistory = "recordsHistory"
         static let showsHistory = "showsHistory"
         static let notifiesAboutRunawayApps = "notifiesAboutRunawayApps"
+        static let historyRange = "historyRange"
+        static let showsInsights = "showsInsights"
+        static let warnsBeforeMeetings = "warnsBeforeMeetings"
+        static let meetingWarningLead = "meetingWarningLead"
+        static let notifiesAboutUnusualDrain = "notifiesAboutUnusualDrain"
+        static let notifiesAboutNewApps = "notifiesAboutNewApps"
         static let showsReplaceTip = "showsReplaceTip"
         static let hasSeenWelcome = "hasSeenWelcome"
         static let panelShortcut = "panelShortcut"

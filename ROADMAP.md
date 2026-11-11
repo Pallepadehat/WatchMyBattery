@@ -76,14 +76,17 @@ Released. See the [changelog](CHANGELOG.md).
 - [x] Where charging is headed: a bar to the charge target, with Optimized Battery Charging's 80% marked
 - [x] A more graceful charging animation, in the menu bar and the panel
 
-## 0.2.5: insights
+## 0.2.5: insights ✅
+
+Released. See the [changelog](CHANGELOG.md).
 
 Things worth acting on, at the right moment, from what WatchMyBattery already measures ([#58](https://github.com/Pallepadehat/WatchMyBattery/issues/58)).
 
-- [ ] Charge before your meeting: "Your battery should last until 13:30, and you have a meeting at 14:00. Charge now." (opt in, calendar start times only)
-- [ ] More than usual: "You're using 20% more power than you usually do at this time, mostly because of Xcode."
-- [ ] A new app using a lot of power: one that hasn't shown up in the last week or two and is now among the hungriest
-- [ ] Two weeks of history, kept small: drain per hour of the week and the apps seen per day, rather than every sample
+- [x] Charge before your meeting: "Charge before your 14:00 meeting. The battery should last until about 13:30." (opt in, the Calendar app, start and end times only, warning time set in Settings)
+- [x] More than usual: "You're using 20% more power than you usually do at this time, mostly because of Xcode."
+- [x] A new app using a lot of power: one that hasn't shown up in the last week or two and is now among the hungriest
+- [x] Two weeks of history, kept small with SwiftData: an hourly summary of the drain, power and apps, rather than every sample
+- [x] Ten days in the panel's history, like iPhone's Battery settings
 
 ## 0.3.0: accessories
 

@@ -45,11 +45,18 @@
 - Works with the keyboard and VoiceOver too: Tab between slices, Delete to quit one.
 - Hide apps you never want to quit by accident, like Music or your VPN.
 
-**The last 24 hours**
+**The last 24 hours, and the last 10 days**
 - A chart of the battery level over the last day, with the time plugged in marked, like iPhone's Battery settings.
+- Switch to **10 Days** for how much battery each day used, an average day, and the apps that used the most over them.
 - How long the Mac has been on battery since it was unplugged, and the average drain per hour.
 - The apps that used the most battery, and how much battery time each one cost.
 - An optional notification when an app keeps using a lot of power for a while, with a button that quits it.
+
+**Insights, at the right moment**
+- 📅 **Charge before your meeting**: *"Charge before your 14:00 meeting. The battery should last until about 13:30."* From the Calendar app, opt in, with a warning time you choose (15 minutes to 2 hours ahead).
+- 📈 **More than usual**: *"About 30% more than at this time on most days, mostly because of Xcode."* Once it knows what's usual for your Mac, after about a week.
+- ✨ **A new app using a lot**: one that hadn't used much battery in the last two weeks, and is now among the hungriest.
+- In the panel, and as notifications if you want them.
 
 **Battery health, and a heads-up when it runs low**
 - Condition, maximum capacity and cycle count, quietly, under the time.
@@ -135,7 +142,9 @@ The numbers in the panel are **estimates**. They're good at answering "what's ea
 
 **How much power each app is using.** The kernel keeps a running energy counter for every process (`ri_energy_nj` from `proc_pid_rusage`, `RUSAGE_INFO_V6`, in nanojoules). While the panel is open, WatchMyBattery reads it for every process at regular intervals and divides the change by the time between readings, which gives each process's average power over that interval. Processes are grouped by their **responsible app**, so a browser's helper and renderer processes count toward the browser, the same grouping Activity Monitor uses.
 
-**History.** On battery, WatchMyBattery reads the same counters every five minutes. They keep counting in between, so a rare reading still sees all the energy each app used (except apps that opened and quit between two readings). Each app's energy over the last 24 hours, divided by the Mac's average power draw, is the battery time it cost. The battery level is recorded whenever macOS reports a change. It's all kept in `~/Library/Application Support/WatchMyBattery/History.plist`, and anything older than a day is dropped.
+**History.** On battery, WatchMyBattery reads the same counters every five minutes. They keep counting in between, so a rare reading still sees all the energy each app used (except apps that opened and quit between two readings). Each app's energy over the last 24 hours, divided by the Mac's average power draw, is the battery time it cost. The battery level is recorded whenever macOS reports a change. Every hour is also summed up (time on battery, battery used, the Mac's power draw and each app's energy), and those summaries are kept for two weeks, for the ten-day chart and the insights. It's all kept with SwiftData in `~/Library/Application Support/WatchMyBattery/History.store`, which only writes what changed: a row for each level change or sample, and the hour it touched.
+
+**Insights.** *More than usual* compares the Mac's average power draw over the last 45 minutes with the same time of day (give or take an hour) on earlier days, and only once at least five days have readings then. It speaks up at 20% and 1 W more, rounds to the nearest 10%, and names an app only if it accounts for at least half of the difference. *A new app* needs a week of history: an app first seen in the last three days that's among the three hungriest of the last 24 hours, with at least a fifth of their energy. *Charge before your meeting* adds macOS's time left to now, and warns when that's before the end of a meeting starting within the warning time you chose (or already under way). It skips all-day events, ones you've declined and ones marked as free.
 
 **Runaway apps.** An app counts as running away when it averages 4 W or more over 15 minutes on battery. You hear about each one once, until it calms down or you plug in, and never about the app you're using.
 
@@ -160,9 +169,10 @@ So treat **−48m** as "this app is a big reason your battery is draining", not 
 - **Nothing leaves your Mac.** No analytics, no accounts, no telemetry. The only network request is Sparkle's update check against this repository's GitHub releases, and you can turn automatic updates off in Settings.
 - WatchMyBattery reads process **energy counters and names**, never what those apps contain or do.
 - It isn't sandboxed, because the sandbox doesn't allow reading other processes' energy use or quitting other apps. It only ever quits an app you ask it to: one you drag out of the panel, delete with the keyboard, or quit from a low battery notification.
-- The low battery and runaway app notifications are off until you turn them on. When the low battery one goes off, apps are measured for two seconds to find the hungriest one.
+- **Calendar access is opt in**, asked for only when you turn on *Charge Before Meetings*. It reads when events start and end, whether they're all day or marked as free, and whether you declined them: never titles, places, notes or who's invited. Nothing from your calendar is stored or sent anywhere.
+- The low battery, runaway app and insight notifications are off until you turn them on. When the low battery one goes off, apps are measured for two seconds to find the hungriest one.
 - Battery changes arrive as IOPowerSources notifications, so there's no polling timer, and the menu bar icon is redrawn **only when something visible changes**.
-- Processes are sampled every two seconds while the panel is open, and otherwise **only on battery, every five minutes**, for the history. A sample is about a millisecond of CPU time (on a Mac running around 900 processes), so roughly 12 ms an hour. macOS gets a minute's leeway on each one to fold it into other wake-ups. Turn the history off in **Settings › Panel** and the app is idle with the panel closed, as before. The history never leaves your Mac.
+- Processes are sampled every two seconds while the panel is open, and otherwise **only on battery, every five minutes**, for the history. A sample is about a millisecond of CPU time (on a Mac running around 900 processes), so roughly 12 ms an hour. macOS gets a minute's leeway on each one to fold it into other wake-ups. Turn the history off in **Settings › Panel** and the app is idle with the panel closed, as before. The history never leaves your Mac. The insights are worked out from those same samples, with no sampling of their own; the meeting warning is checked when the battery or your calendar changes, and once more when a meeting comes close, never on a timer.
 
 ## Settings
 
@@ -172,8 +182,8 @@ Settings is laid out like System Settings, with a pane for each part:
 | --- | --- |
 | General | Open at login, language (System, English or Dansk), shortcuts to hide the built-in battery and to System Settings › Battery |
 | Menu Bar | Percentage hidden, inside the battery or beside it; coloured states (red when low, green when charging) or monochrome; the charging animation |
-| Panel | Time remaining or percentage in the centre of the battery, how many apps get a slice, asking before quitting, hidden apps that never get a slice, and the battery history (on, off, or clear it) |
-| Notifications | A low battery notification and the levels it's sent at, and a notification for apps using a lot of energy |
+| Panel | Time remaining or percentage in the centre of the battery, how many apps get a slice, asking before quitting, hidden apps that never get a slice, the battery history (on, off, or clear it), and insights in the panel |
+| Notifications | A low battery notification and the levels it's sent at, a notification for apps using a lot of energy, and insights: charge before meetings (and how far ahead), more than usual, and new apps using a lot |
 | Updates | Check now (the answer shows right in the row), and check for and install updates automatically |
 | About | The version, and links to the source code, the changelog and the bug report form |
 

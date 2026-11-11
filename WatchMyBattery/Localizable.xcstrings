@@ -1,6 +1,36 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@ before" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ før"
+          }
+        }
+      }
+    },
+    "%@ is new, and using a lot of battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ er ny og bruger meget batteri"
+          }
+        }
+      }
+    },
+    "%@ on battery · %@ used" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ på batteri · %2$@ brugt"
+          }
+        }
+      }
+    },
     "%@ · MIT License" : {
       "localizations" : {
         "da" : {
@@ -117,6 +147,36 @@
         }
       }
     },
+    "10 Days" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "10 dage"
+          }
+        }
+      }
+    },
+    "24 Hours" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "24 timer"
+          }
+        }
+      }
+    },
+    "A line in the panel when the battery won't last through a meeting, the Mac uses more power than usual, or a new app uses a lot." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En linje i panelet, når batteriet ikke holder et møde igennem, Mac'en bruger mere strøm end normalt, eller en ny app bruger meget."
+          }
+        }
+      }
+    },
     "A notification naming the app using the most energy, with a button to quit it." : {
       "localizations" : {
         "da" : {
@@ -167,12 +227,52 @@
         }
       }
     },
+    "About %@ more than at this time on most days, mostly because of %@." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ca. %1$@ mere end på dette tidspunkt de fleste dage, mest på grund af %2$@."
+          }
+        }
+      }
+    },
+    "About %@ more than at this time on most days." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ca. %@ mere end på dette tidspunkt de fleste dage."
+          }
+        }
+      }
+    },
     "About %@ until full." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ca. %@, indtil det er fuldt."
+          }
+        }
+      }
+    },
+    "About %lld times as much as at this time on most days, mostly because of %@." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ca. %1$lld gange så meget som på dette tidspunkt de fleste dage, mest på grund af %2$@."
+          }
+        }
+      }
+    },
+    "About %lld times as much as at this time on most days." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ca. %lld gange så meget som på dette tidspunkt de fleste dage."
           }
         }
       }
@@ -277,6 +377,16 @@
         }
       }
     },
+    "Average day" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gennemsnitlig dag"
+          }
+        }
+      }
+    },
     "Battery" : {
       "localizations" : {
         "da" : {
@@ -377,6 +487,16 @@
         }
       }
     },
+    "Battery used each day, last 10 days" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteri brugt hver dag, seneste 10 dage"
+          }
+        }
+      }
+    },
     "Beside" : {
       "localizations" : {
         "da" : {
@@ -417,12 +537,52 @@
         }
       }
     },
+    "Calendar access is turned off for WatchMyBattery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adgang til kalendere er slået fra for WatchMyBattery."
+          }
+        }
+      }
+    },
     "Cancel" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Annuller"
+          }
+        }
+      }
+    },
+    "Charge Before Meetings" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplad før møder"
+          }
+        }
+      }
+    },
+    "Charge before your %@ meeting" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplad før dit møde kl. %@"
+          }
+        }
+      }
+    },
+    "Charge now to get through your meeting" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplad nu for at komme igennem dit møde"
           }
         }
       }
@@ -437,12 +597,32 @@
         }
       }
     },
+    "Charging" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplader"
+          }
+        }
+      }
+    },
     "Charging Animation" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Opladningsanimation"
+          }
+        }
+      }
+    },
+    "Charging to 100%." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplader til 100 %."
           }
         }
       }
@@ -587,6 +767,16 @@
         }
       }
     },
+    "Day" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dag"
+          }
+        }
+      }
+    },
     "Dismiss" : {
       "localizations" : {
         "da" : {
@@ -623,6 +813,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Træk ud af panelet, eller tryk på Slet, for at afslutte"
+          }
+        }
+      }
+    },
+    "Each day's battery use shows here." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hver dags batteriforbrug vises her."
           }
         }
       }
@@ -814,6 +1014,16 @@
         }
       }
     },
+    "Holding at %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holder på %@"
+          }
+        }
+      }
+    },
     "Hungriest App" : {
       "localizations" : {
         "da" : {
@@ -844,6 +1054,26 @@
         }
       }
     },
+    "Insights" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indsigter"
+          }
+        }
+      }
+    },
+    "Insights also show in the panel. They're worked out on this Mac, from what WatchMyBattery already measures." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indsigter vises også i panelet. De udregnes på denne Mac ud fra det, WatchMyBattery allerede måler."
+          }
+        }
+      }
+    },
     "Install" : {
       "localizations" : {
         "da" : {
@@ -870,6 +1100,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Installer…"
+          }
+        }
+      }
+    },
+    "It hadn't used much battery in the last two weeks, and is now among the apps using the most." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den har ikke brugt meget batteri de seneste to uger og er nu blandt de apps, der bruger mest."
           }
         }
       }
@@ -910,6 +1150,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sprog"
+          }
+        }
+      }
+    },
+    "Last 10 Days" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seneste 10 dage"
           }
         }
       }
@@ -1054,6 +1304,16 @@
         }
       }
     },
+    "More Than Usual" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mere end normalt"
+          }
+        }
+      }
+    },
     "Needs Battery History, in Settings › Panel." : {
       "localizations" : {
         "da" : {
@@ -1070,6 +1330,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vises aldrig i batteriet, så de ikke kan afsluttes ved et uheld."
+          }
+        }
+      }
+    },
+    "New Apps Using a Lot" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nye apps, der bruger meget"
           }
         }
       }
@@ -1145,12 +1415,32 @@
         }
       }
     },
+    "Notifications are turned off, so it only shows in the panel." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifikationer er slået fra, så den vises kun i panelet."
+          }
+        }
+      }
+    },
     "Notify At" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Giv besked ved"
+          }
+        }
+      }
+    },
+    "Now %@, charging to %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nu %1$@, oplader til %2$@"
           }
         }
       }
@@ -1235,6 +1525,36 @@
         }
       }
     },
+    "Optimized" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimeret"
+          }
+        }
+      }
+    },
+    "Optimized Battery Charging keeps the battery at %@ for now, so it lasts longer, and finishes charging in time for when you usually unplug." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimeret batteriopladning holder batteriet på %@ indtil videre, så det holder længere, og lader færdigt i god tid til, når du plejer at tage stikket ud."
+          }
+        }
+      }
+    },
+    "Over the days the Mac ran on battery. Time on battery includes time asleep." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For de dage, Mac'en kørte på batteri. Tid på batteri omfatter tid i dvale."
+          }
+        }
+      }
+    },
     "Panel" : {
       "localizations" : {
         "da" : {
@@ -1251,6 +1571,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Procent"
+          }
+        }
+      }
+    },
+    "Period" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Periode"
           }
         }
       }
@@ -1486,12 +1816,12 @@
         }
       }
     },
-    "Shows the battery level and the apps that used the most battery over the last 24 hours." : {
+    "Shows the battery level and the apps that used the most battery." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Viser batteriniveauet og de apps, der har brugt mest batteri de seneste 24 timer."
+            "value" : "Viser batteriniveauet og de apps, der brugte mest batteri."
           }
         }
       }
@@ -1579,6 +1909,16 @@
         }
       }
     },
+    "The battery level and the apps that used it over the last 24 hours, and a summary of the last two weeks. Apps are measured every few minutes while on battery, and the history stays on this Mac." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriniveauet og de apps, der brugte det, de seneste 24 timer, og et overblik over de seneste to uger. Apps måles med få minutters mellemrum på batteri, og historikken bliver på denne Mac."
+          }
+        }
+      }
+    },
     "The battery level shows here as it changes." : {
       "localizations" : {
         "da" : {
@@ -1589,22 +1929,32 @@
         }
       }
     },
-    "The battery level, and which apps used it, over the last 24 hours. Apps are measured every few minutes while on battery, and the history stays on this Mac." : {
+    "The battery should last until about %@, and the meeting runs until %@." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Batteriniveauet, og hvilke apps der brugte det, de seneste 24 timer. Apps måles med få minutters mellemrum, mens Mac'en kører på batteri, og historikken bliver på denne Mac."
+            "value" : "Batteriet bør holde til ca. kl. %1$@, og mødet varer til kl. %2$@."
           }
         }
       }
     },
-    "The chart and the apps that used the most battery start again from now." : {
+    "The battery should last until about %@." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Grafen og de apps, der har brugt mest batteri, starter forfra fra nu."
+            "value" : "Batteriet bør holde til ca. kl. %@."
+          }
+        }
+      }
+    },
+    "The charts, the apps that used the most battery and what's usual for this Mac start again from now." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagrammerne, de apps, der brugte mest batteri, og hvad der er normalt for denne Mac, starter forfra fra nu."
           }
         }
       }
@@ -1731,6 +2081,16 @@
         }
       }
     },
+    "Until %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indtil %@"
+          }
+        }
+      }
+    },
     "Until full" : {
       "localizations" : {
         "da" : {
@@ -1761,6 +2121,16 @@
         }
       }
     },
+    "Used" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brugt"
+          }
+        }
+      }
+    },
     "Used the most battery" : {
       "localizations" : {
         "da" : {
@@ -1777,6 +2147,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "bruger %@ watt"
+          }
+        }
+      }
+    },
+    "Using more power than usual" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bruger mere strøm end normalt"
           }
         }
       }
@@ -1823,6 +2203,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Version %@ er klar til at blive installeret."
+          }
+        }
+      }
+    },
+    "Warn" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advar"
           }
         }
       }
@@ -1903,6 +2293,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nyheder"
+          }
+        }
+      }
+    },
+    "When an app that hadn't used much battery in the last two weeks is now among the hungriest." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når en app, der ikke har brugt meget batteri de seneste to uger, nu er blandt de mest strømslugende."
+          }
+        }
+      }
+    },
+    "When the battery won't last through your next meeting. Uses the Calendar app, and only reads when events start and end." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når batteriet ikke holder dit næste møde igennem. Bruger appen Kalender og læser kun, hvornår begivenheder starter og slutter."
+          }
+        }
+      }
+    },
+    "When the Mac uses clearly more power than it usually does at this time of day, and which app is behind it. Once it knows what's usual, after about a week." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når Mac'en bruger tydeligt mere strøm, end den plejer på dette tidspunkt af dagen, og hvilken app der står bag. Når den ved, hvad der er normalt, efter ca. en uge."
           }
         }
       }

@@ -3,8 +3,9 @@ import BatteryKit
 import OSLog
 import Observation
 
-/// Keeps the last 24 hours of the battery: its level, and which apps used
-/// its energy, for the panel's history and the runaway app notification.
+/// Keeps the battery's history: the last 24 hours of its level and the apps
+/// using it, for the panel's chart and the runaway app notification, and two
+/// weeks of hourly summaries, for the ten-day chart and the insights.
 ///
 /// The level comes free with every power source notification. Apps are
 /// measured only on battery, and rarely: every five minutes, with a minute's
@@ -12,35 +13,70 @@ import Observation
 /// counting each process's energy in between, so a rare sample still sees
 /// everything an app used, except apps that opened and quit between two
 /// samples. A sample is a few hundred cheap system calls.
+///
+/// It's all kept with SwiftData (``HistoryStore``), which writes only what
+/// changed: a row for each level change or sample, and the hour it touched.
 @Observable
 final class HistoryRecorder {
     private(set) var history: BatteryHistory
+    private(set) var profile: UsageProfile
+
+    /// Called after every energy sample, for the insights to take another look.
+    @ObservationIgnored var didRecordSample: () -> Void = {}
 
     @ObservationIgnored private weak var model: AppModel?
+    @ObservationIgnored private let store: HistoryStore
     @ObservationIgnored private let sampler = ProcessEnergySampler()
     @ObservationIgnored private let systemPower = SystemPowerReader()
     @ObservationIgnored private var appInfo = AppInfoCache()
     @ObservationIgnored private var detector = RunawayDetector()
     @ObservationIgnored private var task: Task<Void, Never>?
     @ObservationIgnored private var lastSaved = Date.distantPast
-    @ObservationIgnored private let fileURL: URL?
 
     static let interval: Duration = .seconds(5 * 60)
     private static let leeway: Duration = .seconds(60)
     /// Level changes are saved at most this often; samples are saved as they come.
     private static let saveInterval: TimeInterval = 5 * 60
 
-    init(fileURL: URL? = HistoryRecorder.defaultFileURL) {
+    init(storeURL: URL? = HistoryRecorder.defaultStoreURL, legacyFileURL: URL? = HistoryRecorder.legacyFileURL) {
         // A made-up battery shouldn't end up in the real history.
-        self.fileURL = LaunchOptions.pretendsCharging ? nil : fileURL
-        history = fileURL.map(BatteryHistory.load(from:)) ?? BatteryHistory()
+        let storeURL = LaunchOptions.pretendsCharging ? nil : storeURL
+        store = HistoryStore.open(at: storeURL) { error in
+            Logger.app.error("Couldn't open the battery history, starting it over: \(error.localizedDescription, privacy: .public)")
+        }
+        if store.isOnDisk, let legacyFileURL { Self.importLegacy(from: legacyFileURL, into: store) }
+        history = store.history
+        profile = store.profile
     }
 
-    /// `~/Library/Application Support/WatchMyBattery/History.plist`, or in the folder of an isolated run.
-    nonisolated static var defaultFileURL: URL? {
-        if let folder = LaunchOptions.isolatedFolder { return folder.appending(path: "History.plist") }
-        return FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
-            .appending(path: "WatchMyBattery/History.plist")
+    /// `~/Library/Application Support/WatchMyBattery/History.store`, or in the folder of an isolated run.
+    nonisolated static var defaultStoreURL: URL? { supportFolder?.appending(path: "History.store") }
+
+    /// Where the history was kept before 0.2.5, as a property list.
+    nonisolated static var legacyFileURL: URL? { supportFolder?.appending(path: "History.plist") }
+
+    nonisolated private static var supportFolder: URL? {
+        if let folder = LaunchOptions.isolatedFolder { return folder }
+        return FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appending(path: "WatchMyBattery")
+    }
+
+    /// Brings the old property list into the store, once, then removes it. Only into a store on disk, and only once
+    /// it's safely there: if the store already has a history (after going back to an older version and forward again,
+    /// say), the file is left alone rather than lost.
+    private static func importLegacy(from url: URL, into store: HistoryStore) {
+        guard FileManager.default.fileExists(atPath: url.path) else { return }
+        let legacy = BatteryHistory.load(from: url)
+        guard store.importLegacy(legacy) || legacy.isEmpty else {
+            Logger.app.notice("Kept the old battery history file, as the store already has a history")
+            return
+        }
+        do {
+            try store.save()
+            try FileManager.default.removeItem(at: url)
+            Logger.app.notice("Moved the battery history into its new store")
+        } catch {
+            Logger.app.error("Couldn't move the battery history: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     func start(model: AppModel) {
@@ -48,20 +84,39 @@ final class HistoryRecorder {
         observe()
     }
 
-    /// Writes what hasn't been saved yet, before the app quits. Waits for it, as the app won't be around for long.
+    /// Writes what hasn't been saved yet, before the app quits.
     func flush() {
-        guard let fileURL else { return }
-        let history = history
-        Self.writer.sync { try? history.save(to: fileURL) }
+        save(force: true)
     }
 
     /// Forgets the whole history, on disk too.
     func clear() {
-        history.removeAll()
+        store.removeAll()
         detector.reset()
-        if let fileURL { try? FileManager.default.removeItem(at: fileURL) }
         // Start again from the current level.
-        if let model { history.record(model.battery.snapshot) }
+        if let model { store.record(model.battery.snapshot) }
+        publish()
+        save(force: true)
+    }
+
+    /// The "new app" notification went out for an app, so it isn't sent again.
+    func markNotifiedAsNew(_ key: String) {
+        store.markNotifiedAsNew(key)
+        publish()
+        save(force: true)
+    }
+
+    /// Its line in the panel was dismissed, for good.
+    func markDismissedAsNew(_ key: String) {
+        store.markDismissedAsNew(key)
+        publish()
+        save(force: true)
+    }
+
+    /// Hands the store's latest to observers, only where it changed, so the panel redraws only then.
+    private func publish() {
+        if history != store.history { history = store.history }
+        if profile != store.profile { profile = store.profile }
     }
 
     // MARK: - Watching the battery
@@ -77,7 +132,8 @@ final class HistoryRecorder {
             stopSampling(takingFinalSample: false)
             return
         }
-        history.record(snapshot)
+        store.record(snapshot)
+        publish()
         save(force: false)
         if snapshot.hasBattery, !snapshot.isPluggedIn {
             startSampling()
@@ -125,8 +181,10 @@ final class HistoryRecorder {
         }
         appInfo.forget(except: Set(joules.keys))
         let systemWatts = systemPower.currentWatts()
-        history.record(joules: byApp, seconds: seconds, systemWatts: systemWatts)
+        store.record(joules: byApp, seconds: seconds, systemWatts: systemWatts)
+        publish()
         save(force: true)
+        didRecordSample()
 
         guard checksRunaways, let sample = history.samples.last else { return }
         for key in detector.add(sample) {
@@ -152,26 +210,22 @@ final class HistoryRecorder {
 
     // MARK: - Saving
 
-    private static let writer = DispatchQueue(label: "WatchMyBattery.history", qos: .utility)
-
+    /// Only what changed goes to disk, a few rows at a time, so it's done right here.
     private func save(force: Bool) {
-        guard let fileURL, force || Date().timeIntervalSince(lastSaved) >= Self.saveInterval else { return }
+        guard store.hasUnsavedChanges, force || Date().timeIntervalSince(lastSaved) >= Self.saveInterval else { return }
         lastSaved = Date()
-        let history = history
-        // One at a time, in order, off the main thread.
-        Self.writer.async {
-            do {
-                try history.save(to: fileURL)
-            } catch {
-                Logger.app.error("Couldn't save the battery history: \(error.localizedDescription, privacy: .public)")
-            }
+        do {
+            try store.save()
+        } catch {
+            Logger.app.error("Couldn't save the battery history: \(error.localizedDescription, privacy: .public)")
         }
     }
 
     #if DEBUG
         /// Shows a made-up history, for previews.
-        func preview(_ history: BatteryHistory) {
+        func preview(_ history: BatteryHistory, profile: UsageProfile = UsageProfile()) {
             self.history = history
+            self.profile = profile
         }
     #endif
 }

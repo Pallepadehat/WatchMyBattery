@@ -65,6 +65,12 @@ public struct BatteryHistory: Codable, Sendable, Equatable {
         /// The battery time this energy is worth at the Mac's average power draw; `nil` without power readings.
         public let batteryTime: TimeInterval?
 
+        public init(app: AppIdentity, joules: Double, batteryTime: TimeInterval?) {
+            self.app = app
+            self.joules = joules
+            self.batteryTime = batteryTime
+        }
+
         public var id: String { app.key }
     }
 
@@ -89,6 +95,17 @@ public struct BatteryHistory: Codable, Sendable, Equatable {
     public private(set) var unplugged: LevelPoint?
 
     public init() {}
+
+    /// A history put back together from what was saved (see ``HistoryStore``): sorted, trimmed, and with only the apps
+    /// its samples name.
+    public init(levels: [LevelPoint], samples: [EnergySample], apps: [String: AppIdentity], unplugged: LevelPoint?, now: Date = Date()) {
+        self.levels = levels.sorted { $0.date < $1.date }
+        self.samples = samples.sorted { $0.date < $1.date }
+        self.apps = apps
+        self.unplugged = unplugged
+        trim(now: now)
+        pruneApps()
+    }
 
     public var isEmpty: Bool { levels.isEmpty && samples.isEmpty }
 
