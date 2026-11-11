@@ -137,4 +137,34 @@ struct BatteryHistoryTests {
         #expect(BatteryHistory.load(from: url) == history)
         #expect(BatteryHistory.load(from: url.appending(path: "missing")).isEmpty)
     }
+
+    @Test func bucketsHoldTheLevelAtTheirEndAndMarkTimePluggedIn() {
+        var history = BatteryHistory()
+        let now = minutes(24 * 60)
+        // Unplugged at 90% 3 hours ago, down to 80% an hour later, plugged in for the last half hour.
+        history.record(snapshot(90, pluggedIn: false), at: minutes(21 * 60))
+        history.record(snapshot(80, pluggedIn: false), at: minutes(22 * 60))
+        history.record(snapshot(80, pluggedIn: true), at: minutes(23 * 60 + 40))
+
+        let buckets = history.levelBuckets(endingAt: now, count: 48)
+        #expect(buckets.count == 48)
+        #expect(buckets.first?.start == minutes(0))
+        #expect(buckets.last?.end == now)
+        // Nothing before history begins.
+        #expect(buckets.prefix(42).allSatisfy { $0.percentage == nil && !$0.isPluggedIn })
+        #expect(buckets[42].percentage == 90)
+        #expect(buckets[44].percentage == 80)
+        // Readings only come with changes, so the level carries on.
+        #expect(buckets[46].percentage == 80 && !buckets[46].isPluggedIn)
+        #expect(buckets[47].isPluggedIn)
+    }
+
+    @Test func theLastBucketShowsTheLevelNow() {
+        var history = BatteryHistory()
+        history.record(snapshot(70, pluggedIn: false), at: minutes(0))
+        let buckets = history.levelBuckets(endingAt: minutes(60), count: 48, current: snapshot(64, pluggedIn: false))
+        #expect(buckets.last?.percentage == 64)
+        // An empty history stays empty, whatever the level now.
+        #expect(BatteryHistory().levelBuckets(endingAt: minutes(60), current: snapshot(64, pluggedIn: false)).allSatisfy { $0.percentage == nil })
+    }
 }

@@ -12,6 +12,9 @@ struct BatteryPanelView: View {
 
     static let width: CGFloat = 320
     private static let inset: CGFloat = 16
+    /// Every detail row is this tall, the height of the Low Power Mode switch, so they line up evenly.
+    private static let rowHeight: CGFloat = 18
+    private static let rowSpacing: CGFloat = 4
 
     private var snapshot: BatterySnapshot { model.battery.snapshot }
 
@@ -37,24 +40,26 @@ struct BatteryPanelView: View {
                 .padding(.horizontal, Self.inset)
                 .padding(.top, 14)
 
-                TimeRow(snapshot: snapshot, estimates: model.estimates, focusedApp: focusedApp)
-                    .padding(.horizontal, Self.inset)
-                    .padding(.top, 8)
-
-                if let health = model.battery.health, !health.isEmpty {
-                    HealthRow(health: health)
-                        .padding(.horizontal, Self.inset)
-                        .padding(.top, 3)
-                        .transition(.opacity)
-                }
-
-                if model.lowPowerMode.isSupported {
-                    LowPowerModeRow(isOn: snapshot.isLowPowerModeOn, isChanging: model.lowPowerMode.isChanging) { on in
-                        setLowPowerMode(on)
+                // The details, one rhythm for all of them: a label on the left, its value on the right.
+                VStack(spacing: Self.rowSpacing) {
+                    if TimeRow.applies(to: snapshot) {
+                        TimeRow(snapshot: snapshot, estimates: model.estimates, focusedApp: focusedApp)
+                            .frame(minHeight: Self.rowHeight)
                     }
-                    .padding(.horizontal, Self.inset)
-                    .padding(.top, 6)
+                    if let health = model.battery.health, !health.isEmpty {
+                        HealthRow(health: health)
+                            .frame(minHeight: Self.rowHeight)
+                            .transition(.opacity)
+                    }
+                    if model.lowPowerMode.isSupported {
+                        LowPowerModeRow(isOn: snapshot.isLowPowerModeOn, isChanging: model.lowPowerMode.isChanging) { on in
+                            setLowPowerMode(on)
+                        }
+                        .frame(minHeight: Self.rowHeight)
+                    }
                 }
+                .padding(.horizontal, Self.inset)
+                .padding(.top, 6)
 
                 if model.lowPowerMode.suggests(for: snapshot) {
                     LowPowerSuggestion(
@@ -163,7 +168,8 @@ struct BatteryPanelView: View {
                         .contentTransition(.numericText(value: snapshot.level))
                 }
             }
-            // Low Power Mode has its own switch below, so the header doesn't repeat it.
+            // Like the system's Battery menu, the state goes with the power source ("Fully Charged"), so the rows
+            // below only hold values. Low Power Mode has its own switch, so the header doesn't repeat it.
             Text(powerSourceDescription)
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
@@ -171,7 +177,12 @@ struct BatteryPanelView: View {
     }
 
     private var powerSourceDescription: LocalizedStringKey {
-        snapshot.powerSource == .battery ? "Power Source: Battery" : "Power Source: Power Adapter"
+        switch (snapshot.powerSource, snapshot.chargeState) {
+        case (.battery, _): "Power Source: Battery"
+        case (.powerAdapter, .charged): "Power Source: Power Adapter · Fully Charged"
+        case (.powerAdapter, .notCharging): "Power Source: Power Adapter · Not Charging"
+        case (.powerAdapter, _): "Power Source: Power Adapter"
+        }
     }
 
     /// With the helper allowed, the switch just flips. Otherwise a password prompt or System Settings
@@ -211,6 +222,11 @@ private struct TimeRow: View {
     let estimates: Estimates
     let focusedApp: AppUsage?
 
+    /// Only on battery and while charging; when it's full or holding its charge, the header says so instead.
+    static func applies(to snapshot: BatterySnapshot) -> Bool {
+        snapshot.chargeState == .discharging || snapshot.chargeState == .charging
+    }
+
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 6) {
             Text(title)
@@ -228,7 +244,7 @@ private struct TimeRow: View {
                     .transition(.scale(scale: 0.6, anchor: .trailing).combined(with: .opacity))
             }
         }
-        .font(.system(size: 13))
+        .font(.system(size: 12))
         .animation(.snappy(duration: 0.25), value: focusedApp?.id)
         .animation(.snappy(duration: 0.25), value: snapshot)
     }
@@ -239,25 +255,15 @@ private struct TimeRow: View {
 
     private var title: LocalizedStringKey {
         if let focusedApp, gained ?? 0 >= 60 { return "Without \(focusedApp.name)" }
-        switch snapshot.chargeState {
-        case .discharging: return "Time left"
-        case .charging: return "Until full"
-        case .charged: return "Fully charged"
-        case .notCharging: return "Not charging"
-        }
+        return snapshot.chargeState == .charging ? "Until full" : "Time left"
     }
 
     private var value: String {
-        switch snapshot.chargeState {
-        case .discharging, .charging:
-            snapshot.timeRemaining.map(TimeFormat.clock) ?? String(localized: "Calculating…")
-        case .charged, .notCharging:
-            ""
-        }
+        snapshot.timeRemaining.map(TimeFormat.clock) ?? String(localized: "Calculating…")
     }
 }
 
-/// "Battery Health  Normal · 88% · 564 cycles": quiet, under the time.
+/// "Battery Health  Normal · 88% · 564 cycles", under the time.
 private struct HealthRow: View {
     let health: BatteryHealth
 
@@ -292,7 +298,6 @@ private struct HealthRow: View {
             if let details, !details.isEmpty {
                 Text(details)
                     .monospacedDigit()
-                    .foregroundStyle(.secondary)
             }
         }
         .fixedSize()
