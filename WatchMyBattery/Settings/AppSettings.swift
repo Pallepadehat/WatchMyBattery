@@ -88,6 +88,17 @@ final class AppSettings {
         didSet { defaults.set(hasSeenWelcome, forKey: Key.hasSeenWelcome) }
     }
 
+    /// A key combination that opens and closes the panel from any app; `nil` for none.
+    var panelShortcut: Hotkey? {
+        didSet {
+            if let data = panelShortcut.flatMap({ try? JSONEncoder().encode($0) }) {
+                defaults.set(data, forKey: Key.panelShortcut)
+            } else {
+                defaults.removeObject(forKey: Key.panelShortcut)
+            }
+        }
+    }
+
     static let appCountRange = 1...4
     /// Levels a low battery notification can be sent at.
     static let lowBatteryChoices = [5, 10, 15, 20, 25, 30]
@@ -121,6 +132,7 @@ final class AppSettings {
             .filter(Self.lowBatteryChoices.contains).sorted(by: >)
         showsReplaceTip = defaults.bool(forKey: Key.showsReplaceTip)
         hasSeenWelcome = defaults.bool(forKey: Key.hasSeenWelcome)
+        panelShortcut = defaults.data(forKey: Key.panelShortcut).flatMap { try? JSONDecoder().decode(Hotkey.self, from: $0) }
     }
 
     /// Whether an app never gets a slice.
@@ -146,5 +158,6 @@ final class AppSettings {
         static let lowBatteryLevels = "lowBatteryLevels"
         static let showsReplaceTip = "showsReplaceTip"
         static let hasSeenWelcome = "hasSeenWelcome"
+        static let panelShortcut = "panelShortcut"
     }
 }

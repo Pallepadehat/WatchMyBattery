@@ -55,6 +55,8 @@ if [[ "${WATCHMYBATTERY_SIGN:-}" == "developer-id" ]]; then
   sign "$SPARKLE/Autoupdate"
   sign "$SPARKLE/Updater.app"
   sign "$APP/Contents/Frameworks/Sparkle.framework"
+  # The Low Power Mode helper, which runs as root, checks that the app talking to it is signed by the same team.
+  sign "$APP/Contents/MacOS/WatchMyBatteryHelper"
   # And the app again, as its signature covers the framework.
   sign --preserve-metadata=entitlements,requirements,flags "$APP"
   codesign --verify --deep --strict "$APP" || { echo "The app's signature doesn't check out."; exit 1; }
