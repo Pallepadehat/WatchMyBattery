@@ -161,9 +161,11 @@ struct BatteryPanelView: View {
         snapshot.powerSource == .battery ? "Power Source: Battery" : "Power Source: Power Adapter"
     }
 
-    /// macOS asks for a password before changing Low Power Mode, and its prompt takes focus anyway, so the panel steps aside.
+    /// With the helper allowed, the switch just flips. Otherwise a password prompt or System Settings
+    /// is about to take focus, so the panel steps aside.
     private func setLowPowerMode(_ on: Bool) {
-        close()
+        model.lowPowerMode.refreshHelperState()
+        if model.lowPowerMode.helperState != .enabled { close() }
         model.setLowPowerMode(on)
     }
 
@@ -318,7 +320,7 @@ private struct LowPowerModeRow: View {
                 .disabled(isChanging)
         }
         .font(.system(size: 12))
-        .help("Reduces energy use, so the battery lasts longer. macOS asks for your password to change it.")
+        .help("Reduces energy use, so the battery lasts longer.")
     }
 }
 

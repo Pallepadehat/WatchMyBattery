@@ -25,11 +25,21 @@
   ],
   "files": [
     { "kind": "folder", "path": "WatchMyBattery", "target-membership": [ "WatchMyBattery" ] },
+    { "kind": "folder", "path": "WatchMyBatteryHelper", "target-membership": [ "WatchMyBatteryHelper" ] },
+    { "kind": "folder", "path": "Shared", "target-membership": [ "WatchMyBattery", "WatchMyBatteryHelper" ] },
     {
       "kind": "group",
       "name": "Products",
       "children": [
         { "path": "<PRODUCTS>/WatchMyBattery.app", "id": "C432364C30A339F000B1E421", "type": "wrapper.application", "index": false },
+        {
+          "path": "<PRODUCTS>/WatchMyBatteryHelper",
+          "id": "C432364C30A339F000B1E422",
+          "type": "compiled.mach-o.executable",
+          "index": false,
+          "target-membership": [ "WatchMyBattery/copy/EmbedHelper" ],
+          "attributes": [ "code-sign-on-copy" ],
+        },
       ],
     }, {
       "kind": "group",
@@ -37,19 +47,42 @@
       "children": [
         { "path": "Signing.xcconfig" },
         { "path": "Info.plist" },
+        { "path": "com.pallepadehat.WatchMyBattery.helper.plist", "target-membership": [ "WatchMyBattery/copy/EmbedDaemon" ] },
       ],
     },
   ],
   "targets": [
     {
+      "name": "WatchMyBatteryHelper",
+      "id": "C432364B30A339F000B1E422",
+      "product": "Products/WatchMyBatteryHelper",
+      "product-type": "tool",
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+      ],
+      "build-settings": {
+        "CREATE_INFOPLIST_SECTION_IN_BINARY": "YES",
+        "ENABLE_HARDENED_RUNTIME": "YES",
+        "GENERATE_INFOPLIST_FILE": "YES",
+        "PRODUCT_BUNDLE_IDENTIFIER": "com.pallepadehat.WatchMyBattery.helper",
+        "PRODUCT_NAME": "$(TARGET_NAME)",
+        "SKIP_INSTALL": "YES",
+        "SWIFT_VERSION": "6.0",
+      },
+    },
+    {
       "name": "WatchMyBattery",
       "id": "C432364B30A339F000B1E421",
       "product": "Products/WatchMyBattery.app",
       "product-type": "application",
+      "dependencies": [ "WatchMyBatteryHelper" ],
       "build-phases": [
         "compile-sources",
         "frameworks",
         "resources",
+        { "kind": "copy", "name": "EmbedHelper", "bundle-base-path": "executables-directory" },
+        { "kind": "copy", "name": "EmbedDaemon", "bundle-base-path": "contents-directory", "relative-path": "Library/LaunchDaemons" },
       ],
       "package-product-members": [
         {

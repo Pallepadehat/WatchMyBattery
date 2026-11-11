@@ -15,10 +15,11 @@ struct GetBatteryLevelIntent: AppIntent {
     func perform() async throws -> some IntentResult & ReturnsValue<Int> & ProvidesDialog {
         let snapshot = PowerSourceReader.read()
         guard snapshot.hasBattery else { throw BatteryIntentError.noBattery }
+        let level = snapshot.level.formatted(.percent.precision(.fractionLength(0)))
         let dialog: IntentDialog =
             snapshot.isCharging
-            ? "The battery is at \(snapshot.percentage)% and charging."
-            : "The battery is at \(snapshot.percentage)%."
+            ? "The battery is at \(level) and charging."
+            : "The battery is at \(level)."
         return .result(value: snapshot.percentage, dialog: dialog)
     }
 }

@@ -167,6 +167,26 @@
         }
       }
     },
+    "Allowed" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilladt"
+          }
+        }
+      }
+    },
+    "Allow…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tillad…"
+          }
+        }
+      }
+    },
     "Another app uses this shortcut. Choose a different one." : {
       "localizations" : {
         "da" : {
@@ -217,18 +237,12 @@
         }
       }
     },
-    "Battery %lld%%, %@" : {
+    "Battery %@, %@" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Batteri %lld %%, %@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Battery %1$lld%%, %2$@"
+            "value" : "Batteri %1$@, %2$@"
           }
         }
       }
@@ -273,12 +287,12 @@
         }
       }
     },
-    "Battery at %lld%%" : {
+    "Battery at %@" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Batteri på %lld %%"
+            "value" : "Batteri på %@"
           }
         }
       }
@@ -673,6 +687,16 @@
         }
       }
     },
+    "Lets the panel switch Low Power Mode right away. macOS asks you to allow it once, in Login Items." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lader panelet slå strømsparetilstand til og fra med det samme. macOS beder dig om at tillade det én gang under Login-emner."
+          }
+        }
+      }
+    },
     "Look" : {
       "localizations" : {
         "da" : {
@@ -699,6 +723,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Strømsparetilstand"
+          }
+        }
+      }
+    },
+    "Low Power Mode Without a Password" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømsparetilstand uden adgangskode"
           }
         }
       }
@@ -983,12 +1017,12 @@
         }
       }
     },
-    "Reduces energy use, so the battery lasts longer. macOS asks for your password to change it." : {
+    "Reduces energy use, so the battery lasts longer." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bruger mindre energi, så batteriet holder længere. macOS beder om din adgangskode for at ændre det."
+            "value" : "Bruger mindre energi, så batteriet holder længere."
           }
         }
       }
@@ -1039,6 +1073,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Service anbefales"
+          }
+        }
+      }
+    },
+    "Set Up…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfigurer…"
           }
         }
       }
@@ -1123,22 +1167,22 @@
         }
       }
     },
-    "The battery is at %lld%% and charging." : {
+    "The battery is at %@ and charging." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Batteriet er på %lld %% og oplades."
+            "value" : "Batteriet er på %@ og oplades."
           }
         }
       }
     },
-    "The battery is at %lld%%." : {
+    "The battery is at %@." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Batteriet er på %lld %%."
+            "value" : "Batteriet er på %@."
           }
         }
       }

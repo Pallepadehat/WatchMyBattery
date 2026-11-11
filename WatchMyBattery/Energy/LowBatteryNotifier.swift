@@ -73,7 +73,7 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
         let app = await model.usage.hungriestApp()
 
         let content = UNMutableNotificationContent()
-        content.title = String(localized: "Battery at \(snapshot.percentage)%")
+        content.title = String(localized: "Battery at \(snapshot.level.formatted(.percent.precision(.fractionLength(0))))")
         let timeLeft = snapshot.timeRemaining.map { String(localized: "About \(TimeFormat.clock($0)) left.") }
         var actions: [UNNotificationAction] = []
         if let app {

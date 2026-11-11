@@ -29,9 +29,19 @@ extension View {
     /// Plays the charging animation for everything inside, which reads it from
     /// ``EnvironmentValues/chargingPhase``. A single repeating keyframe
     /// timeline drives both the wave and the glow, so they stay in step.
-    @ViewBuilder func chargingAnimation(_ isOn: Bool) -> some View {
+    func chargingAnimation(_ isOn: Bool) -> some View {
+        modifier(ChargingAnimationModifier(isOn: isOn))
+    }
+}
+
+/// A modifier rather than code in the `View` extension, so the animation's
+/// closures don't capture the generic view type, which isn't `Sendable`.
+private struct ChargingAnimationModifier: ViewModifier {
+    let isOn: Bool
+
+    @ViewBuilder func body(content: Content) -> some View {
         if isOn {
-            keyframeAnimator(initialValue: ChargingPhase(), repeating: true) { content, phase in
+            content.keyframeAnimator(initialValue: ChargingPhase(), repeating: true) { content, phase in
                 content.environment(\.chargingPhase, phase)
             } keyframes: { _ in
                 KeyframeTrack(\.wave) {
@@ -45,7 +55,7 @@ extension View {
                 }
             }
         } else {
-            self
+            content
         }
     }
 }

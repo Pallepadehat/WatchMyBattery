@@ -1,4 +1,5 @@
 import BatteryKit
+import ServiceManagement
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -152,6 +153,9 @@ private struct GeneralPane: View {
                     SettingLabel("Battery Settings", symbol: SettingIcon.battery, color: .green) {
                         Text("Low Power Mode, battery health and charging, in System Settings.")
                     }
+                }
+                if model.lowPowerMode.isSupported, model.lowPowerMode.helperState != .unavailable {
+                    LowPowerModeHelperRow(lowPowerMode: model.lowPowerMode)
                 }
             } header: {
                 Text("macOS")
@@ -519,6 +523,35 @@ private struct InlineIconLabelStyle: LabelStyle {
         HStack(spacing: 4) {
             configuration.icon.foregroundStyle(color)
             configuration.title
+        }
+    }
+}
+
+// MARK: - Low Power Mode helper
+
+/// Whether the panel's Low Power Mode switch works without a password, and a button to set that up.
+private struct LowPowerModeHelperRow: View {
+    let lowPowerMode: LowPowerMode
+
+    var body: some View {
+        LabeledContent {
+            switch lowPowerMode.helperState {
+            case .enabled:
+                Label("Allowed", systemImage: "checkmark.circle.fill")
+                    .labelStyle(InlineIconLabelStyle(color: .green))
+            case .requiresApproval:
+                Button("Allow…") { SMAppService.openSystemSettingsLoginItems() }
+            case .notRegistered, .unavailable:
+                Button("Set Up…") { lowPowerMode.setUpHelper() }
+            }
+        } label: {
+            SettingLabel("Low Power Mode Without a Password", symbol: "leaf.fill", color: .yellow) {
+                Text("Lets the panel switch Low Power Mode right away. macOS asks you to allow it once, in Login Items.")
+            }
+        }
+        .onAppear { lowPowerMode.refreshHelperState() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            lowPowerMode.refreshHelperState()
         }
     }
 }

@@ -7,8 +7,12 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Added
 
 - ⌨️ **A keyboard shortcut for the panel.** Choose one in Settings › Menu Bar, and it opens and closes the panel from any app. If another app already has it, Settings says so ([#23](https://github.com/Pallepadehat/WatchMyBattery/issues/23)).
-- 🍃 **Low Power Mode from the panel**: a switch under the battery health, and at 20% a suggestion to turn it on, which goes away until the next charge if you dismiss it. The low battery notification has a "Turn On Low Power Mode" button too. macOS has no way for apps to change it directly, so it asks for your password (or Touch ID) each time ([#24](https://github.com/Pallepadehat/WatchMyBattery/issues/24)).
+- 🍃 **Low Power Mode from the panel**: a switch under the battery health, and at 20% a suggestion to turn it on, which goes away until the next charge if you dismiss it. The low battery notification has a "Turn On Low Power Mode" button too. macOS has no way for apps to change it directly, so WatchMyBattery comes with a tiny helper that does only this: you allow it once in System Settings › Login Items (the first time you use the switch, or in Settings › General), and from then on the switch just works, with no password ([#24](https://github.com/Pallepadehat/WatchMyBattery/issues/24)).
 - **Shortcuts actions**: Get Battery Level, Get Battery Time Left and Get App Using the Most Energy, for your own shortcuts and automations. They show up in Spotlight too, and Siri knows them ([#25](https://github.com/Pallepadehat/WatchMyBattery/issues/25)).
+
+### Fixed
+
+- Percentages in the low battery notification, VoiceOver and Shortcuts are written the way your language writes them ("12 %" in Danish).
 
 ## [0.1.2] - 2026-11-11
 

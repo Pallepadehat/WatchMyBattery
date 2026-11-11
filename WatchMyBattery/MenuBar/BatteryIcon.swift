@@ -264,6 +264,7 @@ struct BatteryIcon: Equatable {
             case .notCharging: String(localized: "not charging")
             case .discharging: String(localized: "on battery")
             }
-        return String(localized: "Battery \(percentage)%, \(state)")
+        let level = (Double(percentage) / 100).formatted(.percent.precision(.fractionLength(0)))
+        return String(localized: "Battery \(level), \(state)")
     }
 }
