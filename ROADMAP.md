@@ -6,29 +6,86 @@ What's planned next. Each item has an issue, where the details and discussion li
 
 Released. A new icon, a polished panel and Settings in light and dark mode, and a fix for drag to quit getting stuck ([#7](https://github.com/Pallepadehat/WatchMyBattery/issues/7)). See the [changelog](CHANGELOG.md).
 
-## 0.1.2: polish
+## 0.1.2: trust and polish
 
 **Release**
 
+- [ ] Build the app in CI ([#15](https://github.com/Pallepadehat/WatchMyBattery/issues/15))
 - [ ] Sign with Developer ID and notarize releases ([#8](https://github.com/Pallepadehat/WatchMyBattery/issues/8))
 
 **The panel**
 
-- [ ] Show when an app won't quit, and why ([#9](https://github.com/Pallepadehat/WatchMyBattery/issues/9))
 - [ ] Exclude apps from the battery ([#10](https://github.com/Pallepadehat/WatchMyBattery/issues/10))
 - [ ] Battery health: condition, maximum capacity and cycle count ([#11](https://github.com/Pallepadehat/WatchMyBattery/issues/11))
+
+## 0.1.3: reach
+
+**The panel**
+
+- [ ] Show when an app won't quit, and why ([#9](https://github.com/Pallepadehat/WatchMyBattery/issues/9))
 - [ ] Keyboard and VoiceOver for app slices ([#13](https://github.com/Pallepadehat/WatchMyBattery/issues/13))
+- [ ] A keyboard shortcut to open the panel
 
 **Around it**
 
 - [ ] Low battery notification ([#12](https://github.com/Pallepadehat/WatchMyBattery/issues/12))
+- [ ] Turn Low Power Mode on and off from the panel, and suggest it when the battery is low
+- [ ] Shortcuts actions: battery level, time left, the hungriest app
 - [ ] Danish translation ([#14](https://github.com/Pallepadehat/WatchMyBattery/issues/14))
-- [ ] Build the app in CI ([#15](https://github.com/Pallepadehat/WatchMyBattery/issues/15))
 
-## Later
+## 0.2.0: history
 
-Not scheduled yet:
+**Behind the scenes**
 
-- Energy history: which apps drained the battery over the last hours.
-- A widget for the desktop and Notification Center.
-- Shortcuts actions: battery level, time left, the hungriest app.
+- [ ] Sample apps in the background while on battery, rarely and cheaply, and keep the last 24 hours
+
+**In the panel**
+
+- [ ] Energy history: which apps drained the battery over the last hours
+- [ ] A battery level chart for the last 24 hours, with charging periods marked
+- [ ] Time on battery since last charged, and the average drain per hour
+
+**Around it**
+
+- [ ] Alerts for runaway apps: a notification when an app has used a lot of power for a while, with a Quit button
+
+## 0.3.0: accessories
+
+**The AirPods card**
+
+- [ ] When AirPods or other Bluetooth headphones connect, a card slides in below the menu bar showing the battery of each earbud and the case, like on iPhone
+- [ ] A ring for each battery, filling up as the card appears, and the case's charging state
+- [ ] Choose where the card appears, how long it stays, or turn it off
+
+**In the panel**
+
+- [ ] Battery levels of AirPods, Magic Mouse, Magic Keyboard and Magic Trackpad
+- [ ] Low battery notifications for accessories, with their own threshold
+
+## 0.4.0: delight
+
+**Charging**
+
+- [ ] A charging animation when you plug in: the menu bar battery fills with a glow and shows the level and time until full
+- [ ] An optional chime when you plug in or unplug
+- [ ] Time until full while charging, and why charging is paused (for example Optimized Battery Charging)
+- [ ] The charger's wattage, and a hint when it's too weak to charge while you work
+
+**The menu bar**
+
+- [ ] Power draw in watts, as an extra label or its own menu bar style
+- [ ] More icon styles: a ring, the number alone, or time left instead of the percentage
+
+## 0.5.0: everywhere
+
+**Widgets and Shortcuts**
+
+- [ ] A widget for the desktop and Notification Center: the battery, time left and the hungriest apps
+- [ ] An accessories widget, with your AirPods and Magic devices
+- [ ] More Shortcuts actions and automations: run a shortcut when the battery drops below a level or the charger is connected
+
+**Battery care**
+
+- [ ] Battery health over time: maximum capacity and cycle count, month by month
+- [ ] A weekly summary: battery time used, the apps that used the most, and how it compares with last week
+- [ ] Rules for low battery: turn on Low Power Mode or quit chosen apps at a level you pick
