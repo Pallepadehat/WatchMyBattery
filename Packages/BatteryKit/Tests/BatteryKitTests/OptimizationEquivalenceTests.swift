@@ -46,9 +46,12 @@ import Testing
         #expect(zip(history.levels, history.levels.dropFirst()).allSatisfy { $0.date <= $1.date })
     }
 
+    /// How long after the last reading each trim happens: straight away, within the day, at its edge, and well past it.
+    private static let trimOffsets: [TimeInterval] = [0.0, 1.0, 6.0, 23.9, 24.0, 30.0, 72.0].map { $0 * 3600 }
+
     @Test(arguments: seeds) func trimMatchesTheReference(seed: UInt64) {
         let (history, end) = Self.randomHistory(seed: seed)
-        for offset: TimeInterval in [0, 3600, 6 * 3600, 23.9 * 3600, 24 * 3600, 30 * 3600, 72 * 3600] {
+        for offset in Self.trimOffsets {
             var trimmed = history
             trimmed.trim(now: end + offset)
             let reference = Reference.trim(history, now: end + offset)
@@ -61,15 +64,17 @@ import Testing
     @Test(arguments: seeds) func readingsMatchTheReference(seed: UInt64) {
         let (history, end) = Self.randomHistory(seed: seed)
         let current = Self.snapshot(42, pluggedIn: false)
-        for hoursBack: TimeInterval in [0, 0.5, 2, 12, 24, 36] {
+        let hoursBackList: [TimeInterval] = [0, 0.5, 2, 12, 24, 36]
+        for hoursBack in hoursBackList {
             let start = end - hoursBack * 3600
             #expect(history.levels(since: start) == Reference.levels(history, since: start))
             #expect(history.sampledTime(since: start) == Reference.sampledTime(history, since: start))
             let energy = history.appEnergy(since: start)
             let reference = Reference.appEnergy(history, since: start)
-            #expect(
-                Dictionary(uniqueKeysWithValues: energy.map { ($0.id, $0.joules) }) == Dictionary(uniqueKeysWithValues: reference.map { ($0.id, $0.joules) }))
-            let referenceTimes = Dictionary(uniqueKeysWithValues: reference.map { ($0.id, $0.batteryTime) })
+            let joules: [String: Double] = Dictionary(uniqueKeysWithValues: energy.map { ($0.id, $0.joules) })
+            let referenceJoules: [String: Double] = Dictionary(uniqueKeysWithValues: reference.map { ($0.id, $0.joules) })
+            #expect(joules == referenceJoules)
+            let referenceTimes: [String: TimeInterval?] = Dictionary(uniqueKeysWithValues: reference.map { ($0.id, $0.batteryTime) })
             #expect(energy.allSatisfy { referenceTimes[$0.id] == .some($0.batteryTime) })
             #expect(energy.map(\.joules) == energy.map(\.joules).sorted(by: >))
         }
