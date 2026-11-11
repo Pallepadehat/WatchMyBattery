@@ -4,6 +4,19 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+The last 24 hours of your battery.
+
+### Added
+
+- 📈 **Battery history in the panel**: a chart of the battery level over the last 24 hours, with the time plugged in marked, like the one in iPhone's Battery settings ([#28](https://github.com/Pallepadehat/WatchMyBattery/issues/28)). Fold it away with "Last 24 Hours" if you'd rather keep the panel short.
+- **Time on battery since it was unplugged**, and the average drain per hour, for example "2:04 · 16% an hour" ([#29](https://github.com/Pallepadehat/WatchMyBattery/issues/29)).
+- **The apps that used the most battery** over the last 24 hours, and how much battery time each one cost ([#27](https://github.com/Pallepadehat/WatchMyBattery/issues/27)).
+- 🔥 **A notification for runaway apps**: when an app keeps using a lot of power on battery for a while (4 W or more over 15 minutes), with a button that quits it. Never for the app you're using. Turn it on in Settings › Notifications ([#30](https://github.com/Pallepadehat/WatchMyBattery/issues/30)).
+
+### Changed
+
+- For the history, apps are now measured in the background too, but only on battery, and only every five minutes: about a millisecond of CPU time each, roughly 12 ms an hour. On the adapter nothing changes. The history stays on your Mac, and Settings › Panel can turn it off or clear it ([#26](https://github.com/Pallepadehat/WatchMyBattery/issues/26)).
+
 ## [0.1.3] - 2026-11-11
 
 A keyboard shortcut, Low Power Mode at your fingertips, and Shortcuts actions.
