@@ -68,12 +68,12 @@ Released. A new icon, a polished panel and Settings in light and dark mode, and 
 
 - [ ] A charging animation when you plug in: the menu bar battery fills with a glow and shows the level and time until full
 - [ ] An optional chime when you plug in or unplug
-- [ ] Time until full while charging, and why charging is paused (for example Optimized Battery Charging)
+- [ ] Why charging is paused, for example by Optimized Battery Charging
 - [ ] The charger's wattage, and a hint when it's too weak to charge while you work
 
 **The menu bar**
 
-- [ ] Power draw in watts, as an extra label or its own menu bar style
+- [ ] The Mac's total power draw in watts, as an extra label or its own menu bar style
 - [ ] More icon styles: a ring, the number alone, or time left instead of the percentage
 
 ## 0.5.0: everywhere
