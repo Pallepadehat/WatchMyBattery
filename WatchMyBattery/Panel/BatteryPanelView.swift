@@ -150,18 +150,10 @@ struct BatteryPanelView: View {
                         .contentTransition(.numericText(value: snapshot.level))
                 }
             }
-            HStack(spacing: 6) {
-                Text(powerSourceDescription)
-                if snapshot.isLowPowerModeOn {
-                    Text("Low Power Mode")
-                        .font(.system(size: 10, weight: .semibold))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 1)
-                        .background(.yellow.opacity(0.25), in: .capsule)
-                }
-            }
-            .font(.system(size: 12))
-            .foregroundStyle(.secondary)
+            // Low Power Mode has its own switch below, so the header doesn't repeat it.
+            Text(powerSourceDescription)
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
         }
     }
 
