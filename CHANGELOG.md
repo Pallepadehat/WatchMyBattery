@@ -4,6 +4,30 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+Lighter on your battery, and charging you can see.
+
+### Added
+
+- 🎯 **Where charging is headed.** While the Mac charges, the panel shows a bar from the charge so far to where macOS will stop, with light flowing towards it. When Optimized Battery Charging holds the battery at 80%, the bar marks 80% with a notch and hatches the part it's holding back, the time row says "Until 80%", and once it's there the panel says "Holding at 80%" instead of "Not Charging".
+- ☕ **A way to support WatchMyBattery**: Settings › About has a Buy Me a Coffee button. The app stays free and open source either way.
+
+### Changed
+
+- ⚡ **A more graceful charging animation.** Charging to 80%, the glint in the menu bar rolls up to the target and settles there in a soft glow, rather than running on to the end of the battery. In the panel the wave eases in and out more softly and swells a little as it passes. Both now pause in Low Power Mode.
+- 🪶 **Lighter on the Mac**, measured and checked before every release:
+  - Recording a battery level, which happens every time it changes, takes about 0.1 µs instead of 140 µs.
+  - Measuring apps with the panel open takes about half the time: processes WatchMyBattery isn't allowed to read (about a third of them) are skipped for 30 seconds instead of asked again every two.
+  - With the panel open, it only redraws when a reading changes enough to show (2%), instead of every two seconds.
+  - The charging animation skips frames nobody would see, and needs up to 60% fewer frames on a fuller battery at the same smoothness. Each frame's image is made once and reused.
+  - Each app's colour is worked out once and shared, instead of once per list it appears in.
+- The "Two batteries in your menu bar?" tip only shows while macOS's own battery is still in the menu bar.
+
+### Fixed
+
+- A warning in the history's saving code (a logger used across threads), which builds were meant to be free of.
+
+## [0.2.1]
+
 A tidier panel, and a chart that reads like iPhone's.
 
 ### Changed
@@ -98,7 +122,8 @@ The first release.
 - Automatic updates with Sparkle, from EdDSA-signed releases.
 - One-command install, and build, packaging and release scripts.
 
-[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.1.1...v0.1.2

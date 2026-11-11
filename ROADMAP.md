@@ -62,6 +62,18 @@ Released. See the [changelog](CHANGELOG.md).
 
 - [x] Alerts for runaway apps: a notification when an app has used a lot of power for a while, with a Quit button ([#30](https://github.com/Pallepadehat/WatchMyBattery/issues/30))
 
+## 0.2.2: lighter, and charging you can see
+
+**Behind the scenes**
+
+- [x] Unit, integration, end to end and performance tests, run by `scripts/check.sh` before every release, with budgets and baselines so the app stays light
+- [x] Faster history, app measuring and charging animation, and fewer redraws of the open panel
+
+**In the panel**
+
+- [x] Where charging is headed: a bar to the charge target, with Optimized Battery Charging's 80% marked
+- [x] A more graceful charging animation, in the menu bar and the panel
+
 ## 0.3.0: accessories
 
 **The AirPods card** ([#31](https://github.com/Pallepadehat/WatchMyBattery/issues/31))
