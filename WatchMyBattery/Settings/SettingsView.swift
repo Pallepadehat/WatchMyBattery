@@ -34,7 +34,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         switch self {
         case .general: "gearshape.fill"
         case .menuBar: "rectangle.topthird.inset.filled"
-        case .panel: "bolt.batteryblock.fill"
+        case .panel: SettingIcon.battery
         case .notifications: "bell.fill"
         case .updates: "arrow.triangle.2.circlepath"
         case .about: "info"
@@ -149,7 +149,7 @@ private struct GeneralPane: View {
                 LabeledContent {
                     Button("Open…") { model.openBatterySettings() }
                 } label: {
-                    SettingLabel("Battery Settings", symbol: "bolt.batteryblock.fill", color: .green) {
+                    SettingLabel("Battery Settings", symbol: SettingIcon.battery, color: .green) {
                         Text("Low Power Mode, battery health and charging, in System Settings.")
                     }
                 }
@@ -158,9 +158,12 @@ private struct GeneralPane: View {
             }
 
             Section {
-                HStack {
-                    Spacer()
-                    Button("Quit WatchMyBattery", role: .destructive) { NSApp.terminate(nil) }
+                LabeledContent {
+                    Button("Quit") { NSApp.terminate(nil) }
+                } label: {
+                    SettingLabel("Quit WatchMyBattery", symbol: "power", color: .red) {
+                        Text("Removes the battery from the menu bar until you open the app again.")
+                    }
                 }
             }
         }
@@ -209,7 +212,7 @@ private struct PanelPane: View {
                         Text(label.title).tag(label)
                     }
                 } label: {
-                    SettingLabel("Inside the Battery", symbol: "textformat.123", color: .green)
+                    SettingLabel("Inside the Battery", symbol: SettingIcon.batteryWithNumber, color: .green)
                 }
                 Picker(selection: $settings.maximumApps) {
                     ForEach(AppSettings.appCountRange, id: \.self) { count in
@@ -390,10 +393,13 @@ private struct SettingIcon: View {
     let color: Color
     let size: CGFloat
 
+    /// Our own menu bar battery, full; with "100" in it, like the app icon; and nearly empty.
+    static let battery = "wmb.battery"
+    static let batteryWithNumber = "wmb.battery.number"
+    static let lowBattery = "wmb.battery.low"
+
     var body: some View {
-        Image(systemName: symbol)
-            .font(.system(size: glyphSize, weight: .semibold))
-            .symbolRenderingMode(.monochrome)
+        glyph
             .foregroundStyle(.white)
             .frame(width: size, height: size)
             .background {
@@ -405,6 +411,28 @@ private struct SettingIcon: View {
                             .strokeBorder(.black.opacity(0.08), lineWidth: 0.5))
             }
             .accessibilityHidden(true)
+    }
+
+    @ViewBuilder private var glyph: some View {
+        if symbol.hasPrefix("wmb.battery") {
+            // The same drawing as the menu bar icon, as a template so it takes the white.
+            let low = symbol == Self.lowBattery
+            let icon = BatteryIcon(
+                snapshot: BatterySnapshot(
+                    percentage: low ? 18 : 100, powerSource: .battery, chargeState: .discharging, timeRemaining: nil),
+                percentageStyle: symbol == Self.batteryWithNumber ? .inside : .hidden, usesColor: false
+            ).image()
+            Image(nsImage: icon)
+                .renderingMode(.template)
+                .resizable()
+                .interpolation(.high)
+                .aspectRatio(contentMode: .fit)
+                .frame(width: size * 0.82)
+        } else {
+            Image(systemName: symbol)
+                .font(.system(size: glyphSize, weight: .semibold))
+                .symbolRenderingMode(.monochrome)
+        }
     }
 
     /// The point size at which the symbol's longer side fills about 62% of the box.
@@ -567,7 +595,7 @@ private struct LowBatteryRows: View {
     var body: some View {
         @Bindable var settings = model.settings
         Toggle(isOn: $settings.notifiesWhenLow) {
-            SettingLabel("Low Battery", symbol: "bolt.trianglebadge.exclamationmark.fill", color: .red) {
+            SettingLabel("Low Battery", symbol: SettingIcon.lowBattery, color: .red) {
                 Text("A notification naming the app using the most energy, with a button to quit it.")
             }
         }

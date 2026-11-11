@@ -803,6 +803,16 @@
         }
       }
     },
+    "Removes the battery from the menu bar until you open the app again." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fjerner batteriet fra menulinjen, indtil du åbner appen igen."
+          }
+        }
+      }
+    },
     "Report a Bug" : {
       "localizations" : {
         "da" : {
