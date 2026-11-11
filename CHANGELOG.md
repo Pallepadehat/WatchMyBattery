@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-11-11
+
 Lighter on your battery, and charging you can see.
 
 ### Added
@@ -26,7 +28,7 @@ Lighter on your battery, and charging you can see.
 
 - A warning in the history's saving code (a logger used across threads), which builds were meant to be free of.
 
-## [0.2.1]
+## [0.2.1] - 2026-11-11
 
 A tidier panel, and a chart that reads like iPhone's.
 
@@ -122,7 +124,8 @@ The first release.
 - Automatic updates with Sparkle, from EdDSA-signed releases.
 - One-command install, and build, packaging and release scripts.
 
-[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.1.2...v0.1.3

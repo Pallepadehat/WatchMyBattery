@@ -62,7 +62,9 @@ Released. See the [changelog](CHANGELOG.md).
 
 - [x] Alerts for runaway apps: a notification when an app has used a lot of power for a while, with a Quit button ([#30](https://github.com/Pallepadehat/WatchMyBattery/issues/30))
 
-## 0.2.2: lighter, and charging you can see
+## 0.2.2: lighter, and charging you can see ✅
+
+Released. See the [changelog](CHANGELOG.md).
 
 **Behind the scenes**
 
