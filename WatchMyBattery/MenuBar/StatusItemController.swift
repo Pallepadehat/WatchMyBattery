@@ -39,6 +39,10 @@ final class StatusItemController: NSObject {
         panel.show()
     }
 
+    func togglePanel() {
+        panel.toggle()
+    }
+
     @objc private func buttonPressed(_ sender: NSStatusBarButton) {
         let event = NSApp.currentEvent
         if event?.type == .rightMouseDown || event?.modifierFlags.contains(.control) == true {

@@ -137,12 +137,62 @@
         }
       }
     },
+    "About %@ until full." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ca. %@, indtil det er fuldt."
+          }
+        }
+      }
+    },
+    "Add ⌘, ⌥ or ⌃" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilføj ⌘, ⌥ eller ⌃"
+          }
+        }
+      }
+    },
     "Add…" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tilføj…"
+          }
+        }
+      }
+    },
+    "Allowed" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilladt"
+          }
+        }
+      }
+    },
+    "Allow…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tillad…"
+          }
+        }
+      }
+    },
+    "Another app uses this shortcut. Choose a different one." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En anden app bruger denne genvej. Vælg en anden."
           }
         }
       }
@@ -187,18 +237,12 @@
         }
       }
     },
-    "Battery %lld%%, %@" : {
+    "Battery %@, %@" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Batteri %lld %%, %@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Battery %1$lld%%, %2$@"
+            "value" : "Batteri %1$@, %2$@"
           }
         }
       }
@@ -209,6 +253,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Batteritilstand"
+          }
+        }
+      }
+    },
+    "Battery Level" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriniveau"
           }
         }
       }
@@ -233,12 +287,22 @@
         }
       }
     },
-    "Battery at %lld%%" : {
+    "Battery at %@" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Batteri på %lld %%"
+            "value" : "Batteri på %@"
+          }
+        }
+      }
+    },
+    "Battery is low" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriet er ved at være fladt"
           }
         }
       }
@@ -333,6 +397,16 @@
         }
       }
     },
+    "Click, then press the keys you want." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klik, og tryk derefter på de taster, du vil bruge."
+          }
+        }
+      }
+    },
     "Colorful States" : {
       "localizations" : {
         "da" : {
@@ -413,6 +487,56 @@
         }
       }
     },
+    "Get App Using the Most Energy" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hent appen, der bruger mest energi"
+          }
+        }
+      }
+    },
+    "Get Battery Level" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hent batteriniveau"
+          }
+        }
+      }
+    },
+    "Get Battery Time Left" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hent batteritid tilbage"
+          }
+        }
+      }
+    },
+    "Gets how long the battery will last, or how long until it's full while charging. Empty while macOS is still calculating, or when the Mac is plugged in and not charging." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Henter, hvor længe batteriet holder, eller hvor længe der er, til det er fuldt, mens det oplades. Tom, mens macOS stadig beregner, eller når Mac'en er tilsluttet strøm og ikke oplader."
+          }
+        }
+      }
+    },
+    "Gets the battery's charge, as a percentage from 0 to 100." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Henter batteriets opladning som en procentdel fra 0 til 100."
+          }
+        }
+      }
+    },
     "Green while charging, yellow in Low Power Mode, red when low." : {
       "localizations" : {
         "da" : {
@@ -469,6 +593,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Skjul det indbyggede: Kontrolcenter › Batteri › Vis ikke på menulinjen."
+          }
+        }
+      }
+    },
+    "Hungriest App" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mest energikrævende app"
           }
         }
       }
@@ -533,12 +667,32 @@
         }
       }
     },
+    "Keyboard Shortcut" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastaturgenvej"
+          }
+        }
+      }
+    },
     "Language" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sprog"
+          }
+        }
+      }
+    },
+    "Lets the panel switch Low Power Mode right away. macOS asks you to allow it once, in Login Items." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lader panelet slå strømsparetilstand til og fra med det samme. macOS beder dig om at tillade det én gang under Login-emner."
           }
         }
       }
@@ -573,6 +727,26 @@
         }
       }
     },
+    "Low Power Mode Without a Password" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømsparetilstand uden adgangskode"
+          }
+        }
+      }
+    },
+    "Low Power Mode makes it last longer, by reducing energy use." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømsparetilstand får det til at holde længere ved at bruge mindre energi."
+          }
+        }
+      }
+    },
     "Low Power Mode, battery health and charging, in System Settings." : {
       "localizations" : {
         "da" : {
@@ -593,6 +767,16 @@
         }
       }
     },
+    "Measures for a couple of seconds, then gets the name of the app using the most energy. Apps hidden in WatchMyBattery's settings are left out." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Måler i et par sekunder og henter derefter navnet på den app, der bruger mest energi. Apps, der er skjult i WatchMyBatterys indstillinger, medtages ikke."
+          }
+        }
+      }
+    },
     "Menu Bar" : {
       "localizations" : {
         "da" : {
@@ -609,6 +793,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vises aldrig i batteriet, så de ikke kan afsluttes ved et uheld."
+          }
+        }
+      }
+    },
+    "No app is using much energy right now." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen apps bruger meget energi lige nu."
           }
         }
       }
@@ -693,6 +887,16 @@
         }
       }
     },
+    "Opens and closes the panel from any app." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbner og lukker panelet fra en hvilken som helst app."
+          }
+        }
+      }
+    },
     "Open…" : {
       "localizations" : {
         "da" : {
@@ -753,6 +957,16 @@
         }
       }
     },
+    "Press Escape to cancel, or Delete to remove the shortcut." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tryk på Escape for at annullere eller Slet for at fjerne genvejen."
+          }
+        }
+      }
+    },
     "Quit" : {
       "localizations" : {
         "da" : {
@@ -793,12 +1007,42 @@
         }
       }
     },
+    "Record Shortcut" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optag genvej"
+          }
+        }
+      }
+    },
+    "Reduces energy use, so the battery lasts longer." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bruger mindre energi, så batteriet holder længere."
+          }
+        }
+      }
+    },
     "Relaunch Now" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Genstart nu"
+          }
+        }
+      }
+    },
+    "Remove the shortcut" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fjern genvejen"
           }
         }
       }
@@ -829,6 +1073,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Service anbefales"
+          }
+        }
+      }
+    },
+    "Set Up…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfigurer…"
           }
         }
       }
@@ -893,6 +1147,16 @@
         }
       }
     },
+    "The Mac is plugged in, and the battery isn't charging." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac'en er tilsluttet strøm, og batteriet oplades ikke."
+          }
+        }
+      }
+    },
     "The apps using the most energy each get a slice." : {
       "localizations" : {
         "da" : {
@@ -903,12 +1167,52 @@
         }
       }
     },
+    "The battery is at %@ and charging." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriet er på %@ og oplades."
+          }
+        }
+      }
+    },
+    "The battery is at %@." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriet er på %@."
+          }
+        }
+      }
+    },
+    "The battery is fully charged." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriet er fuldt opladet."
+          }
+        }
+      }
+    },
     "This Mac doesn't have a battery." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Denne Mac har ikke et batteri."
+          }
+        }
+      }
+    },
+    "Time Left" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tid tilbage"
           }
         }
       }
@@ -943,12 +1247,32 @@
         }
       }
     },
+    "Turn On Low Power Mode" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slå strømsparetilstand til"
+          }
+        }
+      }
+    },
     "Two batteries in your menu bar?" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "To batterier på menulinjen?"
+          }
+        }
+      }
+    },
+    "Type Shortcut…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tryk på genvej…"
           }
         }
       }
@@ -1079,6 +1403,26 @@
         }
       }
     },
+    "WatchMyBattery wants to turn off Low Power Mode." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WatchMyBattery vil slå strømsparetilstand fra."
+          }
+        }
+      }
+    },
+    "WatchMyBattery wants to turn on Low Power Mode." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WatchMyBattery vil slå strømsparetilstand til."
+          }
+        }
+      }
+    },
     "What's New" : {
       "localizations" : {
         "da" : {
@@ -1165,6 +1509,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "macOS"
+          }
+        }
+      }
+    },
+    "macOS is still calculating the time left." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS beregner stadig den resterende tid."
           }
         }
       }

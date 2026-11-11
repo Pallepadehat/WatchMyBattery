@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- The Low Power Mode helper, registered by the app with SMAppService and approved by the user in
+	     System Settings › Login Items. launchd starts it when the app connects, and it quits when idle. -->
+	<key>Label</key>
+	<string>com.pallepadehat.WatchMyBattery.helper</string>
+	<key>BundleProgram</key>
+	<string>Contents/MacOS/WatchMyBatteryHelper</string>
+	<key>MachServices</key>
+	<dict>
+		<key>com.pallepadehat.WatchMyBattery.helper</key>
+		<true/>
+	</dict>
+	<key>AssociatedBundleIdentifiers</key>
+	<array>
+		<string>com.pallepadehat.WatchMyBattery</string>
+	</array>
+</dict>
+</plist>

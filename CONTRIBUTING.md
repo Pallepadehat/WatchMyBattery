@@ -28,6 +28,10 @@ Debug builds understand a few launch arguments (set them in the scheme, or pass 
 | `--render-previews <folder>` | Renders the panel and menu bar icons to PNG files and quits |
 | `-AppleLanguages '(da)'` | Runs in Danish |
 
+## The Low Power Mode helper
+
+macOS has no API for changing Low Power Mode, so `WatchMyBatteryHelper` (a tiny launchd daemon, in `WatchMyBatteryHelper/`) runs `pmset` as root. The app registers it with `SMAppService` the first time you use the switch, and you allow it once in System Settings › Login Items. `Shared/` holds the XPC protocol both sides use. The helper only accepts the app signed by the same team as itself, so ad hoc builds can't use it; they ask for an administrator's password instead. To test it, run a build signed with your team (`./scripts/build.sh` with `Config/Local.xcconfig` set up) from `/Applications`. `sudo launchctl print system/com.pallepadehat.WatchMyBattery.helper` shows its state.
+
 ## Translations
 
 Strings live in `WatchMyBattery/Localizable.xcstrings`. Xcode adds new strings to it when you build, and you translate them in its editor. Danish is the only translation so far; adding a language is very welcome (add it to the project's localizations, then translate in the catalog).
@@ -59,7 +63,7 @@ Then open a pull request **into `develop`**.
 ## Before you open a pull request
 
 - `swift test` passes in `Packages/BatteryKit`.
-- `swift format lint --strict -r WatchMyBattery Packages/BatteryKit scripts` reports nothing. Run `swift format -i -r WatchMyBattery Packages/BatteryKit scripts` to fix formatting automatically.
+- `swift format lint --strict -r WatchMyBattery WatchMyBatteryHelper Shared Packages/BatteryKit scripts` reports nothing. Run `swift format -i -r WatchMyBattery WatchMyBatteryHelper Shared Packages/BatteryKit scripts` to fix formatting automatically.
 - The app builds without warnings.
 - WatchMyBattery should stay idle while its panel is closed. If you touch the menu bar icon, notifications or sampling, check CPU and **Energy Impact** in Activity Monitor with a **Release** build.
 - For visual changes, include a screenshot or a short recording.

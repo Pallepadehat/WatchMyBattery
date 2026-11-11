@@ -43,6 +43,7 @@
                 for scheme in [ColorScheme.dark, .light] {
                     let model = AppModel(settings: previewSettings())
                     model.settings.showsReplaceTip = false
+                    model.lowPowerMode.preview(isSupported: true)
                     model.battery.preview(
                         snapshot, health: name == "low" ? BatteryHealth(condition: .serviceRecommended, maximumCapacity: 0.74, cycleCount: 1012) : health)
                     model.usage.preview(

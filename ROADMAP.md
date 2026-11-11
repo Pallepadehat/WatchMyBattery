@@ -28,19 +28,21 @@ Released. See the [changelog](CHANGELOG.md).
 - [x] Settings laid out like System Settings, with a pane for each part
 - [x] Build the app in CI ([#15](https://github.com/Pallepadehat/WatchMyBattery/issues/15))
 
-## 0.1.3: reach
+## 0.1.3: reach ✅
+
+Released. See the [changelog](CHANGELOG.md).
 
 **The panel**
 
-- [ ] Turn Low Power Mode on and off from the panel, and suggest it when the battery is low ([#24](https://github.com/Pallepadehat/WatchMyBattery/issues/24))
+- [x] Turn Low Power Mode on and off from the panel, and suggest it when the battery is low ([#24](https://github.com/Pallepadehat/WatchMyBattery/issues/24))
 
 **The menu bar**
 
-- [ ] A keyboard shortcut to open the panel ([#23](https://github.com/Pallepadehat/WatchMyBattery/issues/23))
+- [x] A keyboard shortcut to open the panel ([#23](https://github.com/Pallepadehat/WatchMyBattery/issues/23))
 
 **Around it**
 
-- [ ] Shortcuts actions: battery level, time left, the hungriest app ([#25](https://github.com/Pallepadehat/WatchMyBattery/issues/25))
+- [x] Shortcuts actions: battery level, time left, the hungriest app ([#25](https://github.com/Pallepadehat/WatchMyBattery/issues/25))
 
 ## 0.2.0: history
 
