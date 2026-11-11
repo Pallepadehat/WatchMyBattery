@@ -110,7 +110,7 @@ private struct LevelChart: View {
             AxisMarks(values: .stride(by: .hour, count: 6)) { _ in
                 AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 2])).foregroundStyle(.quaternary)
                 AxisValueLabel(format: .dateTime.hour(), collisionResolution: .greedy)
-                    .font(.system(size: 9))
+                    .font(.system(size: 10))
                     .foregroundStyle(Color.secondary)
             }
         }
@@ -120,7 +120,7 @@ private struct LevelChart: View {
                 AxisValueLabel {
                     if let level = value.as(Int.self) {
                         Text(Double(level) / 100, format: .percent)
-                            .font(.system(size: 9))
+                            .font(.system(size: 10))
                             .foregroundStyle(Color.secondary)
                     }
                 }
@@ -133,7 +133,8 @@ private struct LevelChart: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .frame(height: 78)
+        // About iPhone's proportions across the panel's width, so the bars read at a glance.
+        .frame(height: 128)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Battery level, last 24 hours")
         .accessibilityValue(accessibilitySummary)

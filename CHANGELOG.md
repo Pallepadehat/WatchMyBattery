@@ -8,7 +8,7 @@ A tidier panel, and a chart that reads like iPhone's.
 
 ### Changed
 
-- 📊 **The battery level chart is a bar every half hour**, like the one in iPhone's Battery settings: green while plugged in, red when the battery ran low. Hours before the history began are left empty, so a new history no longer looks like one thin line stretched across the day.
+- 📊 **The battery level chart is a bar every half hour**, like the one in iPhone's Battery settings, and taller, so it reads at a glance: green while plugged in, red when the battery ran low. Hours before the history began are left empty, so a new history no longer looks like one thin line stretched across the day.
 - **The panel's details line up**: time left, battery health and Low Power Mode share one size and one row height, with the value on the right. "Fully Charged" and "Not Charging" now sit next to the power source, the way the system's Battery menu shows them, instead of on a row of their own.
 - An app drawing almost no power on the adapter shows "<0.1 W" under its slice instead of "0.0 W".
 
