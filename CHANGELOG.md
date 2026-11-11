@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-11-11
+
+A keyboard shortcut, Low Power Mode at your fingertips, and Shortcuts actions.
+
 ### Added
 
 - ⌨️ **A keyboard shortcut for the panel.** Choose one in Settings › Menu Bar, and it opens and closes the panel from any app. If another app already has it, Settings says so ([#23](https://github.com/Pallepadehat/WatchMyBattery/issues/23)).
@@ -71,7 +75,8 @@ The first release.
 - Automatic updates with Sparkle, from EdDSA-signed releases.
 - One-command install, and build, packaging and release scripts.
 
-[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Pallepadehat/WatchMyBattery/releases/tag/v0.1.0

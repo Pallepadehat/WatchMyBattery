@@ -28,7 +28,9 @@ Released. See the [changelog](CHANGELOG.md).
 - [x] Settings laid out like System Settings, with a pane for each part
 - [x] Build the app in CI ([#15](https://github.com/Pallepadehat/WatchMyBattery/issues/15))
 
-## 0.1.3: reach
+## 0.1.3: reach ✅
+
+Released. See the [changelog](CHANGELOG.md).
 
 **The panel**
 
