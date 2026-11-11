@@ -12,6 +12,7 @@ final class AppModel {
     let launchAtLogin = LaunchAtLogin()
     let notifier = LowBatteryNotifier()
     let lowPowerMode = LowPowerMode()
+    let history = HistoryRecorder()
 
     init(settings: AppSettings = AppSettings()) {
         self.settings = settings
@@ -37,6 +38,7 @@ final class AppModel {
         battery.start()
         updater.start()
         notifier.start(model: self)
+        history.start(model: self)
         lowPowerMode.checkSupport()
         usage.excludedApps = Set(settings.excludedApps)
         GlobalHotkey.shared.action = { [weak self] in self?.togglePanel() }
@@ -89,6 +91,11 @@ final class AppModel {
     func panelDidClose() {
         isPanelOpen = false
         usage.stop()
+    }
+
+    /// The app is quitting: save what's left to save.
+    func stop() {
+        history.flush()
     }
 
     func openSettings(_ pane: SettingsPane? = nil) {

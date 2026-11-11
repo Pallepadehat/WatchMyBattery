@@ -45,6 +45,12 @@
 - Works with the keyboard and VoiceOver too: Tab between slices, Delete to quit one.
 - Hide apps you never want to quit by accident, like Music or your VPN.
 
+**The last 24 hours**
+- A chart of the battery level over the last day, with the time plugged in marked, like iPhone's Battery settings.
+- How long the Mac has been on battery since it was unplugged, and the average drain per hour.
+- The apps that used the most battery, and how much battery time each one cost.
+- An optional notification when an app keeps using a lot of power for a while, with a button that quits it.
+
 **Battery health, and a heads-up when it runs low**
 - Condition, maximum capacity and cycle count, quietly, under the time.
 - An optional notification at the levels you choose, naming the hungriest app, with a button that quits it.
@@ -54,7 +60,7 @@
 
 **Light on your battery** (it would be a bit silly otherwise)
 - No polling: battery changes arrive as notifications from macOS.
-- Apps are sampled only while the panel is open.
+- Apps are sampled every two seconds while the panel is open. For the history, every five minutes on battery, and never on the adapter.
 - The menu bar icon is redrawn only when something you can see changes. The charging animation is a short sweep every few seconds, only while charging, and it stops while the displays sleep.
 
 ## Languages
@@ -129,6 +135,10 @@ The numbers in the panel are **estimates**. They're good at answering "what's ea
 
 **How much power each app is using.** The kernel keeps a running energy counter for every process (`ri_energy_nj` from `proc_pid_rusage`, `RUSAGE_INFO_V6`, in nanojoules). While the panel is open, WatchMyBattery reads it for every process at regular intervals and divides the change by the time between readings, which gives each process's average power over that interval. Processes are grouped by their **responsible app**, so a browser's helper and renderer processes count toward the browser, the same grouping Activity Monitor uses.
 
+**History.** On battery, WatchMyBattery reads the same counters every five minutes. They keep counting in between, so a rare reading still sees all the energy each app used (except apps that opened and quit between two readings). Each app's energy over the last 24 hours, divided by the Mac's average power draw, is the battery time it cost. The battery level is recorded whenever macOS reports a change. It's all kept in `~/Library/Application Support/WatchMyBattery/History.plist`, and anything older than a day is dropped.
+
+**Runaway apps.** An app counts as running away when it averages 4 W or more over 15 minutes on battery. You hear about each one once, until it calms down or you plug in, and never about the app you're using.
+
 **How much power the whole Mac is using.** The battery's own controller reports its voltage and current (the `AppleSmartBattery` entry in the IORegistry). Voltage × current is the power flowing out of the battery right now, for everything: apps, the display, the radios, the system itself.
 
 **How much time an app costs you.** If the Mac draws power *P*<sub>system</sub> and the time left is *T*, the battery holds about *T* × *P*<sub>system</sub> of energy. Without an app drawing *P*<sub>app</sub>, the same energy would last *T* × *P*<sub>system</sub> / (*P*<sub>system</sub> − *P*<sub>app</sub>). The difference is the time you'd gain by quitting it:
@@ -150,8 +160,9 @@ So treat **−48m** as "this app is a big reason your battery is draining", not 
 - **Nothing leaves your Mac.** No analytics, no accounts, no telemetry. The only network request is Sparkle's update check against this repository's GitHub releases, and you can turn automatic updates off in Settings.
 - WatchMyBattery reads process **energy counters and names**, never what those apps contain or do.
 - It isn't sandboxed, because the sandbox doesn't allow reading other processes' energy use or quitting other apps. It only ever quits an app you ask it to: one you drag out of the panel, delete with the keyboard, or quit from a low battery notification.
-- The low battery notification is off until you turn it on. When it goes off, apps are measured for two seconds to find the hungriest one.
-- Battery changes arrive as IOPowerSources notifications, so there's no polling timer. Processes are sampled **only while the panel is open**, and the menu bar icon is redrawn **only when something visible changes**. With the panel closed, the app is idle.
+- The low battery and runaway app notifications are off until you turn them on. When the low battery one goes off, apps are measured for two seconds to find the hungriest one.
+- Battery changes arrive as IOPowerSources notifications, so there's no polling timer, and the menu bar icon is redrawn **only when something visible changes**.
+- Processes are sampled every two seconds while the panel is open, and otherwise **only on battery, every five minutes**, for the history. A sample is about a millisecond of CPU time (on a Mac running around 900 processes), so roughly 12 ms an hour. macOS gets a minute's leeway on each one to fold it into other wake-ups. Turn the history off in **Settings › Panel** and the app is idle with the panel closed, as before. The history never leaves your Mac.
 
 ## Settings
 
@@ -161,8 +172,8 @@ Settings is laid out like System Settings, with a pane for each part:
 | --- | --- |
 | General | Open at login, language (System, English or Dansk), shortcuts to hide the built-in battery and to System Settings › Battery |
 | Menu Bar | Percentage hidden, inside the battery or beside it; coloured states (red when low, green when charging) or monochrome; the charging animation |
-| Panel | Time remaining or percentage in the centre of the battery, how many apps get a slice, asking before quitting, and hidden apps that never get a slice |
-| Notifications | A low battery notification, and the levels it's sent at |
+| Panel | Time remaining or percentage in the centre of the battery, how many apps get a slice, asking before quitting, hidden apps that never get a slice, and the battery history (on, off, or clear it) |
+| Notifications | A low battery notification and the levels it's sent at, and a notification for apps using a lot of energy |
 | Updates | Check now (the answer shows right in the row), and check for and install updates automatically |
 | About | The version, and links to the source code, the changelog and the bug report form |
 

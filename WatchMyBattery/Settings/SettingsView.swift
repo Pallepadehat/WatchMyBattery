@@ -260,6 +260,11 @@ private struct PanelPane: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
+            Section {
+                HistoryRows(model: model)
+            } header: {
+                Text("History")
+            }
         }
     }
 }
@@ -271,6 +276,9 @@ private struct NotificationsPane: View {
         Form {
             Section {
                 LowBatteryRows(model: model)
+            }
+            Section {
+                RunawayAppRows(model: model)
             }
         }
     }
@@ -766,6 +774,70 @@ private struct LowBatteryRows: View {
             levels.insert(level)
         }
         model.settings.lowBatteryLevels = levels.sorted(by: >)
+    }
+}
+
+// MARK: - History
+
+/// Keeping a history on or off, and clearing it.
+private struct HistoryRows: View {
+    let model: AppModel
+    @State private var isConfirmingClear = false
+
+    var body: some View {
+        @Bindable var settings = model.settings
+        Toggle(isOn: $settings.recordsHistory) {
+            SettingLabel("Battery History", symbol: "chart.xyaxis.line", color: .green) {
+                Text(
+                    "The battery level, and which apps used it, over the last 24 hours. Apps are measured every few minutes while on battery, and the history stays on this Mac."
+                )
+            }
+        }
+        LabeledContent {
+            Button("Clear…") { isConfirmingClear = true }
+                .disabled(model.history.history.isEmpty)
+        } label: {
+            SettingLabel("Clear History", symbol: "trash.fill", color: .gray)
+        }
+        .confirmationDialog("Clear the battery history?", isPresented: $isConfirmingClear) {
+            Button("Clear History", role: .destructive) { model.history.clear() }
+        } message: {
+            Text("The chart and the apps that used the most battery start again from now.")
+        }
+    }
+}
+
+/// The runaway app notification, which needs the history's measurements.
+private struct RunawayAppRows: View {
+    let model: AppModel
+
+    var body: some View {
+        @Bindable var settings = model.settings
+        Toggle(isOn: $settings.notifiesAboutRunawayApps) {
+            SettingLabel("Apps Using a Lot of Energy", symbol: "flame.fill", color: .orange) {
+                Text("A notification when an app keeps using a lot of power on battery for a while, with a button to quit it. Not for the app you're using.")
+            }
+        }
+        .disabled(!settings.recordsHistory)
+        .onChange(of: settings.notifiesAboutRunawayApps) { _, on in
+            if on { Task { await model.notifier.requestAuthorization() } }
+        }
+
+        if !settings.recordsHistory {
+            Label("Needs Battery History, in Settings › Panel.", systemImage: "info.circle.fill")
+                .labelStyle(InlineIconLabelStyle(color: .secondary))
+                .font(.caption)
+                .padding(.leading, 34)
+        } else if settings.notifiesAboutRunawayApps, model.notifier.isDenied {
+            LabeledContent {
+                Button("Open…") { model.notifier.openNotificationSettings() }
+            } label: {
+                Label("Notifications are turned off for WatchMyBattery.", systemImage: "exclamationmark.triangle.fill")
+                    .labelStyle(InlineIconLabelStyle(color: .orange))
+                    .font(.caption)
+            }
+            .padding(.leading, 34)
+        }
     }
 }
 
