@@ -59,6 +59,26 @@ final class AppSettings {
         didSet { defaults.set(confirmsQuit, forKey: Key.confirmsQuit) }
     }
 
+    /// A gentle animation in the menu bar icon and the panel's battery while charging.
+    var showsChargingAnimation: Bool {
+        didSet { defaults.set(showsChargingAnimation, forKey: Key.showsChargingAnimation) }
+    }
+
+    /// Bundle identifiers of apps that never get a slice, so they can't be dragged out by accident.
+    var excludedApps: [String] {
+        didSet { defaults.set(excludedApps, forKey: Key.excludedApps) }
+    }
+
+    /// Send a notification when the battery runs low.
+    var notifiesWhenLow: Bool {
+        didSet { defaults.set(notifiesWhenLow, forKey: Key.notifiesWhenLow) }
+    }
+
+    /// The percentages a low battery notification is sent at, highest first.
+    var lowBatteryLevels: [Int] {
+        didSet { defaults.set(lowBatteryLevels, forKey: Key.lowBatteryLevels) }
+    }
+
     /// The tip about hiding the built-in battery icon, until it's dismissed.
     var showsReplaceTip: Bool {
         didSet { defaults.set(showsReplaceTip, forKey: Key.showsReplaceTip) }
@@ -69,6 +89,8 @@ final class AppSettings {
     }
 
     static let appCountRange = 1...4
+    /// Levels a low battery notification can be sent at.
+    static let lowBatteryChoices = [5, 10, 15, 20, 25, 30]
 
     @ObservationIgnored private let defaults: UserDefaults
 
@@ -80,6 +102,10 @@ final class AppSettings {
             Key.centerLabel: CenterLabel.timeRemaining.rawValue,
             Key.maximumApps: 3,
             Key.confirmsQuit: false,
+            Key.showsChargingAnimation: true,
+            Key.excludedApps: [String](),
+            Key.notifiesWhenLow: false,
+            Key.lowBatteryLevels: [20, 10],
             Key.showsReplaceTip: true,
             Key.hasSeenWelcome: false,
         ])
@@ -88,8 +114,24 @@ final class AppSettings {
         centerLabel = CenterLabel(rawValue: defaults.string(forKey: Key.centerLabel) ?? "") ?? .timeRemaining
         maximumApps = min(max(defaults.integer(forKey: Key.maximumApps), Self.appCountRange.lowerBound), Self.appCountRange.upperBound)
         confirmsQuit = defaults.bool(forKey: Key.confirmsQuit)
+        showsChargingAnimation = defaults.bool(forKey: Key.showsChargingAnimation)
+        excludedApps = defaults.stringArray(forKey: Key.excludedApps) ?? []
+        notifiesWhenLow = defaults.bool(forKey: Key.notifiesWhenLow)
+        lowBatteryLevels = ((defaults.array(forKey: Key.lowBatteryLevels) as? [Int]) ?? [20, 10])
+            .filter(Self.lowBatteryChoices.contains).sorted(by: >)
         showsReplaceTip = defaults.bool(forKey: Key.showsReplaceTip)
         hasSeenWelcome = defaults.bool(forKey: Key.hasSeenWelcome)
+    }
+
+    /// Whether an app never gets a slice.
+    func isExcluded(bundleIdentifier: String?) -> Bool {
+        guard let bundleIdentifier else { return false }
+        return excludedApps.contains(bundleIdentifier)
+    }
+
+    func exclude(bundleIdentifier: String) {
+        guard !excludedApps.contains(bundleIdentifier) else { return }
+        excludedApps.append(bundleIdentifier)
     }
 
     private enum Key {
@@ -98,6 +140,10 @@ final class AppSettings {
         static let centerLabel = "centerLabel"
         static let maximumApps = "maximumApps"
         static let confirmsQuit = "confirmsQuit"
+        static let showsChargingAnimation = "showsChargingAnimation"
+        static let excludedApps = "excludedApps"
+        static let notifiesWhenLow = "notifiesWhenLow"
+        static let lowBatteryLevels = "lowBatteryLevels"
         static let showsReplaceTip = "showsReplaceTip"
         static let hasSeenWelcome = "hasSeenWelcome"
     }

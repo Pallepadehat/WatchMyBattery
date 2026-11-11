@@ -29,18 +29,18 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
     private func makeWindow() -> NSWindow {
         let controller = NSHostingController(rootView: SettingsView(model: model))
+        controller.sizingOptions = [.minSize]
         let window = NSWindow(contentViewController: controller)
         window.title = String(localized: "WatchMyBattery Settings")
-        // Resizable in height only; the form scrolls when it's taller than the window.
-        window.styleMask = [.titled, .closable, .resizable, .fullSizeContentView]
-        window.setContentSize(CGSize(width: 460, height: min(560, (NSScreen.main?.visibleFrame.height ?? 700) - 80)))
-        window.contentMinSize = CGSize(width: 460, height: 420)
-        window.standardWindowButton(.zoomButton)?.isEnabled = false
-        window.contentMaxSize = CGSize(width: 460, height: 2000)
-        window.titlebarAppearsTransparent = true
-        window.titleVisibility = .hidden
-        window.isMovableByWindowBackground = true
+        window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
+        window.toolbarStyle = .unified
+        window.setContentSize(CGSize(width: 720, height: min(580, (NSScreen.main?.visibleFrame.height ?? 700) - 80)))
         window.isReleasedWhenClosed = false
+        window.setFrameAutosaveName("WatchMyBatterySettings")
+        #if DEBUG
+            // `--tall-settings` opens it tall enough to see a whole pane at once, for screenshots.
+            if CommandLine.arguments.contains("--tall-settings") { window.setContentSize(CGSize(width: 720, height: 900)) }
+        #endif
         window.delegate = self
         return window
     }

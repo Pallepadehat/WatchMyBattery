@@ -44,14 +44,15 @@ jobs:
 
   build:
     name: Build app
-    runs-on: macos-latest
+    # macos-latest lags behind on Xcode; the macOS 26 image is where new Xcode versions arrive first.
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v7
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
       # The project uses Xcode 27's project format, which older Xcode versions
-      # can't open. Skip (with a notice) until the runners have Xcode 27.
+      # can't open. Skip (with a notice) on a runner that doesn't have Xcode 27 yet.
       - name: Check the Xcode version
         id: xcode
         run: |
@@ -70,4 +71,10 @@ jobs:
             -scheme WatchMyBattery \
             -configuration Release \
             -destination 'platform=macOS' \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            | tee build.log
+          # Warnings in our own code fail the build, as CONTRIBUTING asks.
+          if grep -E "warning: .*(WatchMyBattery|BatteryKit)/" build.log | grep -v "Sparkle"; then
+            echo "::error::The app builds with warnings."
+            exit 1
+          fi

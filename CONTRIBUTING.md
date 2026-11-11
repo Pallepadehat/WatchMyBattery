@@ -15,6 +15,23 @@ Thanks for wanting to help! Bug fixes, polish, performance work, better estimate
 
 No Apple developer team is needed to build. See "Building" in the [README](README.md) if you want to sign with yours.
 
+## Handy debug flags
+
+Debug builds understand a few launch arguments (set them in the scheme, or pass them to the binary):
+
+| Flag | What it does |
+| --- | --- |
+| `--show-panel` | Opens the panel right away |
+| `--show-settings` | Opens Settings; add `--settings-pane updates` (or `general`, `menuBar`, `panel`, `notifications`, `about`) for a pane |
+| `--pretend-charging` | Shows the battery charging at 62%, to see the charging animation on a full battery |
+| `--start-updater` | Turns on Sparkle, which debug builds leave off; add `--check-now` to press Check Now in Settings |
+| `--render-previews <folder>` | Renders the panel and menu bar icons to PNG files and quits |
+| `-AppleLanguages '(da)'` | Runs in Danish |
+
+## Translations
+
+Strings live in `WatchMyBattery/Localizable.xcstrings`. Xcode adds new strings to it when you build, and you translate them in its editor. Danish is the only translation so far; adding a language is very welcome (add it to the project's localizations, then translate in the catalog).
+
 ## Branches
 
 | Branch | What it's for |
