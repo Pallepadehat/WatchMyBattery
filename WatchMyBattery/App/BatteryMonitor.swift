@@ -41,14 +41,12 @@ final class BatteryMonitor {
 
     func refresh() {
         var next = PowerSourceReader.read()
-        #if DEBUG
-            // `--pretend-charging` shows the battery charging, to see the charging animation on a full battery.
-            if CommandLine.arguments.contains("--pretend-charging") {
-                next = BatterySnapshot(
-                    percentage: 62, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 48 * 60,
-                    isLowPowerModeOn: next.isLowPowerModeOn)
-            }
-        #endif
+        // `--pretend-charging` shows the battery charging, to see the charging animation on a full battery.
+        if LaunchOptions.pretendsCharging {
+            next = BatterySnapshot(
+                percentage: 62, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 48 * 60,
+                isLowPowerModeOn: next.isLowPowerModeOn)
+        }
         // Only publish real changes, so views and the menu bar icon don't redraw for nothing.
         if next != snapshot { snapshot = next }
     }

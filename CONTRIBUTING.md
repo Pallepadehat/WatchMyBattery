@@ -13,6 +13,8 @@ Thanks for wanting to help! Bug fixes, polish, performance work, better estimate
    swift test
    ```
 
+   Or everything at once, the way a release does: `./scripts/check.sh` (see [Testing](#testing)).
+
 No Apple developer team is needed to build. See "Building" in the [README](README.md) if you want to sign with yours.
 
 ## Handy debug flags
@@ -21,9 +23,10 @@ Debug builds understand a few launch arguments (set them in the scheme, or pass 
 
 | Flag | What it does |
 | --- | --- |
-| `--show-panel` | Opens the panel right away |
+| `--show-panel` | Opens the panel right away (Release builds too) |
 | `--show-settings` | Opens Settings; add `--settings-pane updates` (or `general`, `menuBar`, `panel`, `notifications`, `about`) for a pane |
-| `--pretend-charging` | Shows the battery charging at 62%, to see the charging animation on a full battery |
+| `--pretend-charging` | Shows the battery charging at 62%, to see the charging animation on a full battery (Release builds only with `--isolated`) |
+| `--isolated <folder>` | Runs without touching the real app: fresh settings of its own, the history in `<folder>`, no updater, no keyboard shortcut. Works in Release builds, for the end-to-end checks. Its panel says "Test copy" |
 | `--start-updater` | Turns on Sparkle, which debug builds leave off; add `--check-now` to press Check Now in Settings |
 | `--render-previews <folder>` | Renders the panel and menu bar icons to PNG files and quits |
 | `-AppleLanguages '(da)'` | Runs in Danish |
@@ -31,6 +34,27 @@ Debug builds understand a few launch arguments (set them in the scheme, or pass 
 ## The Low Power Mode helper
 
 macOS has no API for changing Low Power Mode, so `WatchMyBatteryHelper` (a tiny launchd daemon, in `WatchMyBatteryHelper/`) runs `pmset` as root. The app registers it with `SMAppService` the first time you use the switch, and you allow it once in System Settings › Login Items. `Shared/` holds the XPC protocol both sides use. The helper only accepts the app signed by the same team as itself, so ad hoc builds can't use it; they ask for an administrator's password instead. To test it, run a build signed with your team (`./scripts/build.sh` with `Config/Local.xcconfig` set up) from `/Applications`. `sudo launchctl print system/com.pallepadehat.WatchMyBattery.helper` shows its state.
+
+## Testing
+
+There are four kinds of tests, and `./scripts/check.sh` runs them all (plus the linter and a warning-free build), the way `release.sh` does before every release:
+
+| | Where | What it checks |
+| --- | --- | --- |
+| **Unit** | `Packages/BatteryKit/Tests/BatteryKitTests` | The logic, with made-up data: estimates, history, the charging glint's frames, icon colours. Includes equivalence tests that hold the optimized history and smoother against the simple versions they replaced, on many random days. |
+| **Integration** | `Packages/BatteryKit/Tests/BatteryKitIntegrationTests` | Against this Mac: the battery reading agrees with `pmset`, the sampler credits work to the right app, the history survives the disk. Tests that need a battery skip themselves without one. |
+| **Performance** | `Packages/BatteryKit/Sources/BatteryKitBenchmarks` | Times the hot paths (`swift run -c release BatteryKitBenchmarks`) against a budget each, from how often the app does it, and against `Packages/BatteryKit/Benchmarks/baseline.json`. |
+| **End to end** | `scripts/e2e.swift` | Launches the real Release app, isolated, and checks it starts, records its history, and quits cleanly; renders the previews with the Debug build; and measures the app's own CPU time, wake-ups, energy and memory (the counters Activity Monitor reads) idle, charging, and with the panel open, against budgets and `scripts/e2e-baseline.json`. |
+
+While the end-to-end check runs, a second battery (the test copy) appears in the menu bar. Leave it alone: one scenario needs its panel to stay open.
+
+### Keeping it fast
+
+- **Budgets** hold on any Mac. A benchmark or scenario over its budget fails the check: that's a real regression, or a much slower Mac.
+- **Baselines** catch smaller slips: more than its tolerance slower than the recorded numbers fails, but only on the Mac that recorded them (the one releases are made on). Elsewhere the comparison is printed and nothing more.
+- Made something faster? Record it, so it stays that way: `./scripts/check.sh --update-baselines`, and commit the two baseline files. Do the same after a change that's meant to cost more, and say why in the pull request.
+- Each end-to-end scenario runs a few times and counts the fastest run: whatever else the Mac is doing only ever adds. Even so, quit busy apps first for steady numbers.
+- `--quick` gives a quicker look; `--report-only` prints without failing on numbers; `--skip-e2e` leaves out the end-to-end check.
 
 ## Translations
 
@@ -62,10 +86,10 @@ Then open a pull request **into `develop`**.
 
 ## Before you open a pull request
 
-- `swift test` passes in `Packages/BatteryKit`.
+- `./scripts/check.sh` passes (or at least `swift test` in `Packages/BatteryKit`, and `./scripts/check.sh --skip-e2e`).
 - `swift format lint --strict -r WatchMyBattery WatchMyBatteryHelper Shared Packages/BatteryKit scripts` reports nothing. Run `swift format -i -r WatchMyBattery WatchMyBatteryHelper Shared Packages/BatteryKit scripts` to fix formatting automatically.
 - The app builds without warnings.
-- WatchMyBattery should stay idle while its panel is closed. If you touch the menu bar icon, notifications or sampling, check CPU and **Energy Impact** in Activity Monitor with a **Release** build.
+- WatchMyBattery should stay idle while its panel is closed. If you touch the menu bar icon, notifications or sampling, the end-to-end check measures it; Activity Monitor's **Energy Impact** with a **Release** build is still a good second look.
 - For visual changes, include a screenshot or a short recording.
 
 For bigger changes, open an issue first so we can agree on the approach.
@@ -85,7 +109,7 @@ Releases are made by the maintainer from a Mac with the signing certificate, **f
 1. On `develop`, bump `MARKETING_VERSION` in the Xcode project (Target › General › Version).
 2. Move the `[Unreleased]` entries in `CHANGELOG.md` into a new `## [x.y.z] - date` section, add its link at the bottom, and merge to `develop` through a pull request.
 3. Open a pull request from `develop` into `main` and merge it.
-4. Check out `main`, pull, and run `./scripts/release.sh`. It refuses to run on any other branch. It builds the app, packs it into `WatchMyBattery.dmg`, has Apple notarize it, makes the signed `appcast.xml`, tags the commit `vx.y.z` and publishes a GitHub release with both files attached. The app and `install.sh` always pick up the newest release.
+4. Check out `main`, pull, and run `./scripts/release.sh`. It refuses to run on any other branch. It runs `./scripts/check.sh` first and stops if anything fails or got slower. Then it builds the app, packs it into `WatchMyBattery.dmg`, has Apple notarize it, makes the signed `appcast.xml`, tags the commit `vx.y.z` and publishes a GitHub release with both files attached. The app and `install.sh` always pick up the newest release.
 
 To only make the disk image, run `./scripts/make-dmg.sh` (add `--notarize` for a notarized one).
 

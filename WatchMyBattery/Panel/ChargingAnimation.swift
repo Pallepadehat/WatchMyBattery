@@ -76,13 +76,15 @@ struct ChargingWave: View {
     var body: some View {
         GeometryReader { geometry in
             let size = geometry.size
-            let glowWidth = size.width * 0.5
             let wave = phase?.wave ?? 0
-            // Brightest mid-way, fading in at the left and out at the right.
-            let strength = sin(Double.pi * wave)
+            // Brightest mid-way, fading in at the left and out at the right. Raised to a power, so it eases in from
+            // nothing rather than appearing at the edge.
+            let strength = pow(sin(Double.pi * wave), 1.6)
+            // It swells a little as it rolls through the middle, like a breath of charge.
+            let glowWidth = size.width * (0.44 + 0.12 * strength)
             Ellipse()
-                .fill(color.opacity((brightens ? 0.38 : 0.32) * strength))
-                .frame(width: glowWidth, height: size.height * 1.15)
+                .fill(color.opacity((brightens ? 0.42 : 0.34) * strength))
+                .frame(width: glowWidth, height: size.height * (1.05 + 0.15 * strength))
                 .blur(radius: size.height * 0.32)
                 .position(x: -glowWidth * 0.3 + (size.width + glowWidth * 0.6) * wave, y: size.height / 2)
                 .blendMode(brightens ? .plusLighter : .normal)

@@ -18,11 +18,14 @@ final class StatusItemController: NSObject {
     /// Nobody can see the menu bar: the displays are asleep, or another user is logged in.
     private var isOutOfSight = false
     private var workspaceTokens: [any NSObjectProtocol] = []
+    /// Icons already drawn, so each sweep of the charging glint reuses its frames instead of drawing them again.
+    private var images: [BatteryIcon: NSImage] = [:]
 
     init(model: AppModel) {
         self.model = model
         super.init()
-        statusItem.autosaveName = "WatchMyBatteryStatusItem"
+        // An isolated run keeps its own position, so it doesn't move the real app's icon.
+        statusItem.autosaveName = LaunchOptions.isIsolated ? "WatchMyBatteryIsolatedStatusItem" : "WatchMyBatteryStatusItem"
         if let button = statusItem.button {
             button.target = self
             button.action = #selector(buttonPressed(_:))
@@ -94,7 +97,7 @@ final class StatusItemController: NSObject {
         let icon = BatteryIcon(snapshot: snapshot, settings: model.settings)
         currentIcon = icon
         let animates = model.settings.showsChargingAnimation && snapshot.chargeState == .charging && !snapshot.isLowPowerModeOn
-        updateAnimation(wanted: animates)
+        updateAnimation(wanted: animates, level: snapshot.level, target: Double(snapshot.chargeTarget) / 100)
         if !chargingAnimator.isRunning { drawIcon(glint: nil) }
 
         let title = model.settings.percentageStyle == .beside ? snapshot.percentage.formatted(.percent) : ""
@@ -116,18 +119,38 @@ extension StatusItemController {
         guard let button = statusItem.button, var icon = currentIcon else { return }
         icon.chargeGlint = glint
         guard icon != drawnIcon else { return }
-        button.image = icon.image()
+        button.image = image(for: icon)
         if icon.percentage != drawnIcon?.percentage || icon.chargeState != drawnIcon?.chargeState {
             button.setAccessibilityLabel(icon.accessibilityLabel)
         }
         drawnIcon = icon
     }
 
+    /// The icon's image, made once and then reused.
+    ///
+    /// A sweep of the glint is the same couple of dozen frames every few
+    /// seconds, so after the first sweep no image is made again until the
+    /// level changes. The cache holds a few sweeps' worth and starts over
+    /// when it's full, which also drops frames of levels long gone. The
+    /// images draw themselves when shown, so a coloured icon still picks
+    /// black or white for whichever menu bar it's drawn in. (Don't watch the
+    /// button's appearance to throw them away: AppKit changes it for every
+    /// menu bar it snapshots the icon for, on every frame.)
+    private func image(for icon: BatteryIcon) -> NSImage {
+        if let image = images[icon] { return image }
+        if images.count >= Self.cachedImages { images.removeAll(keepingCapacity: true) }
+        let image = icon.image()
+        images[icon] = image
+        return image
+    }
+
+    private static let cachedImages = 64
+
     /// Runs the animation only when it's wanted and someone could see it.
-    fileprivate func updateAnimation(wanted: Bool) {
+    fileprivate func updateAnimation(wanted: Bool, level: Double, target: Double) {
         let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         if wanted && !reduceMotion && !isOutOfSight {
-            chargingAnimator.start()
+            chargingAnimator.start(level: level, target: target)
         } else {
             chargingAnimator.stop()
         }

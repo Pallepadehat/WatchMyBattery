@@ -22,11 +22,14 @@ public struct PowerSmoother<Key: Hashable & Sendable>: Sendable {
     public mutating func add(_ readings: [Key: Double]) {
         var next: [Key: Double] = [:]
         next.reserveCapacity(max(values.count, readings.count))
-        for key in Set(values.keys).union(readings.keys) {
-            let reading = readings[key] ?? 0
-            // The first reading for a key is taken as is, so new apps show up at once.
-            let value = values[key].map { $0 + responsiveness * (reading - $0) } ?? reading
+        // Keys seen before, with or without a new reading (none counts as zero)…
+        for (key, previous) in values {
+            let value = previous + responsiveness * ((readings[key] ?? 0) - previous)
             if value >= floor { next[key] = value }
+        }
+        // …and new ones, whose first reading is taken as is, so new apps show up at once.
+        for (key, reading) in readings where values[key] == nil && reading >= floor {
+            next[key] = reading
         }
         values = next
     }

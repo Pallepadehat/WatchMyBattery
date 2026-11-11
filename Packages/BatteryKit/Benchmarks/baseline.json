@@ -1,0 +1,91 @@
+{
+  "machine" : "Mac15,6, Apple M3 Pro",
+  "recorded" : "2026-11-11",
+  "results" : {
+    "estimates.sliceShares" : {
+      "iterations" : 286464,
+      "medianNanoseconds" : 108.10607964700625,
+      "minimumNanoseconds" : 104.43109779937444
+    },
+    "gauge.layout" : {
+      "iterations" : 274299,
+      "medianNanoseconds" : 105.4326957079683,
+      "minimumNanoseconds" : 104.24011024466003
+    },
+    "glint.frames" : {
+      "iterations" : 72023,
+      "medianNanoseconds" : 395.6427113560946,
+      "minimumNanoseconds" : 393.25805645418825
+    },
+    "history.appEnergy" : {
+      "iterations" : 191,
+      "medianNanoseconds" : 154821.11518324606,
+      "minimumNanoseconds" : 154244.32984293194
+    },
+    "history.levelBuckets" : {
+      "iterations" : 6906,
+      "medianNanoseconds" : 3972.7470315667533,
+      "minimumNanoseconds" : 3915.5564726324933
+    },
+    "history.load" : {
+      "iterations" : 5,
+      "medianNanoseconds" : 6097841.6,
+      "minimumNanoseconds" : 6083650
+    },
+    "history.recordLevel" : {
+      "iterations" : 244294,
+      "medianNanoseconds" : 93.11935618557968,
+      "minimumNanoseconds" : 86.23096760460756
+    },
+    "history.recordSample" : {
+      "iterations" : 176,
+      "medianNanoseconds" : 168861.26704545456,
+      "minimumNanoseconds" : 168236.97727272726
+    },
+    "history.sampledTime" : {
+      "iterations" : 9809,
+      "medianNanoseconds" : 3128.0880823733305,
+      "minimumNanoseconds" : 3075.5896625547966
+    },
+    "history.save" : {
+      "iterations" : 6,
+      "medianNanoseconds" : 4744014,
+      "minimumNanoseconds" : 4648236.166666667
+    },
+    "history.sinceUnplugged" : {
+      "iterations" : 693668,
+      "medianNanoseconds" : 42.12581955632954,
+      "minimumNanoseconds" : 42.04551024409372
+    },
+    "iconPalette.dominantColor" : {
+      "iterations" : 9590,
+      "medianNanoseconds" : 3127.176746611053,
+      "minimumNanoseconds" : 3123.414181438999
+    },
+    "powerSource.read" : {
+      "iterations" : 724,
+      "medianNanoseconds" : 37908.9544198895,
+      "minimumNanoseconds" : 37551.335635359115
+    },
+    "runaway.add" : {
+      "iterations" : 7112,
+      "medianNanoseconds" : 4185.841957255343,
+      "minimumNanoseconds" : 4169.900590551181
+    },
+    "sampler.sampleEnergy" : {
+      "iterations" : 90,
+      "medianNanoseconds" : 344278.23333333334,
+      "minimumNanoseconds" : 342494.44444444444
+    },
+    "smoother.add" : {
+      "iterations" : 593,
+      "medianNanoseconds" : 49008.64249578415,
+      "minimumNanoseconds" : 48837.68971332209
+    },
+    "systemPower.currentWatts" : {
+      "iterations" : 2132,
+      "medianNanoseconds" : 14311.816135084428,
+      "minimumNanoseconds" : 13846.310037523452
+    }
+  }
+}

@@ -62,6 +62,29 @@ Released. See the [changelog](CHANGELOG.md).
 
 - [x] Alerts for runaway apps: a notification when an app has used a lot of power for a while, with a Quit button ([#30](https://github.com/Pallepadehat/WatchMyBattery/issues/30))
 
+## 0.2.2: lighter, and charging you can see ✅
+
+Released. See the [changelog](CHANGELOG.md).
+
+**Behind the scenes**
+
+- [x] Unit, integration, end to end and performance tests, run by `scripts/check.sh` before every release, with budgets and baselines so the app stays light
+- [x] Faster history, app measuring and charging animation, and fewer redraws of the open panel
+
+**In the panel**
+
+- [x] Where charging is headed: a bar to the charge target, with Optimized Battery Charging's 80% marked
+- [x] A more graceful charging animation, in the menu bar and the panel
+
+## 0.2.5: insights
+
+Things worth acting on, at the right moment, from what WatchMyBattery already measures ([#58](https://github.com/Pallepadehat/WatchMyBattery/issues/58)).
+
+- [ ] Charge before your meeting: "Your battery should last until 13:30, and you have a meeting at 14:00. Charge now." (opt in, calendar start times only)
+- [ ] More than usual: "You're using 20% more power than you usually do at this time, mostly because of Xcode."
+- [ ] A new app using a lot of power: one that hasn't shown up in the last week or two and is now among the hungriest
+- [ ] Two weeks of history, kept small: drain per hour of the week and the apps seen per day, rather than every sample
+
 ## 0.3.0: accessories
 
 **The AirPods card** ([#31](https://github.com/Pallepadehat/WatchMyBattery/issues/31))

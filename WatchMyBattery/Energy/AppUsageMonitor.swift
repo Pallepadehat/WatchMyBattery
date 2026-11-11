@@ -158,7 +158,10 @@ final class AppUsageMonitor {
     private func update(with readings: [pid_t: Double]) {
         appPower.add(readings)
         if let watts = systemPower.currentWatts() { systemPowerSmoother.add(watts) }
-        systemWatts = systemPowerSmoother.value
+        // Every change redraws the panel, so only ones that would show are published (see `DisplayThreshold`).
+        if DisplayThreshold.watts.isVisible(from: systemWatts, to: systemPowerSmoother.value) {
+            systemWatts = systemPowerSmoother.value
+        }
 
         // Give apps that were asked to quit a few seconds before they may show up again.
         let now = ContinuousClock.now
@@ -180,8 +183,16 @@ final class AppUsageMonitor {
         appInfo.forget(except: Set(appPower.values.keys))
 
         // Keep the slices still while one is being dragged, so the drag isn't pulled out from under the pointer.
-        if next != apps, !DragToQuitController.shared.isDragging { apps = next }
-        isWarmingUp = false
+        if Self.differsVisibly(next, from: apps), !DragToQuitController.shared.isDragging { apps = next }
+        if isWarmingUp { isWarmingUp = false }
+    }
+
+    /// Other apps, another order, or an app's power moved enough to show.
+    private static func differsVisibly(_ next: [AppUsage], from shown: [AppUsage]) -> Bool {
+        guard next.count == shown.count else { return true }
+        return zip(next, shown).contains { new, old in
+            new.id != old.id || new.name != old.name || DisplayThreshold.watts.isVisible(from: old.watts, to: new.watts)
+        }
     }
 }
 
@@ -203,7 +214,6 @@ struct AppInfoCache {
 
     /// `nil` marks a process that isn't an app you could quit.
     private var cache: [pid_t: Info?] = [:]
-    private var tints: [String: Color] = [:]
 
     mutating func info(for pid: pid_t) -> Info? {
         if let cached = cache[pid] { return cached }
@@ -223,9 +233,7 @@ struct AppInfoCache {
             let name = app.localizedName,
             let icon = app.icon
         else { return nil }
-        let key = app.bundleIdentifier ?? name
-        let tint = tints[key] ?? IconTint.color(of: icon)
-        tints[key] = tint
+        let tint = IconTint.color(of: icon, for: app.bundleIdentifier ?? "name:" + name)
         return Info(name: name, bundleIdentifier: app.bundleIdentifier, icon: icon, tint: tint)
     }
 

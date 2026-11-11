@@ -120,11 +120,18 @@ public struct BatteryHistory: Codable, Sendable, Equatable {
     ) {
         guard seconds > 0 else { return }
         var kept: [String: Double] = [:]
+        kept.reserveCapacity(min(joules.count, Self.appsPerSample))
         for (app, value) in joules.sorted(by: { $0.value > $1.value }).prefix(Self.appsPerSample) where value > 0 {
             kept[app.key, default: 0] += value
             apps[app.key] = app
         }
-        samples.append(EnergySample(date: date, seconds: seconds, joules: kept, systemWatts: systemWatts))
+        let sample = EnergySample(date: date, seconds: seconds, joules: kept, systemWatts: systemWatts)
+        if let last = samples.last, date < last.date {
+            // The clock went back. Keep the samples in date order, which reading them relies on.
+            samples.insert(sample, at: Self.partitionIndex(in: samples) { $0.date <= date })
+        } else {
+            samples.append(sample)
+        }
         trim(now: date)
     }
 
@@ -134,15 +141,48 @@ public struct BatteryHistory: Codable, Sendable, Equatable {
     }
 
     /// Drops what's older than ``retention``, keeping one level reading from before so the chart starts at its edge.
+    ///
+    /// It runs on every recording, so the usual case (nothing old enough to drop) costs two comparisons. Readings
+    /// are kept in date order, so what's old is always at the front.
     public mutating func trim(now: Date = Date()) {
         let cutoff = now.addingTimeInterval(-Self.retention)
-        if let firstKept = levels.firstIndex(where: { $0.date >= cutoff }), firstKept > 1 {
+        // One reading from before the cutoff stays, as the level the chart starts from.
+        if levels.count > 1, levels[1].date < cutoff {
+            let firstKept = Self.firstIndex(in: levels, from: cutoff)
             levels.removeFirst(firstKept - 1)
-        } else if levels.last.map({ $0.date < cutoff }) == true {
-            levels.removeFirst(max(levels.count - 1, 0))
         }
-        samples.removeAll { $0.date < cutoff }
-        let used = Set(samples.flatMap(\.joules.keys))
+        guard let oldest = samples.first, oldest.date < cutoff else { return }
+        samples.removeFirst(Self.partitionIndex(in: samples) { $0.date < cutoff })
+        // Only samples name apps, so only dropping samples can leave one unused.
+        pruneApps()
+    }
+
+    /// The index of the first element that isn't `isBefore` the point looked for, in an array in date order. A
+    /// binary search: the history is read every time the panel draws, and holds a day of readings.
+    static func partitionIndex<Element>(in elements: [Element], isBefore: (Element) -> Bool) -> Int {
+        var low = elements.startIndex
+        var high = elements.endIndex
+        while low < high {
+            let middle = low + (high - low) / 2
+            if isBefore(elements[middle]) { low = middle + 1 } else { high = middle }
+        }
+        return low
+    }
+
+    /// The first level reading at `date` or later.
+    static func firstIndex(in levels: [LevelPoint], from date: Date) -> Int {
+        partitionIndex(in: levels) { $0.date < date }
+    }
+
+    /// The first sample that ends after `date`: one that ends exactly then covers nothing after it.
+    private func firstSample(after date: Date) -> Int {
+        Self.partitionIndex(in: samples) { $0.date <= date }
+    }
+
+    /// Forgets apps no sample names any more.
+    private mutating func pruneApps() {
+        var used = Set<String>(minimumCapacity: apps.count)
+        for sample in samples { used.formUnion(sample.joules.keys) }
         if apps.count > used.count { apps = apps.filter { used.contains($0.key) } }
     }
 
@@ -150,15 +190,18 @@ public struct BatteryHistory: Codable, Sendable, Equatable {
 
     /// Level readings from `start` on, beginning with the level at `start` itself when it's known.
     public func levels(since start: Date) -> [LevelPoint] {
-        guard let firstInside = levels.firstIndex(where: { $0.date >= start }) else {
+        let firstInside = Self.firstIndex(in: levels, from: start)
+        guard firstInside < levels.endIndex else {
             // Nothing changed since: the last reading still holds.
             return levels.last.map { [LevelPoint(date: start, percentage: $0.percentage, isPluggedIn: $0.isPluggedIn)] } ?? []
         }
-        var points = Array(levels[firstInside...])
+        var points: [LevelPoint] = []
+        points.reserveCapacity(levels.count - firstInside + 1)
         if firstInside > 0 {
             let before = levels[firstInside - 1]
-            points.insert(LevelPoint(date: start, percentage: before.percentage, isPluggedIn: before.isPluggedIn), at: 0)
+            points.append(LevelPoint(date: start, percentage: before.percentage, isPluggedIn: before.isPluggedIn))
         }
+        points.append(contentsOf: levels[firstInside...])
         return points
     }
 
@@ -185,7 +228,7 @@ public struct BatteryHistory: Codable, Sendable, Equatable {
         var buckets: [LevelBucket] = []
         buckets.reserveCapacity(count)
         // The reading in effect when each slice starts, carried along as we go.
-        var index = levels.firstIndex { $0.date >= start } ?? levels.endIndex
+        var index = Self.firstIndex(in: levels, from: start)
         var carried: LevelPoint? = index > levels.startIndex ? levels[index - 1] : nil
         for slot in 0..<count {
             let bucketStart = start.addingTimeInterval(Double(slot) * length)
@@ -235,26 +278,34 @@ public struct BatteryHistory: Codable, Sendable, Equatable {
 
     /// The apps that used the most energy from `start` on, most first.
     public func appEnergy(since start: Date) -> [AppEnergy] {
-        let inRange = samples.filter { $0.date > start }
+        let inRange = samples[firstSample(after: start)...]
         var totals: [String: Double] = [:]
+        totals.reserveCapacity(apps.count)
+        var wattsTotal = 0.0
+        var wattsCount = 0
         for sample in inRange {
             // A sample that began before `start` counts for the part inside it.
             let fraction = sample.start < start ? max(sample.date.timeIntervalSince(start), 0) / sample.seconds : 1
             for (key, joules) in sample.joules { totals[key, default: 0] += joules * fraction }
-        }
-        let readings = inRange.compactMap(\.systemWatts).filter { $0 > 0 }
-        let averageWatts = readings.isEmpty ? nil : readings.reduce(0, +) / Double(readings.count)
-        return
-            totals
-            .compactMap { key, joules in
-                apps[key].map { AppEnergy(app: $0, joules: joules, batteryTime: averageWatts.map { joules / $0 }) }
+            if let watts = sample.systemWatts, watts > 0 {
+                wattsTotal += watts
+                wattsCount += 1
             }
-            .sorted { $0.joules > $1.joules }
+        }
+        let averageWatts = wattsCount > 0 ? wattsTotal / Double(wattsCount) : nil
+        var energy: [AppEnergy] = []
+        energy.reserveCapacity(totals.count)
+        for (key, joules) in totals {
+            guard let app = apps[key] else { continue }
+            energy.append(AppEnergy(app: app, joules: joules, batteryTime: averageWatts.map { joules / $0 }))
+        }
+        // Ties broken by key, so the order is the same every time the panel draws.
+        return energy.sorted { $0.joules != $1.joules ? $0.joules > $1.joules : $0.id < $1.id }
     }
 
     /// How much time on battery the energy samples since `start` cover.
     public func sampledTime(since start: Date) -> TimeInterval {
-        samples.filter { $0.date > start }.reduce(0) { $0 + min($1.seconds, $1.date.timeIntervalSince(start)) }
+        samples[firstSample(after: start)...].reduce(0) { $0 + min($1.seconds, $1.date.timeIntervalSince(start)) }
     }
 }
 
@@ -267,6 +318,7 @@ extension BatteryHistory {
         else { return BatteryHistory() }
         var history = file.history
         history.trim()
+        history.pruneApps()
         return history
     }
 

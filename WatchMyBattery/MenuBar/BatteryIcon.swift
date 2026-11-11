@@ -7,13 +7,15 @@ import BatteryKit
 /// terminal, bright as far as the battery is charged and translucent beyond,
 /// with a bolt cut out of it while charging. It can also print the percentage
 /// inside, cut out the same way, so it stays readable on any wallpaper.
-struct BatteryIcon: Equatable {
+struct BatteryIcon: Hashable {
     var level: Double
     var percentage: Int
     var chargeState: BatterySnapshot.ChargeState
     var showsPercentageInside: Bool
     var usesColor: Bool
     var isLowPowerModeOn: Bool
+    /// The level macOS charges to, 0–1: where the charging glint comes to rest.
+    var chargeTarget: Double
     /// Where the charging glint is in its sweep, 0–1, or `nil` for a still icon.
     var chargeGlint: Double?
     /// Draw for a dark (`true`) or light menu bar, instead of the one being drawn into.
@@ -32,6 +34,7 @@ struct BatteryIcon: Equatable {
         showsPercentageInside = percentageStyle == .inside
         self.usesColor = usesColor
         isLowPowerModeOn = snapshot.isLowPowerModeOn
+        chargeTarget = Double(snapshot.chargeTarget) / 100
     }
 
     /// At or below this, the battery counts as low.
@@ -39,7 +42,9 @@ struct BatteryIcon: Equatable {
 
     // MARK: Geometry (points)
 
-    private var bodySize: CGSize { CGSize(width: 23, height: 12) }
+    /// The width of the battery's body, which the charging glint sweeps across.
+    static let bodyWidth: CGFloat = 23
+    private var bodySize: CGSize { CGSize(width: Self.bodyWidth, height: 12) }
     private static let terminalSize = CGSize(width: 1.5, height: 4)
     private static let terminalGap: CGFloat = 1
     private static let imageHeight: CGFloat = 16
@@ -104,7 +109,7 @@ struct BatteryIcon: Equatable {
 
         // A solid pill: the charge in full colour, the rest translucent.
         // Always show a sliver, so an almost empty battery still reads as a battery.
-        let fillWidth = level > 0 ? max(body.width * level, 3) : 0
+        let fillWidth = CGFloat(ChargingGlint.fillWidth(bodyWidth: body.width, level: level))
         let fill = CGRect(x: body.minX, y: body.minY, width: fillWidth, height: body.height)
         context.saveGState()
         bodyPath.addClip()
@@ -173,18 +178,17 @@ struct BatteryIcon: Equatable {
     /// rolls through the empty part of the pill to the terminal, and fades as
     /// it gets there, which gives the terminal a little flash. It only ever
     /// adds the icon's own colour over the translucent part, so it looks the
-    /// same in a template icon and a coloured one, on any menu bar.
+    /// same in a template icon and a coloured one, on any menu bar. Where it
+    /// is in each frame comes from ``ChargingGlint``, which also picks the frames.
     private func drawGlint(
         at phase: Double, body: CGRect, bodyPath: NSBezierPath, fill: CGRect, terminal: CGRect, color: NSColor,
         context: CGContext
     ) {
-        // Ease in and out, so the swell glides rather than ticks.
-        let t = phase < 0.5 ? 2 * phase * phase : 1 - pow(-2 * phase + 2, 2) / 2
-        // Fades in as it leaves the charge and out as it reaches the end.
-        let strength = CGFloat(sin(Double.pi * phase))
+        let glint = ChargingGlint.frame(at: phase, bodyWidth: body.width, level: level, target: chargeTarget)
+        let strength = CGFloat(glint.strength)
         let empty = CGRect(x: fill.maxX, y: body.minY, width: max(body.maxX - fill.maxX, 0), height: body.height)
-        let width = max(min(empty.width * 0.7, 10), 5)
-        let center = empty.minX + (empty.width + width / 2) * t
+        let width = CGFloat(glint.width)
+        let center = body.minX + CGFloat(glint.center)
         let rgb = color.usingColorSpace(.deviceRGB) ?? color
         let space = CGColorSpaceCreateDeviceRGB()
 
@@ -202,12 +206,25 @@ struct BatteryIcon: Equatable {
             context.restoreGState()
         }
 
-        // The terminal lights up as the swell arrives.
-        let arrival = min(max((phase - 0.55) / 0.45, 0), 1)
-        let flash = CGFloat(sin(Double.pi * arrival))
+        // The end lights up as the swell arrives: the terminal when charging to full, or a soft line at the target,
+        // where macOS will hold the charge.
+        let flash = CGFloat(glint.flash)
         if flash > 0 {
-            rgb.withAlphaComponent(0.6 * flash).setFill()
-            terminalPath(in: terminal).fill()
+            if chargeTarget >= 1 {
+                rgb.withAlphaComponent(0.6 * flash).setFill()
+                terminalPath(in: terminal).fill()
+            } else {
+                let x = body.minX + CGFloat(ChargingGlint.targetPosition(bodyWidth: body.width, target: chargeTarget))
+                context.saveGState()
+                bodyPath.addClip()
+                if let glow = CGGradient(
+                    colorsSpace: space, colors: [0, 1, 0].map { rgb.withAlphaComponent($0 * 0.7 * flash).cgColor } as CFArray,
+                    locations: [0, 0.5, 1])
+                {
+                    context.drawLinearGradient(glow, start: CGPoint(x: x - 2.5, y: 0), end: CGPoint(x: x + 2.5, y: 0), options: [])
+                }
+                context.restoreGState()
+            }
         }
     }
 
@@ -215,10 +232,14 @@ struct BatteryIcon: Equatable {
     private static let emptyOpacity: CGFloat = 0.4
 
     private func percentageText(in body: CGRect) -> NSAttributedString {
-        let fontSize: CGFloat = percentage >= 100 ? 9 : 10.5
-        let font = NSFont.systemFont(ofSize: fontSize, weight: .semibold).monospacedDigits
+        let font = percentage >= 100 ? Self.smallDigits : Self.digits
         return NSAttributedString(string: "\(percentage)", attributes: [.font: font, .foregroundColor: NSColor.black])
     }
+
+    /// Made once: building a font with monospaced digits goes through font descriptors, on every frame otherwise.
+    private static let digits = NSFont.systemFont(ofSize: 10.5, weight: .semibold).monospacedDigits
+    /// "100" needs a size smaller to fit.
+    private static let smallDigits = NSFont.systemFont(ofSize: 9, weight: .semibold).monospacedDigits
 
     private func terminalPath(in rect: CGRect) -> NSBezierPath {
         let path = NSBezierPath()

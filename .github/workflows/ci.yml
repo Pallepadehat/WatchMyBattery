@@ -38,9 +38,26 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
+      # Unit tests, and the integration tests against the runner's kernel and disk. The runners are virtual Macs
+      # without a battery, so the tests that need one skip themselves.
       - name: Run tests
         working-directory: Packages/BatteryKit
         run: swift test
+
+  # Not required for merging: runners differ too much from one another for their timings to block anything. It
+  # still fails a benchmark that goes far over its budget, and the numbers are kept for comparing runs.
+  benchmarks:
+    name: Benchmarks
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Run benchmarks
+        working-directory: Packages/BatteryKit
+        run: swift run -c release BatteryKitBenchmarks --quick --report-only --json benchmarks.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: benchmarks
+          path: Packages/BatteryKit/benchmarks.json
 
   build:
     name: Build app
@@ -72,9 +89,16 @@ jobs:
             -configuration Release \
             -destination 'platform=macOS' \
             CODE_SIGNING_ALLOWED=NO \
+            -derivedDataPath build/DerivedData \
             | tee build.log
           # Warnings in our own code fail the build, as CONTRIBUTING asks.
           if grep -E "warning: .*(WatchMyBattery|BatteryKit)/" build.log | grep -v "Sparkle"; then
             echo "::error::The app builds with warnings."
             exit 1
           fi
+      # The real app, launched the way people run it: it has to start, record, and quit cleanly. Its costs are only
+      # reported here (a virtual Mac says little about energy); scripts/check.sh holds them to account before a release.
+      - name: End to end
+        if: steps.xcode.outputs.supported == 'true'
+        continue-on-error: true
+        run: swift scripts/e2e.swift --app build/DerivedData/Build/Products/Release/WatchMyBattery.app --quick --report-only
