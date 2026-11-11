@@ -24,9 +24,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: StatusItemController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        model.start()
         statusItem = StatusItemController(model: model)
         model.showPanel = { [weak self] in self?.statusItem?.showPanel() }
+        model.togglePanel = { [weak self] in self?.statusItem?.togglePanel() }
+        model.start()
         #if DEBUG
             if CommandLine.arguments.contains("--show-settings") {
                 // `--settings-pane updates` (say) opens that pane.

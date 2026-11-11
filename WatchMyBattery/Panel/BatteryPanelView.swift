@@ -48,6 +48,24 @@ struct BatteryPanelView: View {
                         .transition(.opacity)
                 }
 
+                if model.lowPowerMode.isSupported {
+                    LowPowerModeRow(isOn: snapshot.isLowPowerModeOn, isChanging: model.lowPowerMode.isChanging) { on in
+                        setLowPowerMode(on)
+                    }
+                    .padding(.horizontal, Self.inset)
+                    .padding(.top, 6)
+                }
+
+                if model.lowPowerMode.suggests(for: snapshot) {
+                    LowPowerSuggestion(
+                        turnOn: { setLowPowerMode(true) },
+                        dismiss: { withAnimation(.snappy) { model.lowPowerMode.isSuggestionDismissed = true } }
+                    )
+                    .padding(.horizontal, 10)
+                    .padding(.top, 10)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+
                 if let refusal = model.usage.refusal {
                     RefusalNotice(
                         refusal: refusal,
@@ -115,6 +133,7 @@ struct BatteryPanelView: View {
         .animation(.smooth(duration: 0.45), value: model.usage.apps.map(\.id))
         .animation(.smooth(duration: 0.6), value: snapshot)
         .animation(.snappy(duration: 0.3), value: model.usage.refusal)
+        .animation(.snappy(duration: 0.3), value: model.lowPowerMode.suggests(for: snapshot))
     }
 
     private var header: some View {
@@ -148,6 +167,12 @@ struct BatteryPanelView: View {
 
     private var powerSourceDescription: LocalizedStringKey {
         snapshot.powerSource == .battery ? "Power Source: Battery" : "Power Source: Power Adapter"
+    }
+
+    /// macOS asks for a password before changing Low Power Mode, and its prompt takes focus anyway, so the panel steps aside.
+    private func setLowPowerMode(_ on: Bool) {
+        close()
+        model.setLowPowerMode(on)
     }
 
     /// Quits an app dragged out of the panel (or deleted with the keyboard), asking first when `asking`.
@@ -276,6 +301,63 @@ private struct HealthRow: View {
             parts.append(String(localized: "\(cycles) cycles"))
         }
         return parts.joined(separator: " · ")
+    }
+}
+
+/// "Low Power Mode" with a switch, like the one in System Settings.
+private struct LowPowerModeRow: View {
+    let isOn: Bool
+    let isChanging: Bool
+    let set: (Bool) -> Void
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text("Low Power Mode")
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 8)
+            if isChanging {
+                ProgressView()
+                    .controlSize(.mini)
+            }
+            Toggle("Low Power Mode", isOn: Binding(get: { isOn }, set: { set($0) }))
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+                .disabled(isChanging)
+        }
+        .font(.system(size: 12))
+        .help("Reduces energy use, so the battery lasts longer. macOS asks for your password to change it.")
+    }
+}
+
+/// Running low: offer Low Power Mode, the way the iPhone does at 20%.
+private struct LowPowerSuggestion: View {
+    let turnOn: () -> Void
+    let dismiss: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "leaf.fill")
+                .font(.system(size: 15))
+                .foregroundStyle(.yellow)
+                .padding(.top, 1)
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Battery is low")
+                    .font(.system(size: 12, weight: .semibold))
+                Text("Low Power Mode makes it last longer, by reducing energy use.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button("Turn On Low Power Mode", action: turnOn)
+                    .buttonStyle(.link)
+                    .font(.system(size: 11, weight: .medium))
+            }
+            Spacer(minLength: 0)
+            DismissButton(action: dismiss)
+        }
+        .padding(10)
+        .background(.yellow.opacity(0.16), in: .rect(cornerRadius: 10, style: .continuous))
+        .accessibilityElement(children: .contain)
     }
 }
 

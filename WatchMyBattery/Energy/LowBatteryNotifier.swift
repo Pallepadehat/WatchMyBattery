@@ -22,6 +22,7 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
 
     private static let categoryID = "lowBattery"
     private static let quitActionID = "quit"
+    private static let lowPowerModeActionID = "lowPowerMode"
 
     func start(model: AppModel) {
         self.model = model
@@ -74,6 +75,7 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
         let content = UNMutableNotificationContent()
         content.title = String(localized: "Battery at \(snapshot.percentage)%")
         let timeLeft = snapshot.timeRemaining.map { String(localized: "About \(TimeFormat.clock($0)) left.") }
+        var actions: [UNNotificationAction] = []
         if let app {
             let cost = Estimates(snapshot: snapshot, systemWatts: model.usage.systemWatts).timeGained(byQuitting: app.watts)
             let hint =
@@ -82,14 +84,20 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
                 : String(localized: "\(app.name) is using the most energy.")
             content.body = [timeLeft, hint].compactMap(\.self).joined(separator: " ")
             content.userInfo = ["pid": Int(app.id), "bundleIdentifier": app.bundleIdentifier ?? ""]
-            let quit = UNNotificationAction(
-                identifier: Self.quitActionID, title: String(localized: "Quit \(app.name)"), options: [.destructive])
-            center.setNotificationCategories([
-                UNNotificationCategory(identifier: Self.categoryID, actions: [quit], intentIdentifiers: [])
-            ])
-            content.categoryIdentifier = Self.categoryID
+            actions.append(
+                UNNotificationAction(identifier: Self.quitActionID, title: String(localized: "Quit \(app.name)"), options: [.destructive]))
         } else {
             content.body = timeLeft ?? String(localized: "Plug in soon.")
+        }
+        if model.lowPowerMode.isSupported, !snapshot.isLowPowerModeOn {
+            actions.append(
+                UNNotificationAction(identifier: Self.lowPowerModeActionID, title: String(localized: "Turn On Low Power Mode")))
+        }
+        if !actions.isEmpty {
+            center.setNotificationCategories([
+                UNNotificationCategory(identifier: Self.categoryID, actions: actions, intentIdentifiers: [])
+            ])
+            content.categoryIdentifier = Self.categoryID
         }
         content.sound = .default
         // One notification at a time: a lower level replaces the one before.
@@ -121,6 +129,8 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
                     bundleIdentifier?.isEmpty != false || app.bundleIdentifier == bundleIdentifier
                 else { return }
                 app.terminate()
+            } else if action == Self.lowPowerModeActionID {
+                model?.setLowPowerMode(true)
             } else if action == UNNotificationDefaultActionIdentifier {
                 model?.showPanel()
             }

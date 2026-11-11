@@ -35,6 +35,8 @@
 - Click the icon for a panel that looks like the system's Battery menu: the percentage, the power source, and a big capsule-shaped battery.
 - The white fill is the charge you have left. The **coloured slices at the end of it are the apps using the most energy right now**, each with its icon and an estimate of the battery time it's costing you, like **−48m**.
 - The centre of the battery shows the time remaining, or the percentage if you prefer.
+- A switch for Low Power Mode, and a nudge to turn it on when the battery runs low.
+- Open it from any app with a keyboard shortcut of your choice.
 
 **Drag an app out to quit it**
 - Pull an app's slice out of the panel and let go. The app quits with a *poof*, like removing an icon from the Dock.
@@ -47,6 +49,7 @@
 - Condition, maximum capacity and cycle count, quietly, under the time.
 - An optional notification at the levels you choose, naming the hungriest app, with a button that quits it.
 - A soft glow flows into the battery while it charges, in the menu bar and the panel. Turn it off if you prefer a still icon.
+- Shortcuts actions for the battery level, the time left and the app using the most energy, also in Spotlight.
 - In English and Danish.
 
 **Light on your battery** (it would be a bit silly otherwise)
