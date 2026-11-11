@@ -4,9 +4,10 @@ import Charts
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// The last 24 hours: the battery level with the time plugged in marked,
-/// how long it's been on battery since it was unplugged, and the apps that
-/// used the most of it.
+/// The battery's history. Over the last 24 hours: the level with the time
+/// plugged in marked, how long it's been on battery since it was unplugged,
+/// and the apps that used the most of it. Over the last 10 days, like
+/// iPhone's: how much battery each day used, an average day, and the apps.
 struct HistorySection: View {
     /// The recorder rather than its history, so the history is only read (and the panel only redrawn when it
     /// changes) while the section is open.
@@ -16,6 +17,7 @@ struct HistorySection: View {
     /// The panel is on screen. It's only hidden when closed, so the clock below has to know to stop.
     let isVisible: Bool
     @Binding var isExpanded: Bool
+    @Binding var range: HistoryRange
 
     /// A minute is plenty: nothing here changes faster.
     @State private var now = Date()
@@ -24,20 +26,23 @@ struct HistorySection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            DisclosureRow(title: "Last 24 Hours", isExpanded: $isExpanded)
+            DisclosureRow(title: range == .day ? "Last 24 Hours" : "Last 10 Days", isExpanded: $isExpanded)
 
             if isExpanded {
-                let history = recorder.history
                 VStack(alignment: .leading, spacing: 8) {
-                    LevelChart(
-                        buckets: history.levelBuckets(endingAt: now, current: snapshot), start: start, now: now, current: snapshot,
-                        usesColor: usesColor)
-
-                    if let stretch = history.sinceUnplugged(snapshot, now: now) {
-                        SinceUnpluggedRow(stretch: stretch)
+                    Picker("Period", selection: $range.animation(.snappy(duration: 0.25))) {
+                        ForEach(HistoryRange.allCases) { range in
+                            Text(range.title).tag(range)
+                        }
                     }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .controlSize(.small)
 
-                    AppHistoryList(apps: history.appEnergy(since: start), sampledTime: history.sampledTime(since: start))
+                    switch range {
+                    case .day: lastDay
+                    case .tenDays: lastTenDays
+                    }
                 }
                 .padding(.top, 6)
                 .transition(.opacity.combined(with: .move(edge: .top)))
@@ -50,6 +55,35 @@ struct HistorySection: View {
                 try? await Task.sleep(for: .seconds(60), tolerance: .seconds(10))
             }
         }
+    }
+}
+
+extension HistorySection {
+    @ViewBuilder private var lastDay: some View {
+        let history = recorder.history
+        LevelChart(
+            buckets: history.levelBuckets(endingAt: now, current: snapshot), start: start, now: now, current: snapshot,
+            usesColor: usesColor)
+
+        if let stretch = history.sinceUnplugged(snapshot, now: now) {
+            SinceUnpluggedRow(stretch: stretch)
+        }
+
+        AppHistoryList(apps: history.appEnergy(since: start), sampledTime: history.sampledTime(since: start))
+    }
+
+    /// Only read while shown, like the day's history, so the panel doesn't redraw for it otherwise.
+    @ViewBuilder private var lastTenDays: some View {
+        let profile = recorder.profile
+        let days = profile.days(10, endingAt: now)
+        let since = days.first?.start ?? start
+        DayChart(days: days)
+
+        if let average = AverageDay(days) {
+            AverageDayRow(average: average)
+        }
+
+        AppHistoryList(apps: profile.appEnergy(since: since), sampledTime: profile.sampledTime(since: since))
     }
 }
 
@@ -77,7 +111,7 @@ private struct DisclosureRow: View {
         .buttonStyle(.plain)
         .accessibilityLabel(title)
         .accessibilityValue(isExpanded ? Text("Shown") : Text("Hidden"))
-        .accessibilityHint("Shows the battery level and the apps that used the most battery over the last 24 hours.")
+        .accessibilityHint("Shows the battery level and the apps that used the most battery.")
     }
 }
 
@@ -177,6 +211,101 @@ private struct LevelChart: View {
             localized:
                 "Between \((Double(lowest) / 100).formatted(format)) and \((Double(highest) / 100).formatted(format)), now \(current.level.formatted(format))."
         )
+    }
+}
+
+// MARK: - The ten-day chart
+
+/// How much battery each of the last ten days used, a bar a day, like iPhone's Battery settings. A day can use more
+/// than 100% when the Mac was charged in between.
+private struct DayChart: View {
+    let days: [UsageProfile.Day]
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        let top = max(100, days.map(\.drained).max() ?? 0)
+        let plain = colorScheme == .dark ? Color.white.opacity(0.85) : Color(white: 0.12).opacity(0.85)
+        Chart(days) { day in
+            BarMark(x: .value("Day", day.start, unit: .day), y: .value("Used", day.drained), width: .ratio(0.62))
+                .cornerRadius(1.5)
+                .foregroundStyle(plain)
+        }
+        .chartYScale(domain: 0...top)
+        .chartXAxis {
+            AxisMarks(values: days.map(\.start)) { _ in
+                AxisValueLabel(format: .dateTime.weekday(.narrow), centered: true)
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color.secondary)
+            }
+        }
+        .chartYAxis {
+            AxisMarks(position: .trailing, values: [0, 50, 100]) { value in
+                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5)).foregroundStyle(.quaternary)
+                AxisValueLabel {
+                    if let level = value.as(Int.self) {
+                        Text(Double(level) / 100, format: .percent)
+                            .font(.system(size: 10))
+                            .foregroundStyle(Color.secondary)
+                    }
+                }
+            }
+        }
+        .overlay {
+            if days.allSatisfy({ $0.drained == 0 }) {
+                Text("Each day's battery use shows here.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(height: 128)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Battery used each day, last 10 days")
+        .accessibilityValue(accessibilitySummary)
+    }
+
+    private var accessibilitySummary: String {
+        let format = FloatingPointFormatStyle<Double>.Percent().precision(.fractionLength(0))
+        return days.filter { $0.drained > 0 }
+            .map { "\($0.start.formatted(.dateTime.weekday(.wide))) \((Double($0.drained) / 100).formatted(format))" }
+            .joined(separator: ", ")
+    }
+}
+
+/// An average day on battery, over the days that had any.
+private struct AverageDay {
+    let batteryTime: TimeInterval
+    /// Percentage points.
+    let used: Double
+
+    init?(_ days: [UsageProfile.Day]) {
+        let used = days.filter { $0.drained > 0 || $0.batterySeconds >= 60 }
+        guard !used.isEmpty else { return nil }
+        batteryTime = used.reduce(0) { $0 + $1.batterySeconds } / Double(used.count)
+        self.used = Double(used.reduce(0) { $0 + $1.drained }) / Double(used.count)
+    }
+}
+
+/// "Average day  2:10 on battery · 34% used".
+private struct AverageDayRow: View {
+    let average: AverageDay
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text("Average day")
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 8)
+            Text(details)
+                .monospacedDigit()
+        }
+        .font(.system(size: 12))
+        .help(Text("Over the days the Mac ran on battery. Time on battery includes time asleep."))
+        .accessibilityElement(children: .combine)
+    }
+
+    private var details: String {
+        let used = (average.used / 100).formatted(.percent.precision(.fractionLength(0)))
+        return String(localized: "\(TimeFormat.clock(average.batteryTime)) on battery · \(used) used")
     }
 }
 
@@ -290,7 +419,7 @@ private struct AppHistoryRow: View {
 }
 
 /// Icons and colours of apps in the history, which may not be running any more.
-private enum AppLook {
+enum AppLook {
     struct Look {
         let icon: NSImage
         let tint: Color

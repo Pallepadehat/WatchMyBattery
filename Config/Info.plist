@@ -14,5 +14,9 @@
 	<true/>
 	<key>SUScheduledCheckInterval</key>
 	<integer>86400</integer>
+
+	<!-- Asked only once "Charge Before Meetings" is turned on. Translated in InfoPlist.xcstrings. -->
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>WatchMyBattery reads when your meetings start and end, to warn you when the battery won't last through one. It never reads what they're about, and nothing leaves your Mac.</string>
 </dict>
 </plist>

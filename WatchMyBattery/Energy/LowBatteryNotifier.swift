@@ -6,8 +6,9 @@ import UserNotifications
 
 /// Sends a notification when the battery runs low, naming the app that's
 /// using the most energy, with a button that quits it. It also sends the
-/// runaway app notification for ``HistoryRecorder``, as both share the Quit
-/// button and macOS allows one notification delegate.
+/// runaway app notification for ``HistoryRecorder`` and the insights for
+/// ``InsightsMonitor``, as they share the Quit and Low Power Mode buttons and
+/// macOS allows one notification delegate.
 ///
 /// It only watches the battery snapshot, which changes by notification, so
 /// it costs nothing until a level is reached. Then it measures apps for a
@@ -26,6 +27,8 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
 
     private static let categoryID = "lowBattery"
     private static let runawayCategoryID = "runawayApp"
+    private static let meetingCategoryID = "meeting"
+    private static let meetingID = "meeting"
     private static let quitActionID = "quit"
     private static let lowPowerModeActionID = "lowPowerMode"
 
@@ -136,6 +139,70 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
             try await center.add(request)
         } catch {
             Logger.app.error("Couldn't send the runaway app notification: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    // MARK: - Insights
+
+    /// "Charge before your 14:00 meeting". One at a time: a later warning replaces the one before.
+    func notifyMeeting(_ warning: MeetingWarning, offersLowPowerMode: Bool) async {
+        let content = UNMutableNotificationContent()
+        content.title = InsightText.meetingTitle(warning)
+        content.body = InsightText.meetingDetail(warning)
+        if offersLowPowerMode {
+            register(
+                UNNotificationCategory(
+                    identifier: Self.meetingCategoryID,
+                    actions: [UNNotificationAction(identifier: Self.lowPowerModeActionID, title: String(localized: "Turn On Low Power Mode"))],
+                    intentIdentifiers: []))
+            content.categoryIdentifier = Self.meetingCategoryID
+        }
+        content.sound = .default
+        await send(UNNotificationRequest(identifier: Self.meetingID, content: content, trigger: nil), kind: "meeting")
+    }
+
+    /// Plugged in: the meeting warning has done its job, so it leaves Notification Center.
+    func removeMeetingNotification() {
+        center.removeDeliveredNotifications(withIdentifiers: [Self.meetingID])
+    }
+
+    /// "Using more power than usual", with a button that quits the app behind it while it's running.
+    func notifyUnusualDrain(_ drain: UnusualDrain, cause running: NSRunningApplication?) async {
+        let content = UNMutableNotificationContent()
+        content.title = InsightText.unusualDrainTitle
+        content.body = InsightText.unusualDrainDetail(drain)
+        if let cause = drain.cause, let running { addQuitButton(for: cause, pid: running.processIdentifier, to: content) }
+        content.sound = .default
+        await send(UNNotificationRequest(identifier: "unusualDrain", content: content, trigger: nil), kind: "more than usual")
+    }
+
+    /// "Figma is new, and using a lot of battery". Sent once per app.
+    func notifyNewApp(_ app: BatteryHistory.AppIdentity, running: NSRunningApplication?) async {
+        let content = UNMutableNotificationContent()
+        content.title = InsightText.newAppTitle(app)
+        content.body = InsightText.newAppDetail
+        if let running { addQuitButton(for: app, pid: running.processIdentifier, to: content) }
+        content.sound = .default
+        await send(UNNotificationRequest(identifier: "newApp-\(app.key)", content: content, trigger: nil), kind: "new app")
+    }
+
+    /// The runaway app notification's Quit button, which works the same for any app.
+    private func addQuitButton(for app: BatteryHistory.AppIdentity, pid: pid_t, to content: UNMutableNotificationContent) {
+        content.userInfo = ["pid": Int(pid), "bundleIdentifier": app.bundleIdentifier ?? ""]
+        let category = "quit-\(app.key)"
+        register(
+            UNNotificationCategory(
+                identifier: category,
+                actions: [UNNotificationAction(identifier: Self.quitActionID, title: String(localized: "Quit \(app.name)"), options: [.destructive])],
+                intentIdentifiers: []))
+        content.categoryIdentifier = category
+    }
+
+    private func send(_ request: UNNotificationRequest, kind: String) async {
+        do {
+            try await center.add(request)
+        } catch {
+            Logger.app.error("Couldn't send the \(kind, privacy: .public) notification: \(error.localizedDescription, privacy: .public)")
         }
     }
 

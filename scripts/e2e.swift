@@ -9,7 +9,7 @@
 //   --json <path>       also write the results as JSON
 //   --only idle,panel   only these scenarios (idle, charging, panel)
 //
-// Every run is isolated (`--isolated <folder>`): its own settings, a history file in a temporary folder, no
+// Every run is isolated (`--isolated <folder>`): its own settings, a history store in a temporary folder, no
 // updater, no keyboard shortcut, so it runs safely next to the copy you use. A second battery shows up in the menu
 // bar while it runs. Don't click it: the panel scenario needs the panel to stay open.
 //
@@ -19,6 +19,7 @@
 import AppKit
 import Darwin
 import Foundation
+import SQLite3
 
 // MARK: - Options
 
@@ -114,7 +115,21 @@ final class RunningApp {
     }
 
     var pid: pid_t { process.processIdentifier }
-    var historyFile: URL { folder.appending(path: "History.plist") }
+    /// The history's SwiftData store (SQLite underneath).
+    var historyStore: URL { folder.appending(path: "History.store") }
+
+    /// How many level readings the store holds, read straight from SQLite; `nil` if it can't be read.
+    func storedLevels() -> Int? {
+        var database: OpaquePointer?
+        defer { sqlite3_close(database) }
+        guard sqlite3_open_v2(historyStore.path, &database, SQLITE_OPEN_READONLY, nil) == SQLITE_OK else { return nil }
+        var statement: OpaquePointer?
+        defer { sqlite3_finalize(statement) }
+        guard sqlite3_prepare_v2(database, "SELECT COUNT(*) FROM ZSTOREDLEVEL", -1, &statement, nil) == SQLITE_OK,
+            sqlite3_step(statement) == SQLITE_ROW
+        else { return nil }
+        return Int(sqlite3_column_int64(statement, 0))
+    }
 
     /// Waits until `condition` holds, checking every 0.1 s; `false` if it didn't in time.
     func wait(upTo seconds: Double, for condition: () -> Bool) -> Bool {
@@ -280,18 +295,18 @@ func launchAndMeasure(arguments: [String], keepsHistory: Bool, reportsChecks: Bo
     }
     defer { app.cleanUp() }
 
-    // The history is saved as soon as the first battery reading is recorded (on Macs with a battery). A made-up
-    // battery (`--pretend-charging`) is never saved, on purpose.
+    // The history's store is opened at launch, and the first battery reading saved into it straight away (on Macs
+    // with a battery). A made-up battery (`--pretend-charging`) is kept in memory only, on purpose.
     let hasBattery = macHasBattery && keepsHistory
     let started = Date()
-    let launched = app.wait(upTo: 15) { !app.process.isRunning || !hasBattery || FileManager.default.fileExists(atPath: app.historyFile.path) }
+    let launched = app.wait(upTo: 15) { !app.process.isRunning || !hasBattery || (app.storedLevels() ?? 0) > 0 }
     verify(
         "launches and keeps running", launched && app.process.isRunning, app.process.isRunning ? "" : "exited with \(app.process.terminationStatus)\n\(app.log)"
     )
     guard app.process.isRunning else { return nil }
     if hasBattery {
         verify(
-            "records the battery to its history file", FileManager.default.fileExists(atPath: app.historyFile.path),
+            "records the battery to its history store", (app.storedLevels() ?? 0) > 0,
             String(format: "after %.1f s", Date().timeIntervalSince(started)))
     }
 
@@ -306,9 +321,7 @@ func launchAndMeasure(arguments: [String], keepsHistory: Bool, reportsChecks: Bo
         verify("exits cleanly", app.process.terminationStatus == 0, "status \(app.process.terminationStatus)")
     }
     if quit, hasBattery {
-        let saved = (try? Data(contentsOf: app.historyFile))
-            .flatMap { try? PropertyListSerialization.propertyList(from: $0, format: nil) as? [String: Any] }
-        verify("leaves a readable history behind", saved?["version"] as? Int == 1)
+        verify("leaves a readable history behind", (app.storedLevels() ?? 0) > 0)
     }
     return result
 }

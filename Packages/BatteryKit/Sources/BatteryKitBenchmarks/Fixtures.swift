@@ -47,6 +47,23 @@ enum Fixtures {
         return history
     }
 
+    /// Two weeks of hourly summaries, each day like ``fullDay(endingAt:)``: as full as the profile gets.
+    static func twoWeeks(endingAt end: Date = now) -> UsageProfile {
+        var profile = UsageProfile()
+        for day in (0..<14).reversed() {
+            let history = fullDay(endingAt: end.addingTimeInterval(-Double(day) * 24 * 3600))
+            var levels = history.levels[...]
+            for sample in history.samples {
+                while let level = levels.first, level.date <= sample.date {
+                    profile.record(level: level)
+                    levels.removeFirst()
+                }
+                profile.record(sample, apps: history.apps)
+            }
+        }
+        return profile
+    }
+
     /// Readings for the power smoother, like a busy Mac's processes, with some coming and going.
     static func powerReadings(count: Int, round: Int) -> [Int32: Double] {
         var readings: [Int32: Double] = [:]
