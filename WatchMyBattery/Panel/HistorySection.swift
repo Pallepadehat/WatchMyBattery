@@ -8,7 +8,9 @@ import UniformTypeIdentifiers
 /// how long it's been on battery since it was unplugged, and the apps that
 /// used the most of it.
 struct HistorySection: View {
-    let history: BatteryHistory
+    /// The recorder rather than its history, so the history is only read (and the panel only redrawn when it
+    /// changes) while the section is open.
+    let recorder: HistoryRecorder
     let snapshot: BatterySnapshot
     let usesColor: Bool
     /// The panel is on screen. It's only hidden when closed, so the clock below has to know to stop.
@@ -25,6 +27,7 @@ struct HistorySection: View {
             DisclosureRow(title: "Last 24 Hours", isExpanded: $isExpanded)
 
             if isExpanded {
+                let history = recorder.history
                 VStack(alignment: .leading, spacing: 8) {
                     LevelChart(
                         buckets: history.levelBuckets(endingAt: now, current: snapshot), start: start, now: now, current: snapshot,
@@ -85,7 +88,8 @@ private struct DisclosureRow: View {
 /// Before history begins there are no bars, so a new history reads as new
 /// rather than as one thin line stretched across the day.
 private struct LevelChart: View {
-    let buckets: [BatteryHistory.LevelBucket]
+    /// Only the slices with a level: before history begins there's nothing to draw.
+    let filled: [BatteryHistory.LevelBucket]
     let start: Date
     let now: Date
     let current: BatterySnapshot
@@ -98,7 +102,13 @@ private struct LevelChart: View {
     /// Room between bars, as a share of each slot.
     private static let gap = 0.28
 
-    private var filled: [BatteryHistory.LevelBucket] { buckets.filter { $0.percentage != nil } }
+    init(buckets: [BatteryHistory.LevelBucket], start: Date, now: Date, current: BatterySnapshot, usesColor: Bool) {
+        filled = buckets.filter { $0.percentage != nil }
+        self.start = start
+        self.now = now
+        self.current = current
+        self.usesColor = usesColor
+    }
 
     var body: some View {
         Chart(filled) { bucket in
@@ -296,7 +306,7 @@ private enum AppLook {
         } else {
             icon = NSWorkspace.shared.icon(for: .applicationBundle)
         }
-        let look = Look(icon: icon, tint: IconTint.color(of: icon))
+        let look = Look(icon: icon, tint: IconTint.color(of: icon, for: app.key))
         cache[app.key] = look
         return look
     }

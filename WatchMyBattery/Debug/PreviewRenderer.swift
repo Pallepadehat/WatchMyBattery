@@ -36,6 +36,9 @@
                 ("charging", BatterySnapshot(percentage: 81, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 35 * 60)),
                 ("half", BatterySnapshot(percentage: 41, powerSource: .battery, chargeState: .discharging, timeRemaining: 2 * 3600 + 5 * 60)),
                 ("full", BatterySnapshot(percentage: 100, powerSource: .powerAdapter, chargeState: .charged, timeRemaining: nil)),
+                // Optimized Battery Charging: on its way to 80%, and held there.
+                ("optimized", BatterySnapshot(percentage: 64, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 22 * 60, chargeTarget: 80)),
+                ("holding", BatterySnapshot(percentage: 80, powerSource: .powerAdapter, chargeState: .notCharging, timeRemaining: nil, chargeTarget: 80)),
             ]
 
             let health = BatteryHealth(condition: .normal, maximumCapacity: 0.88, cycleCount: 564)
@@ -106,8 +109,13 @@
 
             // The charging glint, frame by frame, in every style.
             var glintRows: [AnyView] = []
-            let charging = BatterySnapshot(percentage: 45, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 3600)
-            for (style, usesColor) in [(PercentageStyle.hidden, true), (.hidden, false), (.inside, true), (.inside, false)] {
+            let toFull = BatterySnapshot(percentage: 45, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 3600)
+            // Charging to 80%: the glint settles at the target instead of running on to the terminal.
+            let toTarget = BatterySnapshot(percentage: 45, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 3600, chargeTarget: 80)
+            for (style, usesColor, charging) in [
+                (PercentageStyle.hidden, true, toFull), (.hidden, false, toFull), (.inside, true, toFull), (.inside, false, toFull),
+                (.hidden, true, toTarget),
+            ] {
                 for dark in [true, false] {
                     let frames = stride(from: 0, to: ChargingAnimator.framesPerSweep, by: 3).map { frame in
                         var icon = BatteryIcon(snapshot: charging, percentageStyle: style, usesColor: usesColor)

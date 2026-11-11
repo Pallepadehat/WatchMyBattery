@@ -20,7 +20,7 @@ enum WatchMyBatteryApp {
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private let model = AppModel()
+    private let model = AppModel(settings: .forLaunch())
     private var statusItem: StatusItemController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -40,12 +40,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
                 return
             }
-            if CommandLine.arguments.contains("--show-panel") {
-                // Give the menu bar a moment to place the icon, so the panel lines up under it.
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.statusItem?.showPanel() }
-                return
-            }
         #endif
+        if LaunchOptions.showsPanel {
+            // Give the menu bar a moment to place the icon, so the panel lines up under it.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.statusItem?.showPanel() }
+            return
+        }
         if !model.settings.hasSeenWelcome {
             model.settings.hasSeenWelcome = true
             statusItem?.showPanel()

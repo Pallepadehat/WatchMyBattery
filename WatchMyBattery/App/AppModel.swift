@@ -32,6 +32,14 @@ final class AppModel {
     /// The panel is on screen, so its animations may run.
     private(set) var isPanelOpen = false
 
+    /// macOS's own battery is in the menu bar too; `nil` when we can't tell. Read each time the panel opens.
+    private(set) var isBuiltInBatteryShown: Bool?
+
+    /// "Two batteries in your menu bar?": only while there are two, and until it's dismissed.
+    var showsReplaceTip: Bool {
+        settings.showsReplaceTip && isBuiltInBatteryShown != false
+    }
+
     @ObservationIgnored private lazy var settingsWindow = SettingsWindowController(model: self)
 
     func start() {
@@ -57,6 +65,8 @@ final class AppModel {
     }
 
     func registerPanelShortcut() {
+        // An isolated run would take the real app's shortcut away from it.
+        guard !LaunchOptions.isIsolated else { return }
         isPanelShortcutTaken = !GlobalHotkey.shared.register(settings.panelShortcut)
     }
 
@@ -72,6 +82,8 @@ final class AppModel {
         usage.excludedApps = Set(settings.excludedApps)
         usage.start()
         battery.refreshHealthIfNeeded()
+        let shown = Self.readBuiltInBatteryShown()
+        if shown != isBuiltInBatteryShown { isBuiltInBatteryShown = shown }
         // The suggestion to turn on Low Power Mode comes back after a charge.
         if battery.snapshot.isPluggedIn { lowPowerMode.isSuggestionDismissed = false }
     }
@@ -111,6 +123,16 @@ final class AppModel {
     /// System Settings › Control Center, where the built-in battery icon can be hidden.
     func openControlCenterSettings() {
         SystemSettings.open(.controlCenter)
+    }
+
+    /// Control Center's own setting for its battery (see ``ControlCenterBattery``). Reading it is one preferences
+    /// lookup, done when the panel opens rather than watched, as nothing needs it in between.
+    private static func readBuiltInBatteryShown() -> Bool? {
+        let domain = ControlCenterBattery.domain as CFString
+        // Control Center changes it from its own process, so drop what's cached first.
+        CFPreferencesSynchronize(domain, kCFPreferencesCurrentUser, kCFPreferencesCurrentHost)
+        let value = CFPreferencesCopyValue(ControlCenterBattery.key as CFString, domain, kCFPreferencesCurrentUser, kCFPreferencesCurrentHost)
+        return ControlCenterBattery.isShownInMenuBar(flags: value as? Int)
     }
 
     /// The numbers behind the panel's estimates, for the current moment.

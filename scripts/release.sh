@@ -14,14 +14,18 @@
 #   ./scripts/release.sh --without-notarizing  signed with Developer ID if you have it (otherwise your Apple
 #                                              Development certificate), not notarized. install.sh still opens it
 #                                              without a warning.
+#   ./scripts/release.sh --skip-checks         without running scripts/check.sh first (tests, benchmarks, end to end).
+#                                              Only for when you've just run it on this very commit.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 REPO="Pallepadehat/WatchMyBattery"
 NOTARIZE=1
+CHECKS=1
 for arg in "$@"; do
   case "$arg" in
     --without-notarizing) NOTARIZE=0 ;;
+    --skip-checks) CHECKS=0 ;;
     *) echo "Unknown option: $arg"; exit 1 ;;
   esac
 done
@@ -62,6 +66,11 @@ NOTES=$(awk -v version="$VERSION" '
   found { print }
 ' CHANGELOG.md)
 [[ -n "$NOTES" ]] || { echo "Add a \"## [$VERSION]\" section to CHANGELOG.md (on develop) first."; exit 1; }
+
+# Nothing goes out that fails its tests, got slower than its budgets or baselines, or stopped working end to end.
+if (( CHECKS )); then
+  ./scripts/check.sh || { echo "scripts/check.sh found problems, so $TAG wasn't released."; exit 1; }
+fi
 
 if (( NOTARIZE )); then
   ./scripts/make-dmg.sh --notarize

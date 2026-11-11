@@ -31,18 +31,15 @@ final class HistoryRecorder {
     private static let saveInterval: TimeInterval = 5 * 60
 
     init(fileURL: URL? = HistoryRecorder.defaultFileURL) {
-        var fileURL = fileURL
-        #if DEBUG
-            // A made-up battery shouldn't end up in the real history.
-            if CommandLine.arguments.contains("--pretend-charging") { fileURL = nil }
-        #endif
-        self.fileURL = fileURL
+        // A made-up battery shouldn't end up in the real history.
+        self.fileURL = LaunchOptions.pretendsCharging ? nil : fileURL
         history = fileURL.map(BatteryHistory.load(from:)) ?? BatteryHistory()
     }
 
-    /// `~/Library/Application Support/WatchMyBattery/History.plist`
+    /// `~/Library/Application Support/WatchMyBattery/History.plist`, or in the folder of an isolated run.
     nonisolated static var defaultFileURL: URL? {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
+        if let folder = LaunchOptions.isolatedFolder { return folder.appending(path: "History.plist") }
+        return FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
             .appending(path: "WatchMyBattery/History.plist")
     }
 

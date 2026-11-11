@@ -120,6 +120,18 @@ final class AppSettings {
 
     @ObservationIgnored private let defaults: UserDefaults
 
+    /// The settings the app runs with: the user's, or fresh ones of its own in an isolated run (see ``LaunchOptions``).
+    static func forLaunch() -> AppSettings {
+        guard LaunchOptions.isIsolated, let defaults = UserDefaults(suiteName: LaunchOptions.isolatedDefaultsDomain) else {
+            return AppSettings()
+        }
+        defaults.removePersistentDomain(forName: LaunchOptions.isolatedDefaultsDomain)
+        let settings = AppSettings(defaults: defaults)
+        // The welcome panel would open on every isolated run; `--show-panel` opens it when it's wanted.
+        settings.hasSeenWelcome = true
+        return settings
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [

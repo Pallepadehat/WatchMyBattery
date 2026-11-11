@@ -73,7 +73,8 @@ final class Updater: NSObject, SPUStandardUserDriverDelegate, SPUUpdaterDelegate
         #if DEBUG
             if CommandLine.arguments.contains("--start-updater") { controller.startUpdater() }
         #else
-            controller.startUpdater()
+            // An isolated run (an end-to-end check) is a copy next to the real app, which keeps itself up to date.
+            if !LaunchOptions.isIsolated { controller.startUpdater() }
         #endif
         lastCheck = controller.updater.lastUpdateCheckDate
         // Sparkle changes this on the main thread.
