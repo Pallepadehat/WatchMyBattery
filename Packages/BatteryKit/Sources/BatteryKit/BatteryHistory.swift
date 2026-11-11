@@ -162,6 +162,50 @@ public struct BatteryHistory: Codable, Sendable, Equatable {
         return points
     }
 
+    /// A slice of time in the level chart: one bar.
+    public struct LevelBucket: Sendable, Equatable, Identifiable {
+        public let start: Date
+        public let end: Date
+        /// The level at the end of the slice; `nil` before history begins.
+        public let percentage: Int?
+        /// Plugged in at any point during the slice.
+        public let isPluggedIn: Bool
+
+        public var id: Date { start }
+    }
+
+    /// The last day in `count` equal slices ending at `now`, for a bar chart
+    /// like iPhone's. A slice without readings of its own carries on the
+    /// level before it, since levels are only recorded when they change.
+    /// `current`, when given, is the level right now, for the last slice.
+    public func levelBuckets(endingAt now: Date = Date(), count: Int = 48, current: BatterySnapshot? = nil) -> [LevelBucket] {
+        guard count > 0 else { return [] }
+        let length = Self.retention / Double(count)
+        let start = now.addingTimeInterval(-Self.retention)
+        var buckets: [LevelBucket] = []
+        buckets.reserveCapacity(count)
+        // The reading in effect when each slice starts, carried along as we go.
+        var index = levels.firstIndex { $0.date >= start } ?? levels.endIndex
+        var carried: LevelPoint? = index > levels.startIndex ? levels[index - 1] : nil
+        for slot in 0..<count {
+            let bucketStart = start.addingTimeInterval(Double(slot) * length)
+            let bucketEnd = slot == count - 1 ? now : bucketStart.addingTimeInterval(length)
+            var pluggedIn = carried?.isPluggedIn ?? false
+            while index < levels.endIndex, levels[index].date < bucketEnd {
+                carried = levels[index]
+                pluggedIn = pluggedIn || levels[index].isPluggedIn
+                index += 1
+            }
+            var percentage = carried?.percentage
+            if slot == count - 1, let current, current.hasBattery, carried != nil {
+                percentage = current.percentage
+                pluggedIn = pluggedIn || current.isPluggedIn
+            }
+            buckets.append(LevelBucket(start: bucketStart, end: bucketEnd, percentage: percentage, isPluggedIn: percentage != nil && pluggedIn))
+        }
+        return buckets
+    }
+
     /// The stretches of time the Mac was plugged in, between `start` and `now`.
     public func pluggedInPeriods(since start: Date, now: Date = Date()) -> [DateInterval] {
         var periods: [DateInterval] = []

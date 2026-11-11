@@ -236,6 +236,8 @@ struct BatteryGauge: View {
             let cost = estimates.timeGained(byQuitting: app.watts)
             return cost >= 60 ? TimeFormat.cost(cost) : "<1m"
         }
+        // "0.0 W" would read as nothing at all; the app is using something, just not much.
+        guard app.watts >= 0.05 else { return "<" + (0.1).formatted(.number.precision(.fractionLength(1))) + " W" }
         return app.watts.formatted(.number.precision(.fractionLength(1))) + " W"
     }
 }
