@@ -63,13 +63,18 @@ final class LowPowerMode {
             switch service.status {
             case .enabled: state = .enabled
             case .requiresApproval: state = .requiresApproval
-            case .notRegistered: state = .notRegistered
-            case .notFound: state = .unavailable
+            // Before it's first registered, macOS reports the helper as not found ("record not found")
+            // rather than not registered, so trust the bundle: if the plist is there, it can be set up.
+            case .notRegistered, .notFound: state = Self.isHelperInBundle ? .notRegistered : .unavailable
             @unknown default: state = .unavailable
             }
         }
         if state != helperState { helperState = state }
     }
+
+    /// This build comes with the helper and its launchd property list.
+    private static let isHelperInBundle = FileManager.default.fileExists(
+        atPath: Bundle.main.bundleURL.appending(path: "Contents/Library/LaunchDaemons/\(HelperIdentity.plistName)").path)
 
     /// Turns Low Power Mode on or off: through the helper when it's allowed, after setting it up the
     /// first time, or else with a password prompt.
@@ -116,6 +121,7 @@ final class LowPowerMode {
             watchForApproval()
         case .notRegistered, .unavailable:
             // Registering didn't work: ask for the password this once.
+            Logger.app.error("The helper couldn't be set up, so asking for a password instead")
             if let value { setWithPassword(value) }
         }
     }
