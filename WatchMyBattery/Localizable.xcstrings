@@ -397,6 +397,16 @@
         }
       }
     },
+    "Buy Me a Coffee" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Giv mig en kop kaffe"
+          }
+        }
+      }
+    },
     "Calculating…" : {
       "localizations" : {
         "da" : {
@@ -622,6 +632,16 @@
     },
     "End" : {
 
+    },
+    "Enjoying WatchMyBattery?" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glad for WatchMyBattery?"
+          }
+        }
+      }
     },
     "For %lld minutes now." : {
       "localizations" : {
@@ -860,6 +880,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Den spørger måske, hvad der skal ske med ændringer, der ikke er arkiveret."
+          }
+        }
+      }
+    },
+    "It's free and open source, made in my spare time. If it helps your battery last, a coffee helps me keep making it better." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den er gratis og open source, lavet i min fritid. Hvis den hjælper dit batteri med at holde, hjælper en kop kaffe mig med at gøre den endnu bedre."
           }
         }
       }
@@ -1171,6 +1201,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Åbn indstillinger for Kontrolcenter"
+          }
+        }
+      }
+    },
+    "Opens Buy Me a Coffee in your browser." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbner Buy Me a Coffee i din browser."
           }
         }
       }

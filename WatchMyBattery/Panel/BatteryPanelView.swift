@@ -17,6 +17,7 @@ struct BatteryPanelView: View {
     private static let rowSpacing: CGFloat = 4
 
     private var snapshot: BatterySnapshot { model.battery.snapshot }
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -42,6 +43,15 @@ struct BatteryPanelView: View {
 
                 // The details, one rhythm for all of them: a label on the left, its value on the right.
                 VStack(spacing: Self.rowSpacing) {
+                    if ChargeProgressRow.applies(to: snapshot) {
+                        ChargeProgressRow(
+                            snapshot: snapshot, usesColor: model.settings.usesColor,
+                            animates: model.settings.showsChargingAnimation && model.isPanelOpen && !snapshot.isLowPowerModeOn && !reduceMotion
+                        )
+                        .padding(.top, 2)
+                        .padding(.bottom, 6)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
                     if TimeRow.applies(to: snapshot) {
                         TimeRow(snapshot: snapshot, estimates: model.estimates, focusedApp: focusedApp)
                             .frame(minHeight: Self.rowHeight)
@@ -91,7 +101,7 @@ struct BatteryPanelView: View {
                         .padding(.horizontal, Self.inset)
                         .padding(.top, 10)
                     HistorySection(
-                        history: model.history.history, snapshot: snapshot, usesColor: model.settings.usesColor, isVisible: model.isPanelOpen,
+                        recorder: model.history, snapshot: snapshot, usesColor: model.settings.usesColor, isVisible: model.isPanelOpen,
                         isExpanded: $settings.showsHistory
                     )
                     .padding(.horizontal, Self.inset)
@@ -113,7 +123,7 @@ struct BatteryPanelView: View {
                 .padding(.top, 10)
             }
 
-            if model.settings.showsReplaceTip {
+            if model.showsReplaceTip {
                 ReplaceTip(
                     open: {
                         close()
@@ -159,6 +169,15 @@ struct BatteryPanelView: View {
             HStack(alignment: .firstTextBaseline) {
                 Text("Battery")
                     .font(.system(size: 13, weight: .bold))
+                if LaunchOptions.isIsolated {
+                    // An end-to-end check's copy, next to the real app: say so, so nobody mistakes its blank settings.
+                    Text(verbatim: "Test copy")
+                        .font(.system(size: 10, weight: .semibold))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 1)
+                        .background(.orange.opacity(0.2), in: .capsule)
+                        .foregroundStyle(.orange)
+                }
                 Spacer()
                 if snapshot.hasBattery {
                     Text(snapshot.level, format: .percent.precision(.fractionLength(0)))
@@ -180,6 +199,8 @@ struct BatteryPanelView: View {
         switch (snapshot.powerSource, snapshot.chargeState) {
         case (.battery, _): "Power Source: Battery"
         case (.powerAdapter, .charged): "Power Source: Power Adapter · Fully Charged"
+        // Held at its target on purpose: the charge bar says so, so "Not Charging" would only alarm.
+        case (.powerAdapter, .notCharging) where snapshot.hasChargeLimit && snapshot.isAtTarget: "Power Source: Power Adapter"
         case (.powerAdapter, .notCharging): "Power Source: Power Adapter · Not Charging"
         case (.powerAdapter, _): "Power Source: Power Adapter"
         }
@@ -255,7 +276,8 @@ private struct TimeRow: View {
 
     private var title: LocalizedStringKey {
         if let focusedApp, gained ?? 0 >= 60 { return "Without \(focusedApp.name)" }
-        return snapshot.chargeState == .charging ? "Until full" : "Time left"
+        guard snapshot.chargeState == .charging else { return "Time left" }
+        return snapshot.hasChargeLimit ? "Until \((Double(snapshot.chargeTarget) / 100).formatted(.percent.precision(.fractionLength(0))))" : "Until full"
     }
 
     private var value: String {

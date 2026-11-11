@@ -21,6 +21,15 @@ public actor ProcessEnergySampler {
     private var previous: [pid_t: Reading] = [:]
     private var previousTime: ContinuousClock.Instant?
     private let clock = ContinuousClock()
+    /// Processes we may not read (other users', the system's): about a third of them on a typical Mac. They're
+    /// skipped until ``unreadableRecheck`` has passed, rather than asked again every two seconds.
+    private var unreadable: [pid_t: ContinuousClock.Instant] = [:]
+    /// Filled by `proc_listallpids`, kept from one sample to the next.
+    private var pidBuffer: [pid_t] = []
+
+    /// How long an unreadable process is skipped before it's tried again. Process IDs get reused, so an app
+    /// that's given the ID of an unreadable process that just quit is measured this much later at most.
+    static let unreadableRecheck: Duration = .seconds(30)
 
     public init() {}
 
@@ -41,13 +50,25 @@ public actor ProcessEnergySampler {
         let now = clock.now
         var current: [pid_t: Reading] = [:]
         current.reserveCapacity(previous.count + 32)
+        // Rebuilt every time, so processes that are gone drop out of it.
+        var stillUnreadable: [pid_t: ContinuousClock.Instant] = [:]
+        stillUnreadable.reserveCapacity(unreadable.count + 16)
 
-        for pid in Self.allProcessIDs() {
-            guard let energy = Self.energy(of: pid) else { continue }
+        let count = Self.listProcessIDs(into: &pidBuffer)
+        for pid in pidBuffer.prefix(count) {
+            if let since = unreadable[pid], now - since < Self.unreadableRecheck {
+                stillUnreadable[pid] = since
+                continue
+            }
+            guard let energy = Self.energy(of: pid) else {
+                stillUnreadable[pid] = now
+                continue
+            }
             // A process's responsible app never changes, so look it up once.
             let responsible = previous[pid]?.responsiblePID ?? Responsibility.responsiblePID(for: pid)
             current[pid] = Reading(energy: energy, responsiblePID: responsible)
         }
+        unreadable = stillUnreadable
 
         defer {
             previous = current
@@ -72,20 +93,28 @@ public actor ProcessEnergySampler {
     public func reset() {
         previous = [:]
         previousTime = nil
+        unreadable = [:]
     }
 
     // MARK: - System calls
 
-    private static func allProcessIDs() -> [pid_t] {
-        let estimate = proc_listallpids(nil, 0)
-        guard estimate > 0 else { return [] }
-        // Leave room for processes started between the two calls.
-        var pids = [pid_t](repeating: 0, count: Int(estimate) + 64)
-        let count = pids.withUnsafeMutableBytes { buffer in
-            proc_listallpids(buffer.baseAddress, Int32(buffer.count))
+    /// Fills `pids` with every process's ID, growing it when there are more than fit, and returns how many there are.
+    private static func listProcessIDs(into pids: inout [pid_t]) -> Int {
+        while true {
+            if pids.isEmpty {
+                let estimate = proc_listallpids(nil, 0)
+                guard estimate > 0 else { return 0 }
+                // Leave room for processes started in the meantime.
+                pids = [pid_t](repeating: 0, count: Int(estimate) + 64)
+            }
+            let count = pids.withUnsafeMutableBytes { buffer in
+                proc_listallpids(buffer.baseAddress, Int32(buffer.count))
+            }
+            guard count > 0 else { return 0 }
+            // A full buffer may have cut the list short: make room and ask again.
+            guard Int(count) >= pids.count else { return Int(count) }
+            pids = [pid_t](repeating: 0, count: pids.count * 2)
         }
-        guard count > 0 else { return [] }
-        return Array(pids.prefix(Int(count)))
     }
 
     /// The process's lifetime energy use in nanojoules, or `nil` when we may

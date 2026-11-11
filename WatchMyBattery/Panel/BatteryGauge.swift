@@ -140,7 +140,8 @@ struct BatteryGauge: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var showsChargingAnimation: Bool {
-        animatesCharging && snapshot.isCharging && !reduceMotion
+        // Like the menu bar's glint: none in Low Power Mode, where every bit of energy counts.
+        animatesCharging && snapshot.isCharging && !reduceMotion && !snapshot.isLowPowerModeOn
     }
 
     /// White light on a dark or green battery; a green wave on a white one, where white light wouldn't show.

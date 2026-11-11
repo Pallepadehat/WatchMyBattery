@@ -331,6 +331,9 @@ private struct AboutPane: View {
                 .padding(.vertical, 12)
             }
             Section {
+                SupportCard()
+            }
+            Section {
                 AboutLink("Source Code on GitHub", symbol: "chevron.left.forwardslash.chevron.right", url: "https://github.com/Pallepadehat/WatchMyBattery")
                 AboutLink("What's New", symbol: "sparkles", url: "https://github.com/Pallepadehat/WatchMyBattery/blob/main/CHANGELOG.md")
                 AboutLink("Report a Bug", symbol: "ladybug.fill", url: "https://github.com/Pallepadehat/WatchMyBattery/issues/new/choose")
@@ -344,6 +347,54 @@ private struct AboutPane: View {
                 }
             }
         }
+    }
+}
+
+/// "Enjoying WatchMyBattery?": a friendly way to support the app, with a button to Buy Me a Coffee.
+private struct SupportCard: View {
+    private static let url = URL(string: "https://buymeacoffee.com/patrickjakobsen")!
+    /// Buy Me a Coffee's own yellow, so the button reads as theirs at a glance.
+    private static let coffeeYellow = Color(red: 1, green: 0.867, blue: 0)
+
+    @State private var isHovered = false
+
+    var body: some View {
+        VStack(spacing: 12) {
+            VStack(spacing: 4) {
+                Text("Enjoying WatchMyBattery?")
+                    .font(.headline)
+                Text("It's free and open source, made in my spare time. If it helps your battery last, a coffee helps me keep making it better.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Link(destination: Self.url) {
+                HStack(spacing: 8) {
+                    Image(systemName: "cup.and.saucer.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .rotationEffect(.degrees(isHovered ? -12 : 0))
+                    Text("Buy Me a Coffee")
+                        .font(.system(size: 13, weight: .semibold))
+                }
+                .foregroundStyle(.black)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 8)
+                .background(Self.coffeeYellow, in: .capsule)
+                .overlay(Capsule().strokeBorder(.black.opacity(0.12), lineWidth: 0.5))
+                .shadow(color: Self.coffeeYellow.opacity(isHovered ? 0.55 : 0.25), radius: isHovered ? 8 : 4, y: 2)
+                .scaleEffect(isHovered ? 1.04 : 1)
+                .contentShape(.capsule)
+            }
+            .buttonStyle(.plain)
+            .onHover { hovering in
+                withAnimation(.snappy(duration: 0.2)) { isHovered = hovering }
+            }
+            .help(Text(verbatim: "buymeacoffee.com/patrickjakobsen"))
+            .accessibilityHint("Opens Buy Me a Coffee in your browser.")
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
     }
 }
 
