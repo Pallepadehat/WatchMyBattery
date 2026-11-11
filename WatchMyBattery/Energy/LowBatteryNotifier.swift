@@ -5,7 +5,9 @@ import Observation
 import UserNotifications
 
 /// Sends a notification when the battery runs low, naming the app that's
-/// using the most energy, with a button that quits it.
+/// using the most energy, with a button that quits it. It also sends the
+/// runaway app notification for ``HistoryRecorder``, as both share the Quit
+/// button and macOS allows one notification delegate.
 ///
 /// It only watches the battery snapshot, which changes by notification, so
 /// it costs nothing until a level is reached. Then it measures apps for a
@@ -19,8 +21,11 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
     @ObservationIgnored private var alert = LowBatteryAlert()
     @ObservationIgnored private let center = UNUserNotificationCenter.current()
     @ObservationIgnored private var wasEnabled = false
+    /// Every kind of notification's buttons; macOS takes them all at once.
+    @ObservationIgnored private var categories: [String: UNNotificationCategory] = [:]
 
     private static let categoryID = "lowBattery"
+    private static let runawayCategoryID = "runawayApp"
     private static let quitActionID = "quit"
     private static let lowPowerModeActionID = "lowPowerMode"
 
@@ -94,9 +99,7 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
                 UNNotificationAction(identifier: Self.lowPowerModeActionID, title: String(localized: "Turn On Low Power Mode")))
         }
         if !actions.isEmpty {
-            center.setNotificationCategories([
-                UNNotificationCategory(identifier: Self.categoryID, actions: actions, intentIdentifiers: [])
-            ])
+            register(UNNotificationCategory(identifier: Self.categoryID, actions: actions, intentIdentifiers: []))
             content.categoryIdentifier = Self.categoryID
         }
         content.sound = .default
@@ -107,6 +110,39 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
         } catch {
             Logger.app.error("Couldn't send the low battery notification: \(error.localizedDescription, privacy: .public)")
         }
+    }
+
+    // MARK: - Runaway apps
+
+    /// "Figma is using a lot of energy": an app has kept up a high power draw for `minutes`, on battery.
+    func notifyRunaway(_ app: BatteryHistory.AppIdentity, pid: pid_t, minutes: Int, timeGained: TimeInterval) async {
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "\(app.name) is using a lot of energy")
+        content.body =
+            timeGained >= 60
+            ? String(localized: "For \(minutes) minutes now. Quitting it would give you about \(TimeFormat.compact(timeGained)) more.")
+            : String(localized: "For \(minutes) minutes now.")
+        content.userInfo = ["pid": Int(pid), "bundleIdentifier": app.bundleIdentifier ?? ""]
+        register(
+            UNNotificationCategory(
+                identifier: Self.runawayCategoryID,
+                actions: [UNNotificationAction(identifier: Self.quitActionID, title: String(localized: "Quit \(app.name)"), options: [.destructive])],
+                intentIdentifiers: []))
+        content.categoryIdentifier = Self.runawayCategoryID
+        content.sound = .default
+        // One per app: if it's reported again later, the new one replaces the old.
+        let request = UNNotificationRequest(identifier: "runaway-\(app.key)", content: content, trigger: nil)
+        do {
+            try await center.add(request)
+        } catch {
+            Logger.app.error("Couldn't send the runaway app notification: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    private func register(_ category: UNNotificationCategory) {
+        guard categories[category.identifier] != category else { return }
+        categories[category.identifier] = category
+        center.setNotificationCategories(Set(categories.values))
     }
 
     // MARK: - UNUserNotificationCenterDelegate

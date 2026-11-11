@@ -79,6 +79,21 @@ final class AppSettings {
         didSet { defaults.set(lowBatteryLevels, forKey: Key.lowBatteryLevels) }
     }
 
+    /// Keep a history of the battery level and the apps using it (measured every few minutes on battery).
+    var recordsHistory: Bool {
+        didSet { defaults.set(recordsHistory, forKey: Key.recordsHistory) }
+    }
+
+    /// The panel's history section is open.
+    var showsHistory: Bool {
+        didSet { defaults.set(showsHistory, forKey: Key.showsHistory) }
+    }
+
+    /// Send a notification when an app uses a lot of power for a while.
+    var notifiesAboutRunawayApps: Bool {
+        didSet { defaults.set(notifiesAboutRunawayApps, forKey: Key.notifiesAboutRunawayApps) }
+    }
+
     /// The tip about hiding the built-in battery icon, until it's dismissed.
     var showsReplaceTip: Bool {
         didSet { defaults.set(showsReplaceTip, forKey: Key.showsReplaceTip) }
@@ -117,6 +132,9 @@ final class AppSettings {
             Key.excludedApps: [String](),
             Key.notifiesWhenLow: false,
             Key.lowBatteryLevels: [20, 10],
+            Key.recordsHistory: true,
+            Key.showsHistory: true,
+            Key.notifiesAboutRunawayApps: false,
             Key.showsReplaceTip: true,
             Key.hasSeenWelcome: false,
         ])
@@ -130,6 +148,9 @@ final class AppSettings {
         notifiesWhenLow = defaults.bool(forKey: Key.notifiesWhenLow)
         lowBatteryLevels = ((defaults.array(forKey: Key.lowBatteryLevels) as? [Int]) ?? [20, 10])
             .filter(Self.lowBatteryChoices.contains).sorted(by: >)
+        recordsHistory = defaults.bool(forKey: Key.recordsHistory)
+        showsHistory = defaults.bool(forKey: Key.showsHistory)
+        notifiesAboutRunawayApps = defaults.bool(forKey: Key.notifiesAboutRunawayApps)
         showsReplaceTip = defaults.bool(forKey: Key.showsReplaceTip)
         hasSeenWelcome = defaults.bool(forKey: Key.hasSeenWelcome)
         panelShortcut = defaults.data(forKey: Key.panelShortcut).flatMap { try? JSONDecoder().decode(Hotkey.self, from: $0) }
@@ -156,6 +177,9 @@ final class AppSettings {
         static let excludedApps = "excludedApps"
         static let notifiesWhenLow = "notifiesWhenLow"
         static let lowBatteryLevels = "lowBatteryLevels"
+        static let recordsHistory = "recordsHistory"
+        static let showsHistory = "showsHistory"
+        static let notifiesAboutRunawayApps = "notifiesAboutRunawayApps"
         static let showsReplaceTip = "showsReplaceTip"
         static let hasSeenWelcome = "hasSeenWelcome"
         static let panelShortcut = "panelShortcut"

@@ -75,7 +75,7 @@ For bigger changes, open an issue first so we can agree on the approach.
 - Swift 6 language mode. The app target defaults to main-actor isolation.
 - Keep logic in `BatteryKit`: plain value types, no AppKit or SwiftUI, with unit tests. Anything you can test without a real battery belongs there.
 - Name things for what they are, and add a doc comment explaining *why* whenever the code alone doesn't make it obvious.
-- No polling. React to IOPowerSources notifications, and sample processes only while the panel is open.
+- No polling. React to IOPowerSources notifications. Processes are sampled every two seconds while the panel is open, and for the history every five minutes on battery only (`HistoryRecorder`); don't add more sampling than that.
 - Be honest about estimates in the UI: round sensibly and don't show more precision than the numbers have.
 
 ## Making a release

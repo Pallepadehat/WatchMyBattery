@@ -28,6 +28,16 @@ public actor ProcessEnergySampler {
     /// app's process ID. The first call only takes a baseline and returns an
     /// empty dictionary.
     public func sample() -> [pid_t: Double] {
+        let (joules, seconds) = sampleEnergy()
+        guard seconds > 0.05 else { return [:] }
+        return joules.mapValues { $0 / seconds }
+    }
+
+    /// Joules used by each responsible app since the last call, and the seconds
+    /// that took. For sampling rarely: the kernel's totals keep counting in
+    /// between, so nothing is missed except processes that came and went.
+    /// The first call only takes a baseline and returns nothing.
+    public func sampleEnergy() -> (joules: [pid_t: Double], seconds: Double) {
         let now = clock.now
         var current: [pid_t: Reading] = [:]
         current.reserveCapacity(previous.count + 32)
@@ -43,19 +53,19 @@ public actor ProcessEnergySampler {
             previous = current
             previousTime = now
         }
-        guard let previousTime else { return [:] }
+        guard let previousTime else { return ([:], 0) }
         let seconds = (now - previousTime).seconds
-        guard seconds > 0.05 else { return [:] }
+        guard seconds > 0 else { return ([:], 0) }
 
-        var watts: [pid_t: Double] = [:]
+        var joules: [pid_t: Double] = [:]
         for (pid, reading) in current {
             // A process we hadn't seen yet (or a reused PID) has no baseline to compare against.
             guard let before = previous[pid], reading.energy >= before.energy else { continue }
             let used = reading.energy - before.energy
             guard used > 0 else { continue }
-            watts[reading.responsiblePID, default: 0] += Double(used) / 1_000_000_000 / seconds
+            joules[reading.responsiblePID, default: 0] += Double(used) / 1_000_000_000
         }
-        return watts
+        return (joules, seconds)
     }
 
     /// Forgets the baseline, so the next ``sample()`` starts afresh.
