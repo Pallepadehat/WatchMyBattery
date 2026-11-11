@@ -14,12 +14,18 @@ struct BatteryIcon: Equatable {
     var showsPercentageInside: Bool
     var usesColor: Bool
     var isLowPowerModeOn: Bool
+    /// Where the charging glint is in its sweep, 0–1, or `nil` for a still icon.
+    var chargeGlint: Double?
+    /// Draw for a dark (`true`) or light menu bar, instead of the one being drawn into.
+    /// For previews, like the samples in Settings, which aren't drawn into a menu bar at all.
+    var drawsForDarkBar: Bool?
 
     init(snapshot: BatterySnapshot, settings: AppSettings) {
         self.init(snapshot: snapshot, percentageStyle: settings.percentageStyle, usesColor: settings.usesColor)
     }
 
-    init(snapshot: BatterySnapshot, percentageStyle: PercentageStyle, usesColor: Bool) {
+    init(snapshot: BatterySnapshot, percentageStyle: PercentageStyle, usesColor: Bool, drawsForDarkBar: Bool? = nil) {
+        self.drawsForDarkBar = drawsForDarkBar
         level = snapshot.level
         percentage = snapshot.percentage
         chargeState = snapshot.chargeState
@@ -82,7 +88,7 @@ struct BatteryIcon: Equatable {
     private func draw(in size: CGSize, accentColor: NSColor?) {
         guard let context = NSGraphicsContext.current?.cgContext else { return }
         // A template only needs alpha; a coloured icon picks white or black for the menu bar it's drawn in.
-        let isDarkBar = NSAppearance.currentDrawing().bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+        let isDarkBar = drawsForDarkBar ?? (NSAppearance.currentDrawing().bestMatch(from: [.aqua, .darkAqua]) == .darkAqua)
         let foreground: NSColor = accentColor == nil || !isDarkBar ? .black : .white
         let empty = foreground.withAlphaComponent(Self.emptyOpacity)
         let body = CGRect(
@@ -108,13 +114,100 @@ struct BatteryIcon: Equatable {
         fill.fill()
         context.restoreGState()
 
-        // What goes on top is cut out of the pill, so the menu bar shows through.
+        if let chargeGlint, chargeState == .charging {
+            drawGlint(at: chargeGlint, body: body, bodyPath: bodyPath, fill: fill, terminal: terminal, color: accentColor ?? foreground, context: context)
+        }
+
+        // The percentage or a symbol on top: cut out of the charge, so the menu
+        // bar shows through, and solid over the empty part. A glyph that sits
+        // across the edge of the charge still reads as one clear shape.
+        let solid = accentColor == nil ? NSColor.black : foreground
         if showsPercentageInside {
-            cutOut(percentageText(in: body), context: context)
+            let text = percentageText(in: body)
+            let size = text.size()
+            let origin = CGPoint(x: body.midX - size.width / 2, y: body.midY - size.height / 2 + 0.25)
+            stamp(body: body, fill: fill, solid: solid, context: context) { color in
+                let colored = NSMutableAttributedString(attributedString: text)
+                colored.addAttribute(.foregroundColor, value: color, range: NSRange(location: 0, length: colored.length))
+                colored.draw(at: origin)
+            }
         } else if chargeState == .charging {
-            cutOut(boltPath(in: body), context: context)
+            let bolt = boltPath(in: body)
+            stamp(body: body, fill: fill, solid: solid, context: context) { color in
+                color.setFill()
+                bolt.fill()
+            }
         } else if chargeState == .notCharging {
-            cutOut(plugPath(in: body), context: context)
+            let plug = plugPath(in: body)
+            stamp(body: body, fill: fill, solid: solid, context: context) { color in
+                color.setFill()
+                plug.fill()
+            }
+        }
+    }
+
+    /// Draws a glyph twice: punched out of the charge, and in `solid` over the
+    /// rest of the pill. `draw` paints the glyph in the colour it's given.
+    private func stamp(body: CGRect, fill: CGRect, solid: NSColor, context: CGContext, draw: (NSColor) -> Void) {
+        // Punched out of the charge (and anything outside the pill, where there's nothing to punch).
+        context.saveGState()
+        context.clip(to: [
+            CGRect(x: 0, y: 0, width: fill.maxX, height: Self.imageHeight),
+            CGRect(x: 0, y: 0, width: Self.imageHeight * 4, height: body.minY),
+            CGRect(x: 0, y: body.maxY, width: Self.imageHeight * 4, height: Self.imageHeight - body.maxY),
+        ])
+        context.setBlendMode(.destinationOut)
+        draw(.black)
+        context.restoreGState()
+
+        // Solid over the empty part, so it stands out from the translucent pill.
+        guard fill.maxX < body.maxX else { return }
+        context.saveGState()
+        context.clip(to: CGRect(x: fill.maxX, y: body.minY, width: body.maxX - fill.maxX, height: body.height))
+        context.setBlendMode(.copy)
+        draw(solid)
+        context.restoreGState()
+    }
+
+    /// Charge flowing in: a soft swell of colour leaves the edge of the charge,
+    /// rolls through the empty part of the pill to the terminal, and fades as
+    /// it gets there, which gives the terminal a little flash. It only ever
+    /// adds the icon's own colour over the translucent part, so it looks the
+    /// same in a template icon and a coloured one, on any menu bar.
+    private func drawGlint(
+        at phase: Double, body: CGRect, bodyPath: NSBezierPath, fill: CGRect, terminal: CGRect, color: NSColor,
+        context: CGContext
+    ) {
+        // Ease in and out, so the swell glides rather than ticks.
+        let t = phase < 0.5 ? 2 * phase * phase : 1 - pow(-2 * phase + 2, 2) / 2
+        // Fades in as it leaves the charge and out as it reaches the end.
+        let strength = CGFloat(sin(Double.pi * phase))
+        let empty = CGRect(x: fill.maxX, y: body.minY, width: max(body.maxX - fill.maxX, 0), height: body.height)
+        let width = max(min(empty.width * 0.7, 10), 5)
+        let center = empty.minX + (empty.width + width / 2) * t
+        let rgb = color.usingColorSpace(.deviceRGB) ?? color
+        let space = CGColorSpaceCreateDeviceRGB()
+
+        if empty.width > 0.5,
+            let swell = CGGradient(
+                colorsSpace: space,
+                colors: [0, 0.75, 1, 0.75, 0].map { rgb.withAlphaComponent($0 * 0.75 * strength).cgColor } as CFArray,
+                locations: [0, 0.25, 0.5, 0.75, 1])
+        {
+            context.saveGState()
+            bodyPath.addClip()
+            context.clip(to: empty)
+            context.drawLinearGradient(
+                swell, start: CGPoint(x: center - width / 2, y: 0), end: CGPoint(x: center + width / 2, y: 0), options: [])
+            context.restoreGState()
+        }
+
+        // The terminal lights up as the swell arrives.
+        let arrival = min(max((phase - 0.55) / 0.45, 0), 1)
+        let flash = CGFloat(sin(Double.pi * arrival))
+        if flash > 0 {
+            rgb.withAlphaComponent(0.6 * flash).setFill()
+            terminalPath(in: terminal).fill()
         }
     }
 
@@ -125,24 +218,6 @@ struct BatteryIcon: Equatable {
         let fontSize: CGFloat = percentage >= 100 ? 9 : 10.5
         let font = NSFont.systemFont(ofSize: fontSize, weight: .semibold).monospacedDigits
         return NSAttributedString(string: "\(percentage)", attributes: [.font: font, .foregroundColor: NSColor.black])
-    }
-
-    private func cutOut(_ text: NSAttributedString, context: CGContext) {
-        let body = CGRect(
-            x: 0, y: ((Self.imageHeight - bodySize.height) / 2).rounded(), width: bodySize.width, height: bodySize.height)
-        let textSize = text.size()
-        context.saveGState()
-        context.setBlendMode(.destinationOut)
-        text.draw(at: CGPoint(x: body.midX - textSize.width / 2, y: body.midY - textSize.height / 2 + 0.25))
-        context.restoreGState()
-    }
-
-    private func cutOut(_ path: NSBezierPath, context: CGContext) {
-        context.saveGState()
-        context.setBlendMode(.destinationOut)
-        NSColor.black.setFill()
-        path.fill()
-        context.restoreGState()
     }
 
     private func terminalPath(in rect: CGRect) -> NSBezierPath {

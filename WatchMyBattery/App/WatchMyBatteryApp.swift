@@ -26,9 +26,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         model.start()
         statusItem = StatusItemController(model: model)
+        model.showPanel = { [weak self] in self?.statusItem?.showPanel() }
         #if DEBUG
             if CommandLine.arguments.contains("--show-settings") {
-                model.openSettings()
+                // `--settings-pane updates` (say) opens that pane.
+                let arguments = CommandLine.arguments
+                let pane = arguments.firstIndex(of: "--settings-pane").flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil }
+                model.openSettings(pane.flatMap(SettingsPane.init(rawValue:)))
+                // `--check-now` presses Check Now, once Sparkle is ready (with `--start-updater`).
+                if arguments.contains("--check-now") {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { self.model.updater.checkNow() }
+                }
                 return
             }
             if CommandLine.arguments.contains("--show-panel") {

@@ -38,12 +38,16 @@
                 ("full", BatterySnapshot(percentage: 100, powerSource: .powerAdapter, chargeState: .charged, timeRemaining: nil)),
             ]
 
+            let health = BatteryHealth(condition: .normal, maximumCapacity: 0.88, cycleCount: 564)
             for (name, snapshot) in states {
                 for scheme in [ColorScheme.dark, .light] {
-                    let model = AppModel()
-                    model.settings.showsReplaceTip = name == "discharging"
-                    model.battery.preview(snapshot)
-                    model.usage.preview(apps: Array(apps.prefix(model.settings.maximumApps)), systemWatts: 14)
+                    let model = AppModel(settings: previewSettings())
+                    model.settings.showsReplaceTip = false
+                    model.battery.preview(
+                        snapshot, health: name == "low" ? BatteryHealth(condition: .serviceRecommended, maximumCapacity: 0.74, cycleCount: 1012) : health)
+                    model.usage.preview(
+                        apps: Array(apps.prefix(model.settings.maximumApps)), systemWatts: 14,
+                        refusal: name == "half" ? QuitRefusal(id: apps[1].id, name: apps[1].name, icon: apps[1].icon) : nil)
                     let view = BatteryPanelView(model: model, close: {})
                         .background(scheme == .dark ? Color(white: 0.16) : Color(white: 0.94))
                         .clipShape(.rect(cornerRadius: 16))
@@ -65,7 +69,7 @@
                 settings.percentageStyle = style
                 for usesColor in [true, false] {
                     settings.usesColor = usesColor
-                    let icons = [
+                    let snapshots = [
                         BatterySnapshot(percentage: 100, powerSource: .powerAdapter, chargeState: .charged, timeRemaining: nil),
                         BatterySnapshot(percentage: 64, powerSource: .battery, chargeState: .discharging, timeRemaining: 3600),
                         BatterySnapshot(percentage: 35, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 3600),
@@ -73,8 +77,13 @@
                         BatterySnapshot(percentage: 9, powerSource: .battery, chargeState: .discharging, timeRemaining: 600),
                         BatterySnapshot(
                             percentage: 50, powerSource: .battery, chargeState: .discharging, timeRemaining: 600, isLowPowerModeOn: true),
-                    ].map { BatteryIcon(snapshot: $0, settings: settings).image() }
+                    ]
                     for dark in [true, false] {
+                        let icons = snapshots.map { snapshot in
+                            var icon = BatteryIcon(snapshot: snapshot, settings: settings)
+                            icon.drawsForDarkBar = dark
+                            return icon.image()
+                        }
                         rows.append(
                             AnyView(
                                 HStack(spacing: 18) {
@@ -92,6 +101,43 @@
                 }
             }
             save(VStack(spacing: 0) { ForEach(rows.indices, id: \.self) { rows[$0] } }.frame(width: 340), to: folder.appending(path: "icons.png"))
+
+            // The charging glint, frame by frame, in every style.
+            var glintRows: [AnyView] = []
+            let charging = BatterySnapshot(percentage: 45, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 3600)
+            for (style, usesColor) in [(PercentageStyle.hidden, true), (.hidden, false), (.inside, true), (.inside, false)] {
+                for dark in [true, false] {
+                    let frames = stride(from: 0, to: ChargingAnimator.framesPerSweep, by: 3).map { frame in
+                        var icon = BatteryIcon(snapshot: charging, percentageStyle: style, usesColor: usesColor)
+                        icon.chargeGlint = Double(frame) / Double(ChargingAnimator.framesPerSweep - 1)
+                        icon.drawsForDarkBar = dark
+                        return icon.image()
+                    }
+                    glintRows.append(
+                        AnyView(
+                            HStack(spacing: 10) {
+                                ForEach(frames.indices, id: \.self) { index in
+                                    Image(nsImage: frames[index]).renderingMode(frames[index].isTemplate ? .template : .original)
+                                }
+                            }
+                            .foregroundStyle(dark ? .white : .black)
+                            .padding(8)
+                            .frame(maxWidth: .infinity)
+                            .background(dark ? Color(white: 0.15) : Color(white: 0.88))
+                            .environment(\.colorScheme, dark ? .dark : .light)
+                        ))
+                }
+            }
+            save(
+                VStack(spacing: 0) { ForEach(glintRows.indices, id: \.self) { glintRows[$0] } }.frame(width: 340),
+                to: folder.appending(path: "glint.png"))
+        }
+
+        /// Settings kept apart from the real app's, so rendering previews never changes them.
+        private static func previewSettings() -> AppSettings {
+            let defaults = UserDefaults(suiteName: "WatchMyBattery.previews")!
+            defaults.removePersistentDomain(forName: "WatchMyBattery.previews")
+            return AppSettings(defaults: defaults)
         }
 
         private static func save(_ view: some View, to url: URL) {

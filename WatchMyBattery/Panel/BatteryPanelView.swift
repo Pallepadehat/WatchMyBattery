@@ -28,8 +28,11 @@ struct BatteryPanelView: View {
                     estimates: model.estimates,
                     centerLabel: model.settings.centerLabel,
                     usesColor: model.settings.usesColor,
+                    animatesCharging: model.settings.showsChargingAnimation && model.isPanelOpen,
                     focusedApp: $focusedApp,
-                    quit: quit
+                    quit: { quit($0, asking: model.settings.confirmsQuit) },
+                    confirmQuit: { quit($0, asking: true) },
+                    exclude: { app in withAnimation(.snappy) { model.exclude(app) } }
                 )
                 .padding(.horizontal, Self.inset)
                 .padding(.top, 14)
@@ -37,6 +40,27 @@ struct BatteryPanelView: View {
                 TimeRow(snapshot: snapshot, estimates: model.estimates, focusedApp: focusedApp)
                     .padding(.horizontal, Self.inset)
                     .padding(.top, 8)
+
+                if let health = model.battery.health, !health.isEmpty {
+                    HealthRow(health: health)
+                        .padding(.horizontal, Self.inset)
+                        .padding(.top, 3)
+                        .transition(.opacity)
+                }
+
+                if let refusal = model.usage.refusal {
+                    RefusalNotice(
+                        refusal: refusal,
+                        show: {
+                            close()
+                            model.usage.showRefusedApp()
+                        },
+                        dismiss: { withAnimation(.snappy) { model.usage.dismissRefusal() } }
+                    )
+                    .padding(.horizontal, 10)
+                    .padding(.top, 10)
+                    .transition(.asymmetric(insertion: .scale(scale: 0.96, anchor: .top).combined(with: .opacity), removal: .opacity))
+                }
             } else {
                 Text("This Mac doesn't have a battery.")
                     .foregroundStyle(.secondary)
@@ -47,7 +71,7 @@ struct BatteryPanelView: View {
             if let version = model.updater.availableVersion {
                 UpdateBanner(version: version) {
                     close()
-                    model.updater.checkNow()
+                    model.updater.installUpdate()
                 }
                 .padding(.horizontal, 10)
                 .padding(.top, 10)
@@ -90,6 +114,7 @@ struct BatteryPanelView: View {
         .fixedSize(horizontal: false, vertical: true)
         .animation(.smooth(duration: 0.45), value: model.usage.apps.map(\.id))
         .animation(.smooth(duration: 0.6), value: snapshot)
+        .animation(.snappy(duration: 0.3), value: model.usage.refusal)
     }
 
     private var header: some View {
@@ -125,10 +150,10 @@ struct BatteryPanelView: View {
         snapshot.powerSource == .battery ? "Power Source: Battery" : "Power Source: Power Adapter"
     }
 
-    /// Quits an app dragged out of the panel, asking first if the user wants that.
-    private func quit(_ app: AppUsage) {
+    /// Quits an app dragged out of the panel (or deleted with the keyboard), asking first when `asking`.
+    private func quit(_ app: AppUsage, asking: Bool) {
         focusedApp = nil
-        guard model.settings.confirmsQuit else {
+        guard asking else {
             model.usage.quit(app)
             return
         }
@@ -197,6 +222,108 @@ private struct TimeRow: View {
         case .charged, .notCharging:
             ""
         }
+    }
+}
+
+/// "Battery Health  Normal · 88% · 564 cycles": quiet, under the time.
+private struct HealthRow: View {
+    let health: BatteryHealth
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text("Battery Health")
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 8)
+            // Everything if it fits; otherwise the least important parts go first, the cycle count, then the capacity.
+            ViewThatFits(in: .horizontal) {
+                summary(details(includingCycles: true))
+                summary(details(includingCycles: false))
+                summary(nil)
+            }
+        }
+        .font(.system(size: 12))
+        .lineLimit(1)
+        .help(
+            "Maximum capacity is how much charge the battery holds compared with when it was new. A charge cycle is using 100% of its capacity, in total, not necessarily all at once."
+        )
+        .accessibilityElement(children: .combine)
+    }
+
+    private func summary(_ details: String?) -> some View {
+        HStack(spacing: 6) {
+            if health.condition == .serviceRecommended {
+                Label("Service Recommended", systemImage: "exclamationmark.triangle.fill")
+                    .labelStyle(.titleAndIcon)
+                    .foregroundStyle(.orange)
+                    .fontWeight(.medium)
+            }
+            if let details, !details.isEmpty {
+                Text(details)
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .fixedSize()
+    }
+
+    private func details(includingCycles: Bool) -> String {
+        var parts: [String] = []
+        if health.condition == .normal { parts.append(String(localized: "Normal")) }
+        if let capacity = health.maximumCapacity {
+            parts.append(capacity.formatted(.percent.precision(.fractionLength(0))))
+        }
+        if includingCycles, let cycles = health.cycleCount {
+            parts.append(String(localized: "\(cycles) cycles"))
+        }
+        return parts.joined(separator: " · ")
+    }
+}
+
+/// An app that didn't quit when it was dragged out: say so, and offer to show it.
+private struct RefusalNotice: View {
+    let refusal: QuitRefusal
+    let show: () -> Void
+    let dismiss: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(nsImage: refusal.icon)
+                .resizable()
+                .frame(width: 26, height: 26)
+            VStack(alignment: .leading, spacing: 3) {
+                Text("\(refusal.name) didn't quit")
+                    .font(.system(size: 12, weight: .semibold))
+                Text("It may be asking what to do with unsaved changes.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button("Show \(refusal.name)", action: show)
+                    .buttonStyle(.link)
+                    .font(.system(size: 11, weight: .medium))
+            }
+            Spacer(minLength: 0)
+            DismissButton(action: dismiss)
+        }
+        .padding(10)
+        .background(.orange.opacity(0.14), in: .rect(cornerRadius: 10, style: .continuous))
+        .accessibilityElement(children: .contain)
+    }
+}
+
+/// The small round × that closes a notice.
+private struct DismissButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "xmark")
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(.secondary)
+                .frame(width: 16, height: 16)
+                .background(.quaternary, in: .circle)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Dismiss")
     }
 }
 
@@ -279,15 +406,7 @@ private struct ReplaceTip: View {
                     .font(.system(size: 11, weight: .medium))
             }
             Spacer(minLength: 0)
-            Button(action: dismiss) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 16, height: 16)
-                    .background(.quaternary, in: .circle)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Dismiss")
+            DismissButton(action: dismiss)
         }
         .padding(10)
         .background(.quaternary.opacity(0.6), in: .rect(cornerRadius: 10, style: .continuous))

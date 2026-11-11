@@ -4,6 +4,33 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-11
+
+Health, notifications, Danish, and a battery that glows while it charges.
+
+### Added
+
+- ⚡ **A charging animation.** While the Mac charges, a soft swell of light flows into the menu bar battery and gives its terminal a little flash, and in the panel a gentle glow rolls across the big battery and lights up the bolt as it passes. It pauses while the displays sleep, follows Reduce Motion and Low Power Mode, and can be turned off in Settings › Menu Bar.
+- **Battery health in the panel**: condition, maximum capacity and cycle count, the same numbers System Settings shows ([#11](https://github.com/Pallepadehat/WatchMyBattery/issues/11)).
+- **Hidden apps.** Choose apps that never get a slice of the battery, so they can't be dragged out by accident: from a slice's menu ("Don't Show … in the Battery"), or in Settings › Panel ([#10](https://github.com/Pallepadehat/WatchMyBattery/issues/10)).
+- **A low battery notification** at the levels you choose (20% and 10% to start with), naming the app using the most energy and how much time quitting it would give you, with a button that quits it ([#12](https://github.com/Pallepadehat/WatchMyBattery/issues/12)).
+- **Keyboard and VoiceOver for the slices.** Tab moves between them (and the arrow keys along them), the time row previews quitting the selected app, and Delete quits it after asking. VoiceOver reads each one as, for example, "Figma, costs 48 minutes" ([#13](https://github.com/Pallepadehat/WatchMyBattery/issues/13)).
+- 🇩🇰 **Danish**, and a language setting in Settings › General ([#14](https://github.com/Pallepadehat/WatchMyBattery/issues/14)).
+- An About pane, with links to the source code, the changelog and the bug report form.
+
+### Changed
+
+- **Settings is laid out like System Settings**, with a sidebar of short panes: General, Menu Bar, Panel, Notifications, Updates and About.
+- **When an app won't quit**, its slice comes back straight away and the panel says so ("Pages didn't quit: it may be asking what to do with unsaved changes"), with a button that brings the app forward. Before, the slice quietly came back a few seconds later ([#9](https://github.com/Pallepadehat/WatchMyBattery/issues/9)).
+- The percentage and the bolt inside the menu bar battery are cut out of the charge and solid over the empty part, so they read clearly at any level, like the iPhone's battery.
+- "Check for Updates…" in the menu bar icon's menu opens Settings › Updates and shows the result there.
+- CI builds the app on the macOS 26 runner, and the panel's estimates are tested ([#15](https://github.com/Pallepadehat/WatchMyBattery/issues/15)).
+
+### Fixed
+
+- Clicking "Check Now" in Settings could freeze the Settings window. Sparkle's "You're up to date" message is an app-modal alert, and in a menu bar app it could open hidden behind the window. The check now runs without Sparkle's windows and shows its answer in Settings.
+- Coloured icons in Settings' menu bar samples were drawn for a light menu bar even over a dark wallpaper.
+
 ## [0.1.1] - 2026-11-10
 
 The first public release.
@@ -34,6 +61,7 @@ The first release.
 - Automatic updates with Sparkle, from EdDSA-signed releases.
 - One-command install, and build, packaging and release scripts.
 
-[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Pallepadehat/WatchMyBattery/releases/tag/v0.1.0

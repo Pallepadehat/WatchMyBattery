@@ -6,36 +6,41 @@ What's planned next. Each item has an issue, where the details and discussion li
 
 Released. A new icon, a polished panel and Settings in light and dark mode, and a fix for drag to quit getting stuck ([#7](https://github.com/Pallepadehat/WatchMyBattery/issues/7)). See the [changelog](CHANGELOG.md).
 
-## 0.1.2: trust and polish
+## 0.1.2: health, notifications and Danish ✅
 
-**Release**
-
-- [ ] Build the app in CI ([#15](https://github.com/Pallepadehat/WatchMyBattery/issues/15))
-- [ ] Sign with Developer ID and notarize releases ([#8](https://github.com/Pallepadehat/WatchMyBattery/issues/8))
+Released. See the [changelog](CHANGELOG.md).
 
 **The panel**
 
-- [ ] Exclude apps from the battery ([#10](https://github.com/Pallepadehat/WatchMyBattery/issues/10))
-- [ ] Battery health: condition, maximum capacity and cycle count ([#11](https://github.com/Pallepadehat/WatchMyBattery/issues/11))
+- [x] Exclude apps from the battery ([#10](https://github.com/Pallepadehat/WatchMyBattery/issues/10))
+- [x] Battery health: condition, maximum capacity and cycle count ([#11](https://github.com/Pallepadehat/WatchMyBattery/issues/11))
+- [x] Show when an app won't quit, and why ([#9](https://github.com/Pallepadehat/WatchMyBattery/issues/9))
+- [x] Keyboard and VoiceOver for app slices ([#13](https://github.com/Pallepadehat/WatchMyBattery/issues/13))
+
+**The menu bar**
+
+- [x] A gentle charging animation in the menu bar and the panel ([#22](https://github.com/Pallepadehat/WatchMyBattery/issues/22))
+
+**Around it**
+
+- [x] Low battery notification ([#12](https://github.com/Pallepadehat/WatchMyBattery/issues/12))
+- [x] Danish translation, and a language setting ([#14](https://github.com/Pallepadehat/WatchMyBattery/issues/14))
+- [x] Settings laid out like System Settings, with a pane for each part
+- [x] Build the app in CI ([#15](https://github.com/Pallepadehat/WatchMyBattery/issues/15))
 
 ## 0.1.3: reach
 
 **The panel**
 
-- [ ] Show when an app won't quit, and why ([#9](https://github.com/Pallepadehat/WatchMyBattery/issues/9))
-- [ ] Keyboard and VoiceOver for app slices ([#13](https://github.com/Pallepadehat/WatchMyBattery/issues/13))
 - [ ] Turn Low Power Mode on and off from the panel, and suggest it when the battery is low ([#24](https://github.com/Pallepadehat/WatchMyBattery/issues/24))
 
 **The menu bar**
 
-- [ ] A gentle charging animation in the menu bar and the panel ([#22](https://github.com/Pallepadehat/WatchMyBattery/issues/22))
 - [ ] A keyboard shortcut to open the panel ([#23](https://github.com/Pallepadehat/WatchMyBattery/issues/23))
 
 **Around it**
 
-- [ ] Low battery notification ([#12](https://github.com/Pallepadehat/WatchMyBattery/issues/12))
 - [ ] Shortcuts actions: battery level, time left, the hungriest app ([#25](https://github.com/Pallepadehat/WatchMyBattery/issues/25))
-- [ ] Danish translation ([#14](https://github.com/Pallepadehat/WatchMyBattery/issues/14))
 
 ## 0.2.0: history
 
@@ -92,3 +97,7 @@ Released. A new icon, a polished panel and Settings in light and dark mode, and 
 - [ ] Battery health over time: maximum capacity and cycle count, month by month ([#42](https://github.com/Pallepadehat/WatchMyBattery/issues/42))
 - [ ] A weekly summary: battery time used, the apps that used the most, and how it compares with last week ([#43](https://github.com/Pallepadehat/WatchMyBattery/issues/43))
 - [ ] Rules for low battery: turn on Low Power Mode or quit chosen apps at a level you pick ([#44](https://github.com/Pallepadehat/WatchMyBattery/issues/44))
+
+## Waiting on a Developer ID
+
+- [ ] Sign with Developer ID and notarize releases, so new users don't have to click "Open Anyway" ([#8](https://github.com/Pallepadehat/WatchMyBattery/issues/8)). This needs a paid Apple Developer Program membership; until then, releases aren't notarized and `install.sh` handles the first launch.

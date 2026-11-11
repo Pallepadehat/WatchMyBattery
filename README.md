@@ -16,7 +16,12 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license"></a>
 </p>
 
-<!-- Add a screenshot or GIF here: docs/screenshot.png (the open panel, with a slice being dragged out) -->
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/panel-dark.png">
+    <img src="docs/panel-light.png" width="380" alt="The WatchMyBattery panel: 4:50 left, with slices for Xcode (−1:06), Music (−32m) and Safari (−20m), and battery health: Normal, 88%, 564 cycles">
+  </picture>
+</p>
 
 ## Features
 
@@ -34,12 +39,24 @@
 **Drag an app out to quit it**
 - Pull an app's slice out of the panel and let go. The app quits with a *poof*, like removing an icon from the Dock.
 - While you hover over or drag a slice, the **Time left** row previews what you'd gain: **4:50 +1:10**.
-- Optionally asks before quitting, so a stray drag never costs you unsaved work.
+- Optionally asks before quitting, so a stray drag never costs you unsaved work. If an app doesn't quit (it's asking about unsaved changes, say), the panel tells you and can bring it forward.
+- Works with the keyboard and VoiceOver too: Tab between slices, Delete to quit one.
+- Hide apps you never want to quit by accident, like Music or your VPN.
+
+**Battery health, and a heads-up when it runs low**
+- Condition, maximum capacity and cycle count, quietly, under the time.
+- An optional notification at the levels you choose, naming the hungriest app, with a button that quits it.
+- A soft glow flows into the battery while it charges, in the menu bar and the panel. Turn it off if you prefer a still icon.
+- In English and Danish.
 
 **Light on your battery** (it would be a bit silly otherwise)
 - No polling: battery changes arrive as notifications from macOS.
 - Apps are sampled only while the panel is open.
-- The menu bar icon is redrawn only when something you can see changes.
+- The menu bar icon is redrawn only when something you can see changes. The charging animation is a short sweep every few seconds, only while charging, and it stops while the displays sleep.
+
+## Languages
+
+English and Danish. WatchMyBattery follows your Mac's language; to pick one just for it, use **Settings › General › Language**. Translations are welcome: see [CONTRIBUTING](CONTRIBUTING.md#translations).
 
 ## Install
 
@@ -97,13 +114,15 @@ WatchMyBattery is meant to take the place of Apple's battery icon, so you'll wan
 
 **System Settings › Control Center › Battery**, and turn off **Show in Menu Bar**.
 
-WatchMyBattery's settings have a button that opens that page for you. To get Apple's icon back, turn the switch on again.
+**Settings › General › Hide the Built-in Battery** opens that page for you. To get Apple's icon back, turn the switch on again.
 
 ## How it works
 
 The numbers in the panel are **estimates**. They're good at answering "what's eating my battery, roughly how much, and is it worth quitting?", but they're not a measurement of the future. Here's exactly where they come from.
 
 **Battery level, charging state and time remaining** come from IOPowerSources, the same source macOS uses for its own battery menu, so the percentage and the time left match what the system shows.
+
+**Battery health** (condition, maximum capacity and cycle count) comes from `system_profiler SPPowerDataType`, which is where System Settings' figures come from too. It runs at most every few hours, in the background, when the panel opens. If it isn't available, the cycle count and an approximate capacity come from the battery controller instead.
 
 **How much power each app is using.** The kernel keeps a running energy counter for every process (`ri_energy_nj` from `proc_pid_rusage`, `RUSAGE_INFO_V6`, in nanojoules). While the panel is open, WatchMyBattery reads it for every process at regular intervals and divides the change by the time between readings, which gives each process's average power over that interval. Processes are grouped by their **responsible app**, so a browser's helper and renderer processes count toward the browser, the same grouping Activity Monitor uses.
 
@@ -127,24 +146,26 @@ So treat **−48m** as "this app is a big reason your battery is draining", not 
 
 - **Nothing leaves your Mac.** No analytics, no accounts, no telemetry. The only network request is Sparkle's update check against this repository's GitHub releases, and you can turn automatic updates off in Settings.
 - WatchMyBattery reads process **energy counters and names**, never what those apps contain or do.
-- It isn't sandboxed, because the sandbox doesn't allow reading other processes' energy use or quitting other apps. It only ever quits an app you drag out of the panel.
+- It isn't sandboxed, because the sandbox doesn't allow reading other processes' energy use or quitting other apps. It only ever quits an app you ask it to: one you drag out of the panel, delete with the keyboard, or quit from a low battery notification.
+- The low battery notification is off until you turn it on. When it goes off, apps are measured for two seconds to find the hungriest one.
 - Battery changes arrive as IOPowerSources notifications, so there's no polling timer. Processes are sampled **only while the panel is open**, and the menu bar icon is redrawn **only when something visible changes**. With the panel closed, the app is idle.
 
 ## Settings
 
-| Setting | Options |
+Settings is laid out like System Settings, with a pane for each part:
+
+| Pane | Settings |
 | --- | --- |
-| Percentage in the menu bar | Hidden, inside the battery, or beside it |
-| Coloured states | Red when low and green when charging, or monochrome (a template image that follows the menu bar's appearance) |
-| Centre of the battery in the panel | Time remaining or percentage |
-| Apps to show | How many of the top energy users get a slice |
-| Ask before quitting | Confirm before an app you drag out quits |
-| Launch at login | Start WatchMyBattery when you log in |
-| Automatic updates | Check for and install updates automatically |
+| General | Open at login, language (System, English or Dansk), shortcuts to hide the built-in battery and to System Settings › Battery |
+| Menu Bar | Percentage hidden, inside the battery or beside it; coloured states (red when low, green when charging) or monochrome; the charging animation |
+| Panel | Time remaining or percentage in the centre of the battery, how many apps get a slice, asking before quitting, and hidden apps that never get a slice |
+| Notifications | A low battery notification, and the levels it's sent at |
+| Updates | Check now (the answer shows right in the row), and check for and install updates automatically |
+| About | The version, and links to the source code, the changelog and the bug report form |
 
 ## Updates
 
-WatchMyBattery updates itself with [Sparkle](https://sparkle-project.org). Each [GitHub release](https://github.com/Pallepadehat/WatchMyBattery/releases) carries an `appcast.xml` signed with the project's EdDSA key, and the app only installs updates that carry a valid signature from that key. Turn off **Automatic updates** in Settings if you'd rather update by hand, for example by running the install command again.
+WatchMyBattery updates itself with [Sparkle](https://sparkle-project.org). Each [GitHub release](https://github.com/Pallepadehat/WatchMyBattery/releases) carries an `appcast.xml` signed with the project's EdDSA key, and the app only installs updates that carry a valid signature from that key. Turn off **Settings › Updates › Check for Updates Automatically** if you'd rather update by hand, for example by running the install command again.
 
 ## Building
 
@@ -169,8 +190,8 @@ swift test
 
 | Folder | What's inside |
 | --- | --- |
-| [`Packages/BatteryKit`](Packages/BatteryKit) | The testable logic: battery state, per-app energy, and the time estimates. |
-| [`WatchMyBattery`](WatchMyBattery) | The app: the menu bar icon, the panel, settings and updates. |
+| [`Packages/BatteryKit`](Packages/BatteryKit) | The testable logic: battery state and health, per-app energy, the time estimates, and when to send a low battery notification. |
+| [`WatchMyBattery`](WatchMyBattery) | The app: the menu bar icon and its charging animation, the panel, notifications, settings, updates, and the strings and their translations (`Localizable.xcstrings`). |
 | [`Config`](Config) | Signing settings and `Info.plist` (including Sparkle's feed URL and public key). |
 | [`scripts`](scripts) | Building, packaging and releasing, plus `generate-icon.swift`, which writes the app icon (`WatchMyBattery/AppIcon.icon`, an Icon Composer icon) and logo, and `generate-social-preview.swift`, which draws the GitHub social preview. |
 | [`install.sh`](install.sh) | The one-command installer. |
