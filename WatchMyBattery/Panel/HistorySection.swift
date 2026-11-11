@@ -27,8 +27,8 @@ struct HistorySection: View {
             if isExpanded {
                 VStack(alignment: .leading, spacing: 8) {
                     LevelChart(
-                        levels: history.levels(since: start), pluggedIn: history.pluggedInPeriods(since: start, now: now),
-                        start: start, now: now, current: snapshot, usesColor: usesColor)
+                        buckets: history.levelBuckets(endingAt: now, current: snapshot), start: start, now: now, current: snapshot,
+                        usesColor: usesColor)
 
                     if let stretch = history.sinceUnplugged(snapshot, now: now) {
                         SinceUnpluggedRow(stretch: stretch)
@@ -80,10 +80,12 @@ private struct DisclosureRow: View {
 
 // MARK: - The level chart
 
-/// The battery level over the last 24 hours, with the time plugged in shaded, like iPhone's Battery settings.
+/// The battery level over the last 24 hours as a bar every half hour, like
+/// iPhone's Battery settings: green while plugged in, red when it ran low.
+/// Before history begins there are no bars, so a new history reads as new
+/// rather than as one thin line stretched across the day.
 private struct LevelChart: View {
-    let levels: [BatteryHistory.LevelPoint]
-    let pluggedIn: [DateInterval]
+    let buckets: [BatteryHistory.LevelBucket]
     let start: Date
     let now: Date
     let current: BatterySnapshot
@@ -92,53 +94,40 @@ private struct LevelChart: View {
     @Environment(\.colorScheme) private var colorScheme
 
     private static let green = Color(red: 0.2, green: 0.78, blue: 0.35)
+    private static let red = Color(red: 0.95, green: 0.27, blue: 0.23)
+    /// Room between bars, as a share of each slot.
+    private static let gap = 0.28
 
-    /// The readings, carried on to now at the current level.
-    private var points: [BatteryHistory.LevelPoint] {
-        guard !levels.isEmpty else { return [] }
-        return levels + [BatteryHistory.LevelPoint(date: now, percentage: current.percentage, isPluggedIn: current.isPluggedIn)]
-    }
-
-    private var lineColor: Color { colorScheme == .dark ? .white : Color(white: 0.25) }
+    private var filled: [BatteryHistory.LevelBucket] { buckets.filter { $0.percentage != nil } }
 
     var body: some View {
-        Chart {
-            ForEach(pluggedIn, id: \.start) { period in
-                RectangleMark(xStart: .value("Plugged in", period.start), xEnd: .value("Unplugged", period.end))
-                    .foregroundStyle((usesColor ? Self.green : Color.secondary).opacity(0.18))
-            }
-            ForEach(points, id: \.date) { point in
-                AreaMark(x: .value("Time", point.date), y: .value("Level", point.percentage))
-                    .interpolationMethod(.stepEnd)
-                    .foregroundStyle(
-                        LinearGradient(colors: [lineColor.opacity(0.28), lineColor.opacity(0.04)], startPoint: .top, endPoint: .bottom))
-                LineMark(x: .value("Time", point.date), y: .value("Level", point.percentage))
-                    .interpolationMethod(.stepEnd)
-                    .lineStyle(StrokeStyle(lineWidth: 1.5, lineJoin: .round))
-                    .foregroundStyle(lineColor)
-            }
+        Chart(filled) { bucket in
+            bar(bucket)
         }
         .chartXScale(domain: start...now)
         .chartYScale(domain: 0...100)
         .chartXAxis {
             AxisMarks(values: .stride(by: .hour, count: 6)) { _ in
-                AxisGridLine().foregroundStyle(.quaternary)
+                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 2])).foregroundStyle(.quaternary)
                 AxisValueLabel(format: .dateTime.hour(), collisionResolution: .greedy)
                     .font(.system(size: 9))
+                    .foregroundStyle(Color.secondary)
             }
         }
         .chartYAxis {
             AxisMarks(position: .trailing, values: [0, 50, 100]) { value in
-                AxisGridLine().foregroundStyle(.quaternary)
+                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5)).foregroundStyle(.quaternary)
                 AxisValueLabel {
                     if let level = value.as(Int.self) {
-                        Text(Double(level) / 100, format: .percent).font(.system(size: 9))
+                        Text(Double(level) / 100, format: .percent)
+                            .font(.system(size: 9))
+                            .foregroundStyle(Color.secondary)
                     }
                 }
             }
         }
         .overlay {
-            if points.isEmpty {
+            if filled.isEmpty {
                 Text("The battery level shows here as it changes.")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
@@ -150,8 +139,28 @@ private struct LevelChart: View {
         .accessibilityValue(accessibilitySummary)
     }
 
+    /// One half hour: a bar from empty up to the level, a little narrower than its slot.
+    private func bar(_ bucket: BatteryHistory.LevelBucket) -> some ChartContent {
+        let inset: TimeInterval = bucket.end.timeIntervalSince(bucket.start) * Self.gap / 2
+        let from: Date = bucket.start.addingTimeInterval(inset)
+        let to: Date = bucket.end.addingTimeInterval(-inset)
+        let level: Int = bucket.percentage ?? 0
+        return RectangleMark(xStart: .value("Start", from), xEnd: .value("End", to), yStart: .value("Empty", 0), yEnd: .value("Level", level))
+            .cornerRadius(1.5)
+            .foregroundStyle(color(for: bucket))
+    }
+
+    private func color(for bucket: BatteryHistory.LevelBucket) -> Color {
+        let plain = colorScheme == .dark ? Color.white.opacity(0.85) : Color(white: 0.12).opacity(0.85)
+        guard usesColor else { return bucket.isPluggedIn ? plain.opacity(0.45) : plain }
+        if bucket.isPluggedIn { return Self.green }
+        if let level = bucket.percentage, level <= BatteryIcon.lowPercentage { return Self.red }
+        return plain
+    }
+
     private var accessibilitySummary: String {
-        guard let lowest = points.map(\.percentage).min(), let highest = points.map(\.percentage).max() else { return "" }
+        let levels = filled.compactMap(\.percentage)
+        guard let lowest = levels.min(), let highest = levels.max() else { return "" }
         let format = FloatingPointFormatStyle<Double>.Percent().precision(.fractionLength(0))
         return String(
             localized:
