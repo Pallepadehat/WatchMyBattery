@@ -1,0 +1,24 @@
+{
+  "machine" : "Mac15,6, Apple M3 Pro",
+  "recorded" : "2026-11-11",
+  "results" : {
+    "charging" : {
+      "cpuMillisecondsPerMinute" : 3657.3937499999997,
+      "energyMillijoulesPerMinute" : 2161.014663,
+      "memoryMegabytes" : 16.28205108642578,
+      "wakeupsPerSecond" : 34.05
+    },
+    "idle" : {
+      "cpuMillisecondsPerMinute" : 80.93112500000001,
+      "energyMillijoulesPerMinute" : 34.541739,
+      "memoryMegabytes" : 14.344551086425781,
+      "wakeupsPerSecond" : 0.4
+    },
+    "panel" : {
+      "cpuMillisecondsPerMinute" : 509.8141250000001,
+      "energyMillijoulesPerMinute" : 71.552502,
+      "memoryMegabytes" : 30.18841552734375,
+      "wakeupsPerSecond" : 5.95
+    }
+  }
+}
