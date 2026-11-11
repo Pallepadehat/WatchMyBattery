@@ -4,7 +4,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
-## [0.1.2] - Unreleased
+## [0.1.2] - 2026-11-11
 
 Health, notifications, Danish, and a battery that glows while it charges.
 

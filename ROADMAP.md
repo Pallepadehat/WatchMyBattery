@@ -6,9 +6,9 @@ What's planned next. Each item has an issue, where the details and discussion li
 
 Released. A new icon, a polished panel and Settings in light and dark mode, and a fix for drag to quit getting stuck ([#7](https://github.com/Pallepadehat/WatchMyBattery/issues/7)). See the [changelog](CHANGELOG.md).
 
-## 0.1.2: health, notifications and Danish
+## 0.1.2: health, notifications and Danish ✅
 
-Done, in review before release. See the [changelog](CHANGELOG.md).
+Released. See the [changelog](CHANGELOG.md).
 
 **The panel**
 
