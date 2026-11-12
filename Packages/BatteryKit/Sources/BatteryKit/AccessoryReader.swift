@@ -13,13 +13,16 @@ import IOKit.ps
 ///   list is read with `IOPSCopyPowerSourcesByType`, which IOKit exports but
 ///   doesn't declare in its headers, so it's looked up at runtime: if a
 ///   future macOS removes it, accessories simply don't show up.
-/// - **The HID registry**, where the Magic Mouse, Keyboard and Trackpad keep
-///   a `BatteryPercent` property.
+/// - **The IORegistry**, where the Magic Mouse, Keyboard and Trackpad keep
+///   a `BatteryPercent` property (see ``AccessoryRegistry``).
 ///
 /// Neither needs Bluetooth permission, and a read takes well under a millisecond.
 public enum AccessoryReader {
-    public static func read() -> [Accessory] {
-        merge(powerSources: accessories(fromPowerSources: readPowerSources()), registry: accessories(fromRegistry: readRegistry()))
+    /// Reads every accessory. With `registry`, the Magic accessories it found
+    /// last are read again; without, the registry is searched first.
+    public static func read(registry: AccessoryRegistry? = nil) -> [Accessory] {
+        let entries = registry?.entries() ?? AccessoryRegistry.scanOnce()
+        return merge(powerSources: accessories(fromPowerSources: readPowerSources()), registry: accessories(fromRegistry: entries))
     }
 
     // MARK: - IOPowerSources
@@ -177,32 +180,13 @@ public enum AccessoryReader {
         return list.compactMap { IOPSGetPowerSourceDescription(info, $0)?.takeUnretainedValue() as? [String: Any] }
     }
 
-    private static func readRegistry() -> [[String: Any]] {
-        var iterator: io_iterator_t = 0
-        guard IOServiceGetMatchingServices(kIOMainPortDefault, IOServiceMatching(registryClass), &iterator) == KERN_SUCCESS else {
-            return []
-        }
-        defer { IOObjectRelease(iterator) }
-        var entries: [[String: Any]] = []
-        while case let service = IOIteratorNext(iterator), service != IO_OBJECT_NULL {
-            defer { IOObjectRelease(service) }
-            // Only the few properties needed, rather than copying every property of the device.
-            var entry: [String: Any] = [:]
-            for key in [
-                Key.batteryPercent, Key.product, Key.deviceAddress, Key.serialNumber, Key.batteryStatusFlags, Key.registryProductID,
-                Key.registryVendorID,
-            ] {
-                if let value = IORegistryEntryCreateCFProperty(service, key as CFString, kCFAllocatorDefault, 0)?.takeRetainedValue() {
-                    entry[key] = value
-                }
-            }
-            if entry[Key.batteryPercent] != nil { entries.append(entry) }
-        }
-        return entries
-    }
-
-    /// The registry class of HID devices that manage a battery.
-    static let registryClass = "AppleDeviceManagementHIDEventService"
+    /// The property Magic accessories keep their level in.
+    static let registryBatteryKey = Key.batteryPercent
+    /// What's read from each of them.
+    static let registryKeys = [
+        Key.batteryPercent, Key.product, Key.deviceAddress, Key.serialNumber, Key.batteryStatusFlags, Key.registryProductID,
+        Key.registryVendorID,
+    ]
 
     private enum Key {
         static let accessoryType = "Accessory Source"

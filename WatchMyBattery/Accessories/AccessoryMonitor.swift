@@ -25,6 +25,9 @@ final class AccessoryMonitor {
     @ObservationIgnored private var pendingRefresh: Task<Void, Never>?
     @ObservationIgnored private var slowRefresh: Task<Void, Never>?
     @ObservationIgnored private var followUp: Task<Void, Never>?
+    /// The Magic accessories, searched for only when they come or go.
+    @ObservationIgnored private let registry = AccessoryRegistry()
+    @ObservationIgnored private var needsRescan = false
     @ObservationIgnored private var wakeToken: (any NSObjectProtocol)?
 
     private static let slowRefreshInterval: Duration = .seconds(15 * 60)
@@ -35,15 +38,20 @@ final class AccessoryMonitor {
             accessories = Self.samples
             return
         }
-        // Notifications come in bursts (each earbud, then the case), so they're gathered into one read.
-        let observer = AccessoryObserver { [weak self] in self?.scheduleRefresh() }
+        let observer = AccessoryObserver(
+            onChange: { [weak self] in self?.scheduleRefresh() },
+            onDevicesChanged: { [weak self] in
+                self?.scheduleRefresh(rescanning: true)
+                self?.scheduleFollowUp()
+            })
         observer.start()
         self.observer = observer
         wakeToken = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didWakeNotification, object: nil, queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.scheduleRefresh() }
+            MainActor.assumeIsolated { self?.scheduleRefresh(rescanning: true) }
         }
+        registry.rescan()
         refresh()
     }
 
@@ -52,7 +60,11 @@ final class AccessoryMonitor {
         pendingRefresh?.cancel()
         pendingRefresh = nil
         if LaunchOptions.pretendsAccessories { return }
-        let next = AccessoryReader.read()
+        if needsRescan {
+            needsRescan = false
+            registry.rescan()
+        }
+        let next = AccessoryReader.read(registry: registry)
         // Only publish real changes, so the panel doesn't redraw for nothing.
         if next != accessories {
             if Set(next.map(\.id)) != Set(accessories.map(\.id)) { scheduleFollowUp() }
@@ -71,6 +83,7 @@ final class AccessoryMonitor {
         followUp = Task { [weak self] in
             try? await Task.sleep(for: .seconds(4))
             guard !Task.isCancelled else { return }
+            self?.needsRescan = true
             self?.refresh()
         }
     }
@@ -85,7 +98,9 @@ final class AccessoryMonitor {
         Logger.app.notice("Accessories: \(summary.isEmpty ? "none" : summary.joined(separator: "; "), privacy: .public)")
     }
 
-    private func scheduleRefresh() {
+    /// Notifications come in bursts (each earbud, then the case), so they're gathered into one read.
+    private func scheduleRefresh(rescanning: Bool = false) {
+        if rescanning { needsRescan = true }
         pendingRefresh?.cancel()
         pendingRefresh = Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(300))

@@ -7,20 +7,24 @@ import IOKit.ps
 /// changes. macOS pushes all of these, so there's no polling:
 ///
 /// - IOPowerSources' accessory notifications, for AirPods and others it publishes;
-/// - the IOKit registry's notifications for HID devices with a battery
-///   (Magic Mouse, Keyboard, Trackpad) appearing and going away.
+/// - the IOKit registry's notifications for devices with a `BatteryPercent`
+///   (Magic Mouse, Keyboard, Trackpad) appearing and going away, reported
+///   apart, as only then does ``AccessoryRegistry`` need to search again.
 ///
-/// The HID registry doesn't announce a changed `BatteryPercent`, so the
-/// owner refreshes those at other moments too (see `AccessoryMonitor`).
+/// The registry doesn't announce a changed `BatteryPercent`, so the owner
+/// reads those at other moments too (see `AccessoryMonitor`).
 @MainActor
 public final class AccessoryObserver {
     private let onChange: @MainActor () -> Void
+    private let onDevicesChanged: @MainActor () -> Void
     private var sources: [CFRunLoopSource] = []
     private var notificationPort: IONotificationPortRef?
     private var iterators: [io_iterator_t] = []
 
-    public init(onChange: @escaping @MainActor () -> Void) {
+    /// `onChange` for any change; `onDevicesChanged` when a device with a `BatteryPercent` comes or goes.
+    public init(onChange: @escaping @MainActor () -> Void, onDevicesChanged: @escaping @MainActor () -> Void) {
         self.onChange = onChange
+        self.onDevicesChanged = onDevicesChanged
     }
 
     public func start() {
@@ -43,7 +47,7 @@ public final class AccessoryObserver {
             sources.append(source)
         }
 
-        // Magic accessories come and go as HID devices.
+        // Magic accessories come and go in the registry.
         guard let port = IONotificationPortCreate(kIOMainPortDefault) else { return }
         notificationPort = port
         CFRunLoopAddSource(CFRunLoopGetMain(), IONotificationPortGetRunLoopSource(port).takeUnretainedValue(), .defaultMode)
@@ -52,17 +56,21 @@ public final class AccessoryObserver {
             while case let service = IOIteratorNext(iterator), service != IO_OBJECT_NULL { IOObjectRelease(service) }
             guard let context else { return }
             MainActor.assumeIsolated {
-                Unmanaged<AccessoryObserver>.fromOpaque(context).takeUnretainedValue().onChange()
+                Unmanaged<AccessoryObserver>.fromOpaque(context).takeUnretainedValue().onDevicesChanged()
             }
         }
+        // By the property, and by the class Magic accessories use today: the property match is only checked as a
+        // device is registered, so one whose level is set a moment later is caught by its class instead.
+        let matchings = { [AccessoryRegistry.matching(), IOServiceMatching(AccessoryRegistry.knownClass)].compactMap(\.self) }
         for type in [kIOFirstMatchNotification, kIOTerminatedNotification] {
-            var iterator: io_iterator_t = 0
-            let result = IOServiceAddMatchingNotification(
-                port, type, IOServiceMatching(AccessoryReader.registryClass), matched, context, &iterator)
-            guard result == KERN_SUCCESS else { continue }
-            // Drain once to arm it; the devices already there are read separately.
-            while case let service = IOIteratorNext(iterator), service != IO_OBJECT_NULL { IOObjectRelease(service) }
-            iterators.append(iterator)
+            for matching in matchings() {
+                var iterator: io_iterator_t = 0
+                let result = IOServiceAddMatchingNotification(port, type, matching, matched, context, &iterator)
+                guard result == KERN_SUCCESS else { continue }
+                // Drain once to arm it; the devices already there are read separately.
+                while case let service = IOIteratorNext(iterator), service != IO_OBJECT_NULL { IOObjectRelease(service) }
+                iterators.append(iterator)
+            }
         }
     }
 

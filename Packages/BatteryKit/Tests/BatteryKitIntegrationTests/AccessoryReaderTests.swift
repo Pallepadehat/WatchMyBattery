@@ -37,4 +37,21 @@ struct AccessoryReaderSystemTests {
             #expect(ours.contains { abs($0.percentage - percentage) <= 1 }, "pmset lists a battery at \(percentage)%")
         }
     }
+
+    /// The registry search finds what `ioreg -r -k BatteryPercent` finds: every device with a battery level, whatever its class.
+    @Test func findsWhatIoregFinds() throws {
+        let output = try #require(Machine.run("/usr/sbin/ioreg", ["-r", "-k", "BatteryPercent"]))
+        let ioregLevels = output.matches(of: /"BatteryPercent" = (\d+)/).compactMap { Int($0.output.1) }.sorted()
+        let ours = AccessoryRegistry.scanOnce().compactMap { $0["BatteryPercent"] as? Int }.sorted()
+        #expect(ours == ioregLevels)
+    }
+
+    /// Reading again from the devices found by a search gives the same as searching again.
+    @Test func readingAgainMatchesSearchingAgain() {
+        let registry = AccessoryRegistry()
+        registry.rescan()
+        let again = registry.entries().compactMap { $0["BatteryPercent"] as? Int }.sorted()
+        let fresh = AccessoryRegistry.scanOnce().compactMap { $0["BatteryPercent"] as? Int }.sorted()
+        #expect(again == fresh)
+    }
 }
