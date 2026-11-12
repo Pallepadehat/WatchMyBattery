@@ -326,10 +326,11 @@ func launchAndMeasure(arguments: [String], keepsHistory: Bool, reportsChecks: Bo
     return result
 }
 
-// Idle with the animation off, so it's the same whether this Mac happens to be charging or not.
+// Idle and panel with the animation off, so they're the same whether this Mac happens to be charging or not: the
+// animation has its own scenario, and playing it in the panel would measure the animation rather than the panel.
 scenario("idle", "Idle: panel closed, nothing to animate", arguments: ["-showsChargingAnimation", "NO"])
 scenario("charging", "Charging: the menu bar animation playing", arguments: ["--pretend-charging"], keepsHistory: false)
-scenario("panel", "Panel open: measuring apps every two seconds", arguments: ["--show-panel"])
+scenario("panel", "Panel open: measuring apps every two seconds", arguments: ["--show-panel", "-showsChargingAnimation", "NO"])
 
 // Clean up after the isolated runs' settings. (Their menu bar icon keeps its own position under its own name, so
 // the real app's isn't touched.)
