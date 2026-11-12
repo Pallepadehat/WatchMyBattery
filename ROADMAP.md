@@ -88,6 +88,12 @@ Things worth acting on, at the right moment, from what WatchMyBattery already me
 - [x] Two weeks of history, kept small with SwiftData: an hourly summary of the drain, power and apps, rather than every sample
 - [x] Ten days in the panel's history, like iPhone's Battery settings
 
+## 0.2.6: calendar access when you ask ✅
+
+Released. See the [changelog](CHANGELOG.md).
+
+- [x] Ask for calendar access with a button in Settings, instead of macOS's prompt appearing when the app opens
+
 ## 0.3.0: accessories
 
 **The AirPods card** ([#31](https://github.com/Pallepadehat/WatchMyBattery/issues/31))

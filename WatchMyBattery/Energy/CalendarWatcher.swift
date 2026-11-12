@@ -6,9 +6,11 @@ import Observation
 
 /// The next day's meetings from the Calendar app, for "charge before your meeting".
 ///
-/// Only when the warning is turned on, and only after macOS has asked you for
-/// access. It reads when events start and end, and whether you're going,
-/// never titles, places or who's invited. Nothing is kept on disk or sent
+/// Only when the warning is turned on, and only once you've allowed access
+/// with the button in Settings › Notifications: macOS's prompt never appears
+/// by itself, not when the app opens and not when the switch is turned on.
+/// It reads when events start and end, and whether you're going, never
+/// titles, places or who's invited. Nothing is kept on disk or sent
 /// anywhere. Events are read again when the calendar changes, or when what
 /// was read is an hour old, rather than on a timer.
 @Observable
@@ -21,15 +23,14 @@ final class CalendarWatcher {
     }
 
     private(set) var access: Access = CalendarWatcher.currentAccess()
+    /// macOS is showing its prompt, after "Allow Access…" was clicked.
+    private(set) var isRequestingAccess = false
     /// Meetings that haven't ended, from a little before now to a day ahead.
     private(set) var events: [UpcomingEvent] = []
 
     @ObservationIgnored private var store: EKEventStore?
     @ObservationIgnored private var fetchedAt = Date.distantPast
     @ObservationIgnored private var changeObserver: NSObjectProtocol?
-    @ObservationIgnored private var starting: Task<Void, Never>?
-    /// Goes up with every ``stop()``, so a start still waiting for the user's answer knows it's no longer wanted.
-    @ObservationIgnored private var generation = 0
 
     private static let lookAhead: TimeInterval = 24 * 3600
     private static let refreshInterval: TimeInterval = 3600
@@ -44,48 +45,42 @@ final class CalendarWatcher {
 
     var isWatching: Bool { store != nil }
 
-    /// Starts reading the calendar, asking for access first if macOS hasn't yet. Settings and the insights can both
-    /// ask at once (when the switch is turned on); the second waits for the first rather than asking again.
-    func start() async {
-        if let starting {
-            await starting.value
-            return
-        }
+    /// Starts reading the calendar, if access has been allowed. It never asks: that's ``requestAccess()``, from the
+    /// button in Settings.
+    func start() {
         guard store == nil else {
             refreshIfStale()
             return
         }
-        let task = Task { await begin() }
-        starting = task
-        await task.value
-        starting = nil
-    }
-
-    private func begin() async {
-        let wanted = generation
+        refreshAccess()
+        guard access == .granted else { return }
         let store = EKEventStore()
-        if access == .notDetermined {
-            Logger.app.info("Asking for calendar access")
-            // macOS holds a background app's permission prompt until it comes forward, which a menu bar app may never
-            // do on its own. From Settings it's already in front; from anywhere else, step forward so the prompt shows.
-            NSApp.activate()
-            let granted = (try? await store.requestFullAccessToEvents()) ?? false
-            if !granted { Logger.app.notice("Calendar access wasn't allowed") }
-        }
-        access = Self.currentAccess()
-        Logger.app.info("Calendar access: \(String(describing: self.access), privacy: .public)")
-        // Turned off again while macOS was asking.
-        guard access == .granted, generation == wanted else { return }
         self.store = store
         changeObserver = NotificationCenter.default.addObserver(forName: .EKEventStoreChanged, object: store, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.refresh() }
         }
+        Logger.app.info("Reading the calendar")
         refresh()
+    }
+
+    /// Shows macOS's prompt for calendar access. Only ever called when you click "Allow Access…" in Settings, which is
+    /// in front, so the prompt shows right away. Once it's allowed, the insights start reading (they watch ``access``).
+    func requestAccess() async {
+        refreshAccess()
+        guard access == .notDetermined, !isRequestingAccess else { return }
+        isRequestingAccess = true
+        defer { isRequestingAccess = false }
+        Logger.app.info("Asking for calendar access")
+        // A menu bar app's prompt waits until the app is in front. Settings already is, but make sure.
+        NSApp.activate()
+        let granted = (try? await EKEventStore().requestFullAccessToEvents()) ?? false
+        if !granted { Logger.app.notice("Calendar access wasn't allowed") }
+        refreshAccess()
+        Logger.app.info("Calendar access: \(String(describing: self.access), privacy: .public)")
     }
 
     /// Stops reading it, and forgets what was read.
     func stop() {
-        generation += 1
         if let changeObserver { NotificationCenter.default.removeObserver(changeObserver) }
         changeObserver = nil
         store = nil
