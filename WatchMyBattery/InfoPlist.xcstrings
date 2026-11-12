@@ -2,7 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "NSCalendarsFullAccessUsageDescription" : {
-      "comment" : "Shown when macOS asks for calendar access, once \"Charge Before Meetings\" is turned on.",
+      "comment" : "Shown when macOS asks for calendar access, after \"Allow Access…\" is clicked in Settings › Notifications.",
       "extractionState" : "manual",
       "localizations" : {
         "da" : {

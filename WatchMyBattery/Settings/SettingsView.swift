@@ -911,6 +911,9 @@ private struct RunawayAppRows: View {
 // MARK: - Insights
 
 /// "Charge before your meeting": on or off, how far ahead, and calendar access.
+///
+/// Turning it on doesn't bring up macOS's prompt by itself: the Calendar Access row below it says why access is
+/// needed, and asks only when you click "Allow Access…".
 private struct MeetingWarningRows: View {
     let model: AppModel
 
@@ -924,34 +927,31 @@ private struct MeetingWarningRows: View {
             }
         }
         .onChange(of: settings.warnsBeforeMeetings) { _, on in
-            guard on else { return }
-            Task {
-                await model.insights.calendar.start()
-                await model.notifier.requestAuthorization()
-            }
+            if on { Task { await model.notifier.requestAuthorization() } }
         }
-        .task { calendar.refreshAccess() }
+        .onAppear { calendar.refreshAccess() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            // Back from System Settings, where access may have been turned on or off.
+            calendar.refreshAccess()
+            Task { await model.notifier.refreshAuthorization() }
+        }
 
         if settings.warnsBeforeMeetings {
-            Picker(selection: $settings.meetingWarningLead) {
-                ForEach(MeetingCheck.leadChoices, id: \.self) { minutes in
-                    Text(Self.leadTitle(minutes)).tag(minutes)
-                }
-            } label: {
-                Text("Warn")
-            }
-            .padding(.leading, 34)
+            CalendarAccessRow(calendar: calendar)
 
-            if calendar.access == .denied {
-                LabeledContent {
-                    Button("Open…") { calendar.openPrivacySettings() }
+            // How far ahead only matters once there's a calendar to read.
+            if calendar.access == .granted {
+                Picker(selection: $settings.meetingWarningLead) {
+                    ForEach(MeetingCheck.leadChoices, id: \.self) { minutes in
+                        Text(Self.leadTitle(minutes)).tag(minutes)
+                    }
                 } label: {
-                    Label("Calendar access is turned off for WatchMyBattery.", systemImage: "exclamationmark.triangle.fill")
-                        .labelStyle(InlineIconLabelStyle(color: .orange))
-                        .font(.caption)
+                    Text("Warn")
                 }
                 .padding(.leading, 34)
-            } else if model.notifier.isDenied {
+            }
+
+            if calendar.access == .granted, model.notifier.isDenied {
                 LabeledContent {
                     Button("Open…") { model.notifier.openNotificationSettings() }
                 } label: {
@@ -968,6 +968,36 @@ private struct MeetingWarningRows: View {
     private static func leadTitle(_ minutes: Int) -> String {
         let duration = Duration.seconds(minutes * 60).formatted(.units(allowed: [.hours, .minutes], width: .wide))
         return String(localized: "\(duration) before")
+    }
+}
+
+/// Whether WatchMyBattery may read the calendar, laid out like the Low Power Mode helper's row, and the one place
+/// that asks: "Allow…" brings up macOS's prompt; once that's been answered no, "Open…" goes to System Settings, since
+/// macOS won't ask twice.
+private struct CalendarAccessRow: View {
+    let calendar: CalendarWatcher
+
+    var body: some View {
+        LabeledContent {
+            switch calendar.access {
+            case .granted:
+                Label("Allowed", systemImage: "checkmark.circle.fill")
+                    .labelStyle(InlineIconLabelStyle(color: .green))
+            case .notDetermined:
+                Button("Allow…") { Task { await calendar.requestAccess() } }
+                    .disabled(calendar.isRequestingAccess)
+            case .denied:
+                Button("Open…") { calendar.openPrivacySettings() }
+            }
+        } label: {
+            SettingLabel("Calendar Access", symbol: "calendar", color: .red) {
+                if calendar.access == .denied {
+                    Text("Turned off in System Settings › Privacy & Security › Calendars.")
+                } else {
+                    Text("Reads only when your meetings start and end. macOS asks you to allow it once.")
+                }
+            }
+        }
     }
 }
 

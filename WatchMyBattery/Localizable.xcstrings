@@ -537,12 +537,12 @@
         }
       }
     },
-    "Calendar access is turned off for WatchMyBattery." : {
+    "Calendar Access" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Adgang til kalendere er slået fra for WatchMyBattery."
+            "value" : "Adgang til kalendere"
           }
         }
       }
@@ -1696,6 +1696,16 @@
         }
       }
     },
+    "Reads only when your meetings start and end. macOS asks you to allow it once." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Læser kun, hvornår dine møder starter og slutter. macOS beder dig tillade det én gang."
+          }
+        }
+      }
+    },
     "Record Shortcut" : {
       "localizations" : {
         "da" : {
@@ -2036,6 +2046,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Slå strømsparetilstand til"
+          }
+        }
+      }
+    },
+    "Turned off in System Settings › Privacy & Security › Calendars." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slået fra i Systemindstillinger › Anonymitet og sikkerhed › Kalendere."
           }
         }
       }

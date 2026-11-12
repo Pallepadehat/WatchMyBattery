@@ -1,6 +1,5 @@
 import AppKit
 import BatteryKit
-import OSLog
 import Observation
 
 /// Things worth acting on, at the right moment: a meeting the battery won't
@@ -42,6 +41,8 @@ final class InsightsMonitor {
 
     /// The panel opened: time has passed since the last sample, so have another look.
     func refresh() {
+        // Access may have been allowed, or turned off, in System Settings since.
+        calendar.refreshAccess()
         checkHistory()
         evaluateMeeting()
     }
@@ -79,14 +80,12 @@ final class InsightsMonitor {
         if snapshot.isPluggedIn, wasPluggedIn == false { didPlugIn() }
         wasPluggedIn = snapshot.isPluggedIn
 
-        if warns {
-            // Denied: Settings offers to open System Settings; asking again from here would do nothing.
-            if !calendar.isWatching, calendar.access != .denied {
-                Task { await calendar.start() }
-            } else if !calendar.isWatching {
-                Logger.app.info("Not reading the calendar: access is turned off in System Settings")
-            }
-        } else if calendar.isWatching {
+        // Reads the calendar only once access is allowed, and never asks for it from here: that's the "Allow
+        // Access…" button in Settings, so opening the app never brings up macOS's prompt.
+        let reads = warns && calendar.access == .granted
+        if reads, !calendar.isWatching {
+            calendar.start()
+        } else if !reads, calendar.isWatching {
             calendar.stop()
         }
         evaluateMeeting()
