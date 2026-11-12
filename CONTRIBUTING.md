@@ -100,6 +100,8 @@ For bigger changes, open an issue first so we can agree on the approach.
 - Keep logic in `BatteryKit`: plain value types, no AppKit or SwiftUI, with unit tests. Anything you can test without a real battery belongs there.
 - Name things for what they are, and add a doc comment explaining *why* whenever the code alone doesn't make it obvious.
 - No polling. React to IOPowerSources notifications. Processes are sampled every two seconds while the panel is open, and for the history every five minutes on battery only (`HistoryRecorder`); don't add more sampling than that.
+- The history is kept with SwiftData (`HistoryStore`, in BatteryKit), but read from its value types (`BatteryHistory`, `UsageProfile`), which answer in microseconds. Changing a stored model means a new `VersionedSchema` next to `HistorySchemaV1` and a stage in `HistoryMigrationPlan`, so people's history comes along.
+- Insights (`Insights.swift`) only use what the history already has, and say nothing rather than guess. Their wording lives in `InsightText`, shared by the panel and the notifications.
 - Be honest about estimates in the UI: round sensibly and don't show more precision than the numbers have.
 
 ## Making a release

@@ -8,7 +8,7 @@ import Foundation
 /// regression (or a much slower Mac) trips them; the baseline catches
 /// smaller slips on the Mac that recorded it.
 enum Benchmarks {
-    static let all: [Benchmark] = history + measuring + panel
+    static let all: [Benchmark] = history + profile + store + measuring + panel
 
     // MARK: - History: recorded all day, read when the panel opens
 
@@ -54,20 +54,73 @@ enum Benchmarks {
             let current = Fixtures.snapshot(40, pluggedIn: false)
             return { blackHole(history.sinceUnplugged(current, now: Fixtures.now)) }
         },
-        // Saved every five minutes on battery, off the main thread.
-        Benchmark("history.save", budget: .milliseconds(30), tolerance: 1) {
+    ]
+
+    // MARK: - Two weeks, and the insights: every five minutes on battery, and when the panel shows ten days
+
+    static let profile: [Benchmark] = [
+        Benchmark("profile.recordSample", budget: .microseconds(200)) {
+            let state = Box((profile: Fixtures.twoWeeks(), index: 0))
             let history = Fixtures.fullDay()
-            let url = FileManager.default.temporaryDirectory.appending(path: "BatteryKitBenchmarks-\(UUID().uuidString)/History.plist")
-            return { try? history.save(to: url) }
+            return {
+                state.value.index += 1
+                var sample = history.samples[state.value.index % history.samples.count]
+                sample.date = Fixtures.now.addingTimeInterval(Double(state.value.index) * 0.001)
+                state.value.profile.record(sample, apps: history.apps)
+            }
         },
-        // Once, at launch, on the main thread.
-        Benchmark("history.load", budget: .milliseconds(50), tolerance: 1) {
-            let url = FileManager.default.temporaryDirectory.appending(path: "BatteryKitBenchmarks-\(UUID().uuidString)/History.plist")
-            // Recent enough that loading doesn't trim it all away.
-            try? Fixtures.fullDay(endingAt: Date()).save(to: url)
-            return { blackHole(BatteryHistory.load(from: url)) }
+        Benchmark("profile.days", budget: .microseconds(200)) {
+            let profile = Fixtures.twoWeeks()
+            return { blackHole(profile.days(10, endingAt: Fixtures.now)) }
+        },
+        Benchmark("profile.appEnergy", budget: .milliseconds(1)) {
+            let profile = Fixtures.twoWeeks()
+            let start = Fixtures.now.addingTimeInterval(-10 * 24 * 3600)
+            return { blackHole(profile.appEnergy(since: start)) }
+        },
+        Benchmark("insights.usualDrain", budget: .milliseconds(2)) {
+            let history = Fixtures.fullDay()
+            let profile = Fixtures.twoWeeks()
+            return { blackHole(UsualDrainCheck.check(history: history, profile: profile, now: Fixtures.now)) }
+        },
+        Benchmark("insights.newApps", budget: .milliseconds(2)) {
+            let history = Fixtures.fullDay()
+            let profile = Fixtures.twoWeeks()
+            return { blackHole(NewAppCheck.newApps(history: history, profile: profile, now: Fixtures.now)) }
         },
     ]
+
+    // MARK: - The store: written every five minutes on battery, opened once at launch, on the main thread
+
+    static let store: [Benchmark] = [
+        // A sample, its hour and its apps, written to a store that already holds a full day.
+        Benchmark("store.recordSample", budget: .milliseconds(10), tolerance: 1) {
+            let url = FileManager.default.temporaryDirectory.appending(path: "BatteryKitBenchmarks-\(UUID().uuidString)/History.store")
+            let state = await MainActor.run { Box((store: Self.filledStore(at: url), date: Date(), index: 0)) }
+            return {
+                await MainActor.run {
+                    state.value.date += 300
+                    state.value.index += 1
+                    state.value.store.record(joules: Fixtures.joules(for: state.value.index), seconds: 300, systemWatts: 9, at: state.value.date)
+                    try? state.value.store.save()
+                }
+            }
+        },
+        // Opening a store with a full day and its summaries, and reading it all into memory.
+        Benchmark("store.open", budget: .milliseconds(150), tolerance: 1) {
+            let url = FileManager.default.temporaryDirectory.appending(path: "BatteryKitBenchmarks-\(UUID().uuidString)/History.store")
+            await MainActor.run { _ = Self.filledStore(at: url) }
+            return { await MainActor.run { blackHole(try? HistoryStore(url: url)) } }
+        },
+    ]
+
+    /// A store on disk holding a day like ``Fixtures/fullDay(endingAt:)``, ending now so opening it trims nothing.
+    @MainActor private static func filledStore(at url: URL) -> HistoryStore {
+        let store = HistoryStore.open(at: url)
+        store.importLegacy(Fixtures.fullDay(endingAt: Date()))
+        try? store.save()
+        return store
+    }
 
     // MARK: - Measuring apps: every two seconds while the panel is open
 

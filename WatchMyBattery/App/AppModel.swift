@@ -12,10 +12,12 @@ final class AppModel {
     let launchAtLogin = LaunchAtLogin()
     let notifier = LowBatteryNotifier()
     let lowPowerMode = LowPowerMode()
-    let history = HistoryRecorder()
+    let history: HistoryRecorder
+    let insights = InsightsMonitor()
 
-    init(settings: AppSettings = AppSettings()) {
+    init(settings: AppSettings = AppSettings(), history: HistoryRecorder = HistoryRecorder()) {
         self.settings = settings
+        self.history = history
     }
 
     /// Opens the panel under the menu bar icon (set up by the app delegate).
@@ -47,6 +49,7 @@ final class AppModel {
         updater.start()
         notifier.start(model: self)
         history.start(model: self)
+        insights.start(model: self)
         lowPowerMode.checkSupport()
         usage.excludedApps = Set(settings.excludedApps)
         GlobalHotkey.shared.action = { [weak self] in self?.togglePanel() }
@@ -82,6 +85,7 @@ final class AppModel {
         usage.excludedApps = Set(settings.excludedApps)
         usage.start()
         battery.refreshHealthIfNeeded()
+        insights.refresh()
         let shown = Self.readBuiltInBatteryShown()
         if shown != isBuiltInBatteryShown { isBuiltInBatteryShown = shown }
         // The suggestion to turn on Low Power Mode comes back after a charge.

@@ -39,12 +39,16 @@
                 // Optimized Battery Charging: on its way to 80%, and held there.
                 ("optimized", BatterySnapshot(percentage: 64, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 22 * 60, chargeTarget: 80)),
                 ("holding", BatterySnapshot(percentage: 80, powerSource: .powerAdapter, chargeState: .notCharging, timeRemaining: nil, chargeTarget: 80)),
+                // 0.2.5: the insights, and the history's ten days.
+                ("insights", BatterySnapshot(percentage: 23, powerSource: .battery, chargeState: .discharging, timeRemaining: 70 * 60)),
+                ("tendays", BatterySnapshot(percentage: 64, powerSource: .battery, chargeState: .discharging, timeRemaining: 4 * 3600 + 50 * 60)),
             ]
 
             let health = BatteryHealth(condition: .normal, maximumCapacity: 0.88, cycleCount: 564)
             for (name, snapshot) in states {
                 for scheme in [ColorScheme.dark, .light] {
-                    let model = AppModel(settings: previewSettings())
+                    // In memory: previews must never open (or move) the real history.
+                    let model = AppModel(settings: previewSettings(), history: HistoryRecorder(storeURL: nil, legacyFileURL: nil))
                     model.settings.showsReplaceTip = false
                     model.lowPowerMode.preview(isSupported: true)
                     model.battery.preview(
@@ -52,7 +56,10 @@
                     model.usage.preview(
                         apps: Array(apps.prefix(model.settings.maximumApps)), systemWatts: 14,
                         refusal: name == "half" ? QuitRefusal(id: apps[1].id, name: apps[1].name, icon: apps[1].icon) : nil)
-                    model.history.preview(sampleHistory(apps: sampleApps.map(\.path), now: snapshot))
+                    let history = sampleHistory(apps: sampleApps.map(\.path), now: snapshot)
+                    model.history.preview(history, profile: sampleProfile(history: history))
+                    if name == "tendays" { model.settings.historyRange = .tenDays }
+                    if name == "insights" { previewInsights(model.insights, history: history) }
                     let view = BatteryPanelView(model: model, close: {})
                         .background(scheme == .dark ? Color(white: 0.16) : Color(white: 0.94))
                         .clipShape(.rect(cornerRadius: 16))
@@ -200,6 +207,45 @@
                 history.record(joules: joules, seconds: 300, systemWatts: 9, at: at(Double(24 - index) * 0.08))
             }
             return history
+        }
+
+        /// Ten days of use, ending with `history`'s last day.
+        private static func sampleProfile(history: BatteryHistory) -> UsageProfile {
+            var profile = UsageProfile()
+            let now = Date()
+            let used = [38, 52, 0, 61, 44, 27, 73, 49, 35]
+            for (offset, drained) in used.enumerated() {
+                let day = now.addingTimeInterval(-Double(10 - offset) * 24 * 3600)
+                guard drained > 0 else { continue }
+                profile.record(level: .init(date: day, percentage: 100, isPluggedIn: false))
+                profile.record(level: .init(date: day.addingTimeInterval(Double(drained) * 300), percentage: 100 - drained, isPluggedIn: false))
+                profile.record(level: .init(date: day.addingTimeInterval(Double(drained) * 300 + 60), percentage: 100 - drained, isPluggedIn: true))
+            }
+            for point in history.levels { profile.record(level: point) }
+            for sample in history.samples {
+                for day in 0..<9 {
+                    let earlier = BatteryHistory.EnergySample(
+                        date: sample.date.addingTimeInterval(-Double(day + 1) * 24 * 3600), seconds: sample.seconds,
+                        joules: sample.joules.mapValues { $0 * Double(day % 3 + 1) }, systemWatts: sample.systemWatts)
+                    profile.record(earlier, apps: history.apps)
+                }
+                profile.record(sample, apps: history.apps)
+            }
+            return profile
+        }
+
+        /// One of each insight.
+        private static func previewInsights(_ insights: InsightsMonitor, history: BatteryHistory) {
+            let now = Date()
+            let start = Date(timeIntervalSinceReferenceDate: (now.timeIntervalSinceReferenceDate / 1800).rounded(.up) * 1800 + 1800)
+            let meeting = MeetingCheck.warning(
+                snapshot: BatterySnapshot(percentage: 23, powerSource: .battery, chargeState: .discharging, timeRemaining: 70 * 60),
+                events: [UpcomingEvent(start: start, end: start.addingTimeInterval(3600))], now: now, lead: 2 * 3600)
+            let apps = history.appEnergy(since: now.addingTimeInterval(-BatteryHistory.retention))
+            let figma = BatteryHistory.AppIdentity(name: "Music", bundleIdentifier: "com.apple.Music")
+            let newApp = BatteryHistory.AppEnergy(app: figma, joules: 9000, batteryTime: 1000)
+            insights.preview(
+                meeting: meeting, unusualDrain: UnusualDrain(currentWatts: 13.2, usualWatts: 10, cause: apps.first?.app), newApps: [newApp])
         }
 
         /// Settings kept apart from the real app's, so rendering previews never changes them.

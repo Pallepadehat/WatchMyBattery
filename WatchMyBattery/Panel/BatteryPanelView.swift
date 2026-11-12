@@ -81,6 +81,16 @@ struct BatteryPanelView: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
 
+                if model.settings.showsInsights, InsightCards.hasAny(model.insights) {
+                    InsightCards(
+                        insights: model.insights, snapshot: snapshot,
+                        turnOnLowPowerMode: model.lowPowerMode.isSupported ? { setLowPowerMode(true) } : nil
+                    )
+                    .padding(.horizontal, 10)
+                    .padding(.top, 10)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+
                 if let refusal = model.usage.refusal {
                     RefusalNotice(
                         refusal: refusal,
@@ -102,7 +112,7 @@ struct BatteryPanelView: View {
                         .padding(.top, 10)
                     HistorySection(
                         recorder: model.history, snapshot: snapshot, usesColor: model.settings.usesColor, isVisible: model.isPanelOpen,
-                        isExpanded: $settings.showsHistory
+                        isExpanded: $settings.showsHistory, range: $settings.historyRange
                     )
                     .padding(.horizontal, Self.inset)
                     .padding(.top, 8)
@@ -162,6 +172,7 @@ struct BatteryPanelView: View {
         .animation(.smooth(duration: 0.6), value: snapshot)
         .animation(.snappy(duration: 0.3), value: model.usage.refusal)
         .animation(.snappy(duration: 0.3), value: model.lowPowerMode.suggests(for: snapshot))
+        .animation(.snappy(duration: 0.3), value: InsightCards.hasAny(model.insights))
     }
 
     private var header: some View {
@@ -427,7 +438,7 @@ private struct RefusalNotice: View {
 }
 
 /// The small round × that closes a notice.
-private struct DismissButton: View {
+struct DismissButton: View {
     let action: () -> Void
 
     var body: some View {

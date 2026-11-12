@@ -4,6 +4,24 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-11-12
+
+Insights: the battery, your day, and what's unusual ([#58](https://github.com/Pallepadehat/WatchMyBattery/issues/58)).
+
+### Added
+
+- 📅 **Charge before your meeting.** When the battery won't last through a meeting on your calendar, the panel and a notification say so in time: "Charge before your 14:00 meeting. The battery should last until about 13:30." Choose how far ahead in Settings › Notifications, from 15 minutes to 2 hours (30 to start with). It uses the Calendar app's calendars, asks for access only when you turn it on, and reads only when events start and end. All-day events, ones you've declined and ones marked as free don't count. Plug in and the notification goes away by itself.
+- 📈 **More than usual.** When the Mac draws clearly more power than it usually does at this time of day, the panel says by how much, and which app is behind it: "About 30% more than at this time on most days, mostly because of Xcode." It waits until it knows what's usual (about a week), and says nothing rather than guess.
+- ✨ **A new app using a lot.** An app that hadn't used much battery in the last two weeks and is now among the hungriest gets a line in the panel, once, with a button that quits it.
+- 📊 **10 Days** in the panel's history, next to 24 Hours: how much battery each day used, an average day on battery, and the apps that used the most over the ten days. The panel remembers which one you looked at last.
+- Each insight can also be a notification (Settings › Notifications › Insights), and the panel's insights can be turned off in Settings › Panel.
+
+### Changed
+
+- 🗄️ **The history is kept with SwiftData**, and now goes back two weeks, in hourly summaries: time on battery, battery used, the Mac's power draw, and each app's energy. Saving writes only what changed (about 1.5 ms for a sample) instead of rewriting the whole history. Your existing history moves over the first time 0.2.5 opens, and a damaged store starts over instead of stopping the app. It still never leaves your Mac.
+- Clearing the history clears the two weeks and what's usual too.
+- Danish for the charge bar's labels, which 0.2.2 left in English.
+
 ## [0.2.2] - 2026-11-11
 
 Lighter on your battery, and charging you can see.
@@ -124,7 +142,8 @@ The first release.
 - Automatic updates with Sparkle, from EdDSA-signed releases.
 - One-command install, and build, packaging and release scripts.
 
-[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.5...HEAD
+[0.2.5]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.2...v0.2.5
 [0.2.2]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.1.3...v0.2.0
