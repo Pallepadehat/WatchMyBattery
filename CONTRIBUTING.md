@@ -24,11 +24,13 @@ Debug builds understand a few launch arguments (set them in the scheme, or pass 
 | Flag | What it does |
 | --- | --- |
 | `--show-panel` | Opens the panel right away (Release builds too) |
-| `--show-settings` | Opens Settings; add `--settings-pane updates` (or `general`, `menuBar`, `panel`, `notifications`, `about`) for a pane |
+| `--show-settings` | Opens Settings; add `--settings-pane updates` (or `general`, `menuBar`, `panel`, `accessories`, `notifications`, `about`) for a pane |
 | `--pretend-charging` | Shows the battery charging at 62%, to see the charging animation on a full battery (Release builds only with `--isolated`) |
+| `--pretend-accessories` | Shows AirPods Pro, a Magic Keyboard running low, a Magic Mouse and a charging Magic Trackpad instead of what's connected (Release builds only with `--isolated`) |
+| `--show-accessory-card` | Slides in the AirPods card for the headphones that are connected (or, with `--pretend-accessories`, the made-up AirPods) |
 | `--isolated <folder>` | Runs without touching the real app: fresh settings of its own, the history in `<folder>`, no updater, no keyboard shortcut. Works in Release builds, for the end-to-end checks. Its panel says "Test copy" |
 | `--start-updater` | Turns on Sparkle, which debug builds leave off; add `--check-now` to press Check Now in Settings |
-| `--render-previews <folder>` | Renders the panel and menu bar icons to PNG files and quits |
+| `--render-previews <folder>` | Renders the panel, the AirPods card and the menu bar icons to PNG files and quits |
 | `-AppleLanguages '(da)'` | Runs in Danish |
 
 ## The Low Power Mode helper

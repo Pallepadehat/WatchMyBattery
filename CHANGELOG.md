@@ -4,6 +4,20 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+Accessories: your AirPods and Magic accessories, and a card for your AirPods.
+
+### Added
+
+- 🎧 **The AirPods card.** When AirPods or other headphones connect, a glass card slides in below the menu bar with a ring for each earbud and the case, filling up as it appears, like on iPhone ([#31](https://github.com/Pallepadehat/WatchMyBattery/issues/31)). When both earbuds are about the same, they share one ring. A bolt shows what's charging, and the levels keep up if they arrive a moment after the earbuds connect. It never takes focus from the app you're in, stays while the pointer is over it, and opens the panel when clicked. VoiceOver reads it out. In Settings › Accessories, put it below the menu bar icon, top center or top right, keep it for 3 to 12 seconds, try it with Show Card, or turn it off.
+- 🖱️ **Accessories in the panel**: each connected AirPods, Beats, Magic Mouse, Magic Keyboard, Magic Trackpad or game controller, with the level of every part ([#32](https://github.com/Pallepadehat/WatchMyBattery/issues/32)). It shows on Macs without a battery too.
+- 🔔 **A notification when an accessory runs low**, at its own level: 10% to 30%, 20% to start with ([#33](https://github.com/Pallepadehat/WatchMyBattery/issues/33)). It goes by the lower earbud, never the case, and comes again only once the accessory has charged. Turn it on in Settings › Notifications.
+- 🍏 **Every Apple accessory, by name and by look.** All AirPods (from the first ones to AirPods 4, AirPods Pro 3 and AirPods Max), the Beats line (Powerbeats, Powerbeats Pro, Fit Pro, Studio Buds and Studio Buds +, Solo Buds, Flex, Solo, Studio, Pill) and the Magic Mouse, Keyboard and Trackpad each get their own symbol, for each earbud and the case too. Renamed ones show their model under the name ("Gym", Powerbeats Pro 2).
+- A new Settings pane, Accessories, with the accessories connected now.
+
+### Changed
+
+- Accessories are read from what macOS already knows, without Bluetooth permission: macOS announces connections and AirPods' levels, so nothing is polled for them. The Magic accessories' levels are read again every quarter of an hour, only while one is connected.
+
 ## [0.2.6] - 2026-11-12
 
 Calendar access when you ask for it.

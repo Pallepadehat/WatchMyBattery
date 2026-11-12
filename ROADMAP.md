@@ -96,16 +96,18 @@ Released. See the [changelog](CHANGELOG.md).
 
 ## 0.3.0: accessories
 
+In progress. See the [changelog](CHANGELOG.md).
+
 **The AirPods card** ([#31](https://github.com/Pallepadehat/WatchMyBattery/issues/31))
 
-- [ ] When AirPods or other Bluetooth headphones connect, a card slides in below the menu bar showing the battery of each earbud and the case, like on iPhone
-- [ ] A ring for each battery, filling up as the card appears, and the case's charging state
-- [ ] Choose where the card appears, how long it stays, or turn it off
+- [x] When AirPods or other Bluetooth headphones connect, a card slides in below the menu bar showing the battery of each earbud and the case, like on iPhone
+- [x] A ring for each battery, filling up as the card appears, and the case's charging state
+- [x] Choose where the card appears, how long it stays, or turn it off
 
 **In the panel**
 
-- [ ] Battery levels of AirPods, Magic Mouse, Magic Keyboard and Magic Trackpad ([#32](https://github.com/Pallepadehat/WatchMyBattery/issues/32))
-- [ ] Low battery notifications for accessories, with their own threshold ([#33](https://github.com/Pallepadehat/WatchMyBattery/issues/33))
+- [x] Battery levels of AirPods, Magic Mouse, Magic Keyboard and Magic Trackpad ([#32](https://github.com/Pallepadehat/WatchMyBattery/issues/32))
+- [x] Low battery notifications for accessories, with their own threshold ([#33](https://github.com/Pallepadehat/WatchMyBattery/issues/33))
 
 ## 0.4.0: delight
 
