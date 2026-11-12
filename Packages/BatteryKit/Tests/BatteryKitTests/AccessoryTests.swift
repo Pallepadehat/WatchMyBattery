@@ -106,6 +106,21 @@ struct AccessoryReaderTests {
         #expect(accessories[1].parts == [Accessory.Part(role: .single, percentage: 12, isCharging: true)])
     }
 
+    @Test func aLevelOfZeroIsntReadYet() {
+        #expect(AccessoryReader.accessories(fromRegistry: [magicMouse(0)]).isEmpty)
+    }
+
+    @Test func theSameAppleProductUnderAnotherNameIsListedOnce() {
+        let fromPowerSources = Accessory(
+            id: "ps", name: "Patrick’s Magic Keyboard", kind: .keyboard, parts: [.init(role: .single, percentage: 60)], productID: 0x029C,
+            vendorID: 0x004C)
+        let registry = AccessoryReader.accessories(fromRegistry: [
+            ["Product": "Magic Keyboard with Touch ID", "BatteryPercent": 61, "DeviceAddress": "kb", "ProductID": 0x029C, "VendorID": 76],
+            ["Product": "Magic Mouse", "BatteryPercent": 40, "DeviceAddress": "m", "ProductID": 0x0269, "VendorID": 76],
+        ])
+        #expect(AccessoryReader.merge(powerSources: [fromPowerSources], registry: registry).map(\.id) == ["ps", "hid:m"])
+    }
+
     @Test func listsADeviceBothSourcesKnowOnce() {
         let fromPowerSources = Accessory(id: "ps", name: "Magic Mouse", kind: .mouse, parts: [.init(role: .single, percentage: 60)])
         let registry = AccessoryReader.accessories(fromRegistry: [

@@ -1,5 +1,6 @@
 import AppKit
 import BatteryKit
+import OSLog
 import Observation
 
 /// Keeps ``accessories`` up to date with the Bluetooth accessories that are
@@ -23,6 +24,7 @@ final class AccessoryMonitor {
     @ObservationIgnored private var arrivals = AccessoryArrivals()
     @ObservationIgnored private var pendingRefresh: Task<Void, Never>?
     @ObservationIgnored private var slowRefresh: Task<Void, Never>?
+    @ObservationIgnored private var followUp: Task<Void, Never>?
     @ObservationIgnored private var wakeToken: (any NSObjectProtocol)?
 
     private static let slowRefreshInterval: Duration = .seconds(15 * 60)
@@ -52,9 +54,35 @@ final class AccessoryMonitor {
         if LaunchOptions.pretendsAccessories { return }
         let next = AccessoryReader.read()
         // Only publish real changes, so the panel doesn't redraw for nothing.
-        if next != accessories { accessories = next }
+        if next != accessories {
+            if Set(next.map(\.id)) != Set(accessories.map(\.id)) { scheduleFollowUp() }
+            log(next)
+            accessories = next
+        }
         for accessory in arrivals.update(with: next) { onArrival(accessory) }
         updateSlowRefresh()
+    }
+
+    /// One more read a few seconds after something connects or goes: a new
+    /// device's levels (a Magic accessory's especially) often come in a moment
+    /// after the device itself.
+    private func scheduleFollowUp() {
+        followUp?.cancel()
+        followUp = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(4))
+            guard !Task.isCancelled else { return }
+            self?.refresh()
+        }
+    }
+
+    /// What's connected, for `log stream --predicate 'subsystem == "com.pallepadehat.WatchMyBattery"'`. Names stay private.
+    private func log(_ accessories: [Accessory]) {
+        let summary = accessories.map { accessory in
+            let parts = accessory.parts.map { "\($0.role) \($0.percentage)%\($0.isCharging ? " charging" : "")" }.joined(separator: ", ")
+            let source = accessory.id.hasPrefix("hid:") ? "registry" : "power sources"
+            return "\(accessory.kind) from \(source): \(parts)"
+        }
+        Logger.app.notice("Accessories: \(summary.isEmpty ? "none" : summary.joined(separator: "; "), privacy: .public)")
     }
 
     private func scheduleRefresh() {

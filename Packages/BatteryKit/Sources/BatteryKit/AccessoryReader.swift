@@ -127,7 +127,8 @@ public enum AccessoryReader {
     public static func accessories(fromRegistry entries: [[String: Any]]) -> [Accessory] {
         var seen: Set<String> = []
         return entries.compactMap { properties -> Accessory? in
-            guard let percentage = properties[Key.batteryPercent] as? Int,
+            // Right after connecting, the level can read 0 for a moment; a device that's really at 0% isn't connected.
+            guard let percentage = properties[Key.batteryPercent] as? Int, percentage > 0,
                 let name = properties[Key.product] as? String, !name.isEmpty
             else { return nil }
             let address = properties[Key.deviceAddress] as? String ?? properties[Key.serialNumber] as? String
@@ -145,10 +146,17 @@ public enum AccessoryReader {
 
     /// Both sources together, in a steady order: headphones first, then by
     /// name. A device both of them know about is listed once, from
-    /// IOPowerSources, which knows more about it.
+    /// IOPowerSources, which knows more about it. They can name it
+    /// differently ("Patrick's Magic Keyboard" there, "Magic Keyboard" in the
+    /// registry), so the same Apple product ID counts as the same device too.
     public static func merge(powerSources: [Accessory], registry: [Accessory]) -> [Accessory] {
-        let known = Set(powerSources.map { normalized($0.name) })
-        let extra = registry.filter { !known.contains(normalized($0.name)) }
+        let names = Set(powerSources.map { normalized($0.name) })
+        let products = Set(powerSources.compactMap { $0.isApple ? $0.productID : nil })
+        let extra = registry.filter { accessory in
+            if names.contains(normalized(accessory.name)) { return false }
+            if accessory.isApple, let productID = accessory.productID, products.contains(productID) { return false }
+            return true
+        }
         return (powerSources + extra).sorted {
             ($0.kind, $0.name.localizedLowercase, $0.id) < ($1.kind, $1.name.localizedLowercase, $1.id)
         }

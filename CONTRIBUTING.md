@@ -33,6 +33,12 @@ Debug builds understand a few launch arguments (set them in the scheme, or pass 
 | `--render-previews <folder>` | Renders the panel, the AirPods card and the menu bar icons to PNG files and quits |
 | `-AppleLanguages '(da)'` | Runs in Danish |
 
+To see which accessories the app finds, and from where, watch its log while you connect one (use `/usr/bin/log`, as zsh has a `log` command of its own):
+
+```sh
+/usr/bin/log stream --predicate 'subsystem == "com.pallepadehat.WatchMyBattery" AND eventMessage CONTAINS "Accessories"'
+```
+
 ## The Low Power Mode helper
 
 macOS has no API for changing Low Power Mode, so `WatchMyBatteryHelper` (a tiny launchd daemon, in `WatchMyBatteryHelper/`) runs `pmset` as root. The app registers it with `SMAppService` the first time you use the switch, and you allow it once in System Settings › Login Items. `Shared/` holds the XPC protocol both sides use. The helper only accepts the app signed by the same team as itself, so ad hoc builds can't use it; they ask for an administrator's password instead. To test it, run a build signed with your team (`./scripts/build.sh` with `Config/Local.xcconfig` set up) from `/Applications`. `sudo launchctl print system/com.pallepadehat.WatchMyBattery.helper` shows its state.
