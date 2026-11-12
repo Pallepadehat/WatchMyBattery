@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-11-12
+
+Calendar access when you ask for it.
+
+### Changed
+
+- 📅 **You choose when to give calendar access.** WatchMyBattery no longer brings up macOS's calendar prompt by itself, when the app opens or when you turn on *Charge Before Meetings*. Under the switch in Settings › Notifications, a **Calendar Access** row has an **Allow…** button: click it and macOS asks, once. Once it's allowed, the row says so with a check. If access was turned off, **Open…** goes to System Settings › Privacy & Security › Calendars.
+- Access changed in System Settings is noticed when you come back to Settings or open the panel, so the warning starts or stops without a restart.
+
 ## [0.2.5] - 2026-11-12
 
 Insights: the battery, your day, and what's unusual ([#58](https://github.com/Pallepadehat/WatchMyBattery/issues/58)).
@@ -142,7 +151,8 @@ The first release.
 - Automatic updates with Sparkle, from EdDSA-signed releases.
 - One-command install, and build, packaging and release scripts.
 
-[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.5...HEAD
+[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.6...HEAD
+[0.2.6]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.2...v0.2.5
 [0.2.2]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.0...v0.2.1
