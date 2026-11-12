@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 
 /// The panes of Settings, in the sidebar.
 enum SettingsPane: String, CaseIterable, Identifiable {
-    case general, menuBar, panel, notifications, updates, about
+    case general, menuBar, panel, accessories, notifications, updates, about
 
     var id: Self { self }
 
@@ -14,6 +14,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .general: "General"
         case .menuBar: "Menu Bar"
         case .panel: "Panel"
+        case .accessories: "Accessories"
         case .notifications: "Notifications"
         case .updates: "Updates"
         case .about: "About"
@@ -25,6 +26,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .general: String(localized: "General")
         case .menuBar: String(localized: "Menu Bar")
         case .panel: String(localized: "Panel")
+        case .accessories: String(localized: "Accessories")
         case .notifications: String(localized: "Notifications")
         case .updates: String(localized: "Updates")
         case .about: String(localized: "About")
@@ -36,6 +38,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .general: "gearshape.fill"
         case .menuBar: "rectangle.topthird.inset.filled"
         case .panel: SettingIcon.battery
+        case .accessories: "airpodspro"
         case .notifications: "bell.fill"
         case .updates: "arrow.triangle.2.circlepath"
         case .about: "info"
@@ -47,6 +50,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .general: .gray
         case .menuBar: .blue
         case .panel: .green
+        case .accessories: .cyan
         case .notifications: .red
         case .updates: .indigo
         case .about: .orange
@@ -77,6 +81,7 @@ struct SettingsView: View {
                 case .general: GeneralPane(model: model)
                 case .menuBar: MenuBarPane(model: model)
                 case .panel: PanelPane(model: model)
+                case .accessories: AccessoriesPane(model: model)
                 case .notifications: NotificationsPane(model: model)
                 case .updates: UpdatesPane(model: model)
                 case .about: AboutPane(model: model)
@@ -296,7 +301,87 @@ private struct NotificationsPane: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
+            Section {
+                AccessoryLowBatteryRows(model: model)
+            }
         }
+    }
+}
+
+private struct AccessoriesPane: View {
+    let model: AppModel
+
+    var body: some View {
+        @Bindable var settings = model.settings
+        let accessories = model.accessories.accessories
+        Form {
+            Section {
+                if accessories.isEmpty {
+                    Text("No accessories with a battery are connected.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(accessories) { accessory in
+                        AccessoryRow(accessory: accessory)
+                    }
+                }
+            } header: {
+                Text("Connected")
+            } footer: {
+                Text("AirPods, Beats and other headphones, the Magic Mouse, Keyboard and Trackpad, and game controllers.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
+                Toggle(isOn: $settings.showsAccessoryCard) {
+                    SettingLabel("AirPods Card", symbol: "airpodspro", color: .cyan) {
+                        Text("Slides in below the menu bar when AirPods or other headphones connect, with the battery of each earbud and the case.")
+                    }
+                }
+                if settings.showsAccessoryCard {
+                    Picker("Position", selection: $settings.accessoryCardPosition) {
+                        ForEach(AccessoryCardPosition.allCases) { position in
+                            Text(position.title).tag(position)
+                        }
+                    }
+                    .padding(.leading, 34)
+                    Picker("Stays For", selection: $settings.accessoryCardDuration) {
+                        ForEach(AppSettings.accessoryCardDurations, id: \.self) { seconds in
+                            Text(Duration.seconds(seconds), format: .units(allowed: [.seconds], width: .wide)).tag(seconds)
+                        }
+                    }
+                    .padding(.leading, 34)
+                    LabeledContent {
+                        Button("Show Card") { model.showAccessoryCard(previewHeadphones) }
+                    } label: {
+                        Text("Stays while the pointer is over it. Click it to open the panel.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.leading, 34)
+                }
+            } header: {
+                Text("When Headphones Connect")
+            }
+            .animation(.snappy, value: settings.showsAccessoryCard)
+
+            Section {
+                Toggle(isOn: $settings.showsAccessories) {
+                    SettingLabel("Accessories in the Panel", symbol: "list.bullet", color: .gray) {
+                        Text("Under the battery, each with the level of every part.")
+                    }
+                }
+            }
+        }
+    }
+
+    /// The headphones that are connected, or a pair of AirPods Pro to show what the card looks like.
+    private var previewHeadphones: Accessory {
+        model.accessories.accessories.first { $0.kind.isAudio }
+            ?? Accessory(
+                id: "preview", name: "AirPods Pro", kind: .earbuds,
+                parts: [.init(role: .left, percentage: 84), .init(role: .right, percentage: 84), .init(role: .case, percentage: 61, isCharging: true)],
+                productID: 0x2027, vendorID: 0x004C)
     }
 }
 
@@ -841,6 +926,49 @@ private struct LowBatteryRows: View {
             levels.insert(level)
         }
         model.settings.lowBatteryLevels = levels.sorted(by: >)
+    }
+}
+
+// MARK: - Accessories
+
+/// The accessory low battery notification: on or off, and at which level.
+private struct AccessoryLowBatteryRows: View {
+    let model: AppModel
+
+    var body: some View {
+        @Bindable var settings = model.settings
+        Toggle(isOn: $settings.notifiesWhenAccessoryLow) {
+            SettingLabel("Accessories Running Low", symbol: "airpodspro", color: .cyan) {
+                Text("A notification when AirPods, a Magic Mouse or another accessory needs charging.")
+            }
+        }
+        .onChange(of: settings.notifiesWhenAccessoryLow) { _, on in
+            if on { Task { await model.notifier.requestAuthorization() } }
+        }
+
+        if settings.notifiesWhenAccessoryLow {
+            LabeledContent("Notify At") {
+                HStack(spacing: 4) {
+                    ForEach(AppSettings.accessoryLowBatteryChoices.reversed(), id: \.self) { level in
+                        LevelChip(level: level, isOn: settings.accessoryLowBatteryLevel == level) {
+                            settings.accessoryLowBatteryLevel = level
+                        }
+                    }
+                }
+            }
+            .padding(.leading, 34)
+
+            if model.notifier.isDenied {
+                LabeledContent {
+                    Button("Open…") { model.notifier.openNotificationSettings() }
+                } label: {
+                    Label("Notifications are turned off for WatchMyBattery.", systemImage: "exclamationmark.triangle.fill")
+                        .labelStyle(InlineIconLabelStyle(color: .orange))
+                        .font(.caption)
+                }
+                .padding(.leading, 34)
+            }
+        }
     }
 }
 

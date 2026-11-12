@@ -60,6 +60,7 @@
                     model.history.preview(history, profile: sampleProfile(history: history))
                     if name == "tendays" { model.settings.historyRange = .tenDays }
                     if name == "insights" { previewInsights(model.insights, history: history) }
+                    if name == "discharging" || name == "charging" { model.accessories.preview(AccessoryMonitor.samples) }
                     let view = BatteryPanelView(model: model, close: {})
                         .background(scheme == .dark ? Color(white: 0.16) : Color(white: 0.94))
                         .clipShape(.rect(cornerRadius: 16))
@@ -72,6 +73,57 @@
                         .environment(\.colorScheme, scheme)
                     save(view, to: folder.appending(path: "panel-\(name)-\(scheme == .dark ? "dark" : "light").png"))
                 }
+            }
+
+            // The AirPods card, for a few kinds of headphones, in dark and light.
+            let cards: [Accessory] = [
+                AccessoryMonitor.samples[0],
+                Accessory(
+                    id: "a", name: "Patrick’s AirPods", kind: .earbuds,
+                    parts: [.init(role: .left, percentage: 100), .init(role: .right, percentage: 97), .init(role: .case, percentage: 12)],
+                    productID: 0x201B, vendorID: 0x004C),
+                Accessory(
+                    id: "b", name: "AirPods Max", kind: .headphones, parts: [.init(role: .single, percentage: 38, isCharging: true)],
+                    productID: 0x201F, vendorID: 0x004C),
+                Accessory(
+                    id: "c", name: "Gym", kind: .earbuds,
+                    parts: [.init(role: .left, percentage: 9), .init(role: .right, percentage: 26), .init(role: .case, percentage: 55)],
+                    productID: 0x201D, vendorID: 0x004C),
+                Accessory(
+                    id: "d", name: "Beats Studio Pro", kind: .headphones, parts: [.init(role: .single, percentage: 72)], productID: 0x2017,
+                    vendorID: 0x004C),
+            ]
+            for scheme in [ColorScheme.dark, .light] {
+                let sheet = VStack(spacing: 22) {
+                    ForEach(cards) { accessory in
+                        AccessoryCard(accessory: accessory, fillsOnAppear: false)
+                            .background(scheme == .dark ? Color(white: 0.17) : Color(white: 0.96))
+                            .clipShape(.rect(cornerRadius: AccessoryCardWindow.cornerRadius, style: .continuous))
+                            .shadow(color: .black.opacity(0.3), radius: 16, y: 6)
+                    }
+                }
+                .padding(30)
+                .background(
+                    LinearGradient(
+                        colors: [Color(red: 0.1, green: 0.2, blue: 0.75), Color(red: 0.25, green: 0.1, blue: 0.55)],
+                        startPoint: .topLeading, endPoint: .bottomTrailing)
+                )
+                .environment(\.colorScheme, scheme)
+                save(sheet, to: folder.appending(path: "card-\(scheme == .dark ? "dark" : "light").png"))
+
+                // One card on its own, for the README.
+                let single = AccessoryCard(accessory: cards[0], fillsOnAppear: false)
+                    .background(scheme == .dark ? Color(white: 0.17) : Color(white: 0.96))
+                    .clipShape(.rect(cornerRadius: AccessoryCardWindow.cornerRadius, style: .continuous))
+                    .shadow(color: .black.opacity(0.3), radius: 16, y: 6)
+                    .padding(30)
+                    .background(
+                        LinearGradient(
+                            colors: [Color(red: 0.1, green: 0.2, blue: 0.75), Color(red: 0.25, green: 0.1, blue: 0.55)],
+                            startPoint: .topLeading, endPoint: .bottomTrailing)
+                    )
+                    .environment(\.colorScheme, scheme)
+                save(single, to: folder.appending(path: "airpods-card-\(scheme == .dark ? "dark" : "light").png"))
             }
 
             // Menu bar icons, every state and style, on a dark and a light bar.

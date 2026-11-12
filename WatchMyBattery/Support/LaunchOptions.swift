@@ -29,6 +29,16 @@ nonisolated enum LaunchOptions {
         #endif
     }()
 
+    /// `--pretend-accessories`: AirPods Pro and the Magic Keyboard, Mouse and Trackpad, instead of what's connected.
+    /// Like `--pretend-charging`, Release builds only understand it in an isolated run.
+    static let pretendsAccessories: Bool = {
+        #if DEBUG
+            return CommandLine.arguments.contains("--pretend-accessories")
+        #else
+            return isIsolated && CommandLine.arguments.contains("--pretend-accessories")
+        #endif
+    }()
+
     private static func value(after flag: String) -> String? {
         let arguments = CommandLine.arguments
         guard let index = arguments.firstIndex(of: flag), arguments.indices.contains(index + 1) else { return nil }

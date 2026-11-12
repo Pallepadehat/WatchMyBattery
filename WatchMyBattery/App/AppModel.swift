@@ -14,6 +14,7 @@ final class AppModel {
     let lowPowerMode = LowPowerMode()
     let history: HistoryRecorder
     let insights = InsightsMonitor()
+    let accessories = AccessoryMonitor()
 
     init(settings: AppSettings = AppSettings(), history: HistoryRecorder = HistoryRecorder()) {
         self.settings = settings
@@ -24,6 +25,8 @@ final class AppModel {
     @ObservationIgnored var showPanel: () -> Void = {}
     /// Opens the panel, or closes it if it's open: what the keyboard shortcut does.
     @ObservationIgnored var togglePanel: () -> Void = {}
+    /// Slides in the AirPods card for these headphones (set up by the app delegate).
+    @ObservationIgnored var showAccessoryCard: (Accessory) -> Void = { _ in }
 
     /// macOS wouldn't take the panel's keyboard shortcut, most likely because another app has it.
     private(set) var isPanelShortcutTaken = false
@@ -50,6 +53,11 @@ final class AppModel {
         notifier.start(model: self)
         history.start(model: self)
         insights.start(model: self)
+        accessories.onArrival = { [weak self] accessory in
+            guard let self, self.settings.showsAccessoryCard else { return }
+            self.showAccessoryCard(accessory)
+        }
+        accessories.start()
         lowPowerMode.checkSupport()
         usage.excludedApps = Set(settings.excludedApps)
         GlobalHotkey.shared.action = { [weak self] in self?.togglePanel() }
@@ -88,6 +96,7 @@ final class AppModel {
         insights.refresh()
         let shown = Self.readBuiltInBatteryShown()
         if shown != isBuiltInBatteryShown { isBuiltInBatteryShown = shown }
+        accessories.refresh()
         // The suggestion to turn on Low Power Mode comes back after a charge.
         if battery.snapshot.isPluggedIn { lowPowerMode.isSuggestionDismissed = false }
     }

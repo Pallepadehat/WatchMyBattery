@@ -6,9 +6,10 @@ import UserNotifications
 
 /// Sends a notification when the battery runs low, naming the app that's
 /// using the most energy, with a button that quits it. It also sends the
-/// runaway app notification for ``HistoryRecorder`` and the insights for
-/// ``InsightsMonitor``, as they share the Quit and Low Power Mode buttons and
-/// macOS allows one notification delegate.
+/// runaway app notification for ``HistoryRecorder``, the insights for
+/// ``InsightsMonitor`` and the accessory low battery notification, as they
+/// share the Quit and Low Power Mode buttons and macOS allows one
+/// notification delegate.
 ///
 /// It only watches the battery snapshot, which changes by notification, so
 /// it costs nothing until a level is reached. Then it measures apps for a
@@ -22,6 +23,7 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
     @ObservationIgnored private var alert = LowBatteryAlert()
     @ObservationIgnored private let center = UNUserNotificationCenter.current()
     @ObservationIgnored private var wasEnabled = false
+    @ObservationIgnored private var accessoryAlert = AccessoryLowBatteryAlert()
     /// Every kind of notification's buttons; macOS takes them all at once.
     @ObservationIgnored private var categories: [String: UNNotificationCategory] = [:]
 
@@ -38,6 +40,7 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
         wasEnabled = model.settings.notifiesWhenLow
         Task { await refreshAuthorization() }
         observe()
+        observeAccessories()
     }
 
     /// Asks for permission the first time notifications are turned on.
@@ -112,6 +115,47 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
             try await center.add(request)
         } catch {
             Logger.app.error("Couldn't send the low battery notification: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    // MARK: - Accessories
+
+    private func observeAccessories() {
+        guard let model else { return }
+        let (low, enabled) = withObservationTracking {
+            // Followed even while off, so turning it on with an accessory already low doesn't notify right away.
+            (
+                accessoryAlert.update(with: model.accessories.accessories, threshold: model.settings.accessoryLowBatteryLevel),
+                model.settings.notifiesWhenAccessoryLow
+            )
+        } onChange: { [weak self] in
+            Task { @MainActor in self?.observeAccessories() }
+        }
+        guard enabled else { return }
+        for accessory in low { Task { await notify(accessory) } }
+    }
+
+    /// "AirPods Pro at 15%": the lowest earbud, or the only battery.
+    private func notify(_ accessory: Accessory) async {
+        guard let level = accessory.lowestLevel else { return }
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "\(accessory.name) at \((Double(level) / 100).formatted(.percent.precision(.fractionLength(0))))")
+        switch accessory.kind {
+        case .earbuds:
+            let earbuds = accessory.parts.filter(\.role.isEarbud).map(\.spokenDescription).joined(separator: ", ")
+            content.body = String(localized: "\(earbuds). Put them in their case to charge.")
+        case .keyboard, .mouse, .trackpad:
+            content.body = String(localized: "Connect its cable to charge it.")
+        case .headphones, .gameController, .other:
+            content.body = String(localized: "Charge it soon.")
+        }
+        content.sound = .default
+        // One per accessory: if it's reported again later, the new one replaces the old.
+        let request = UNNotificationRequest(identifier: "accessory-\(accessory.id)", content: content, trigger: nil)
+        do {
+            try await center.add(request)
+        } catch {
+            Logger.app.error("Couldn't send the accessory notification: \(error.localizedDescription, privacy: .public)")
         }
     }
 

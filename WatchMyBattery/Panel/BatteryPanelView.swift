@@ -105,6 +105,8 @@ struct BatteryPanelView: View {
                     .transition(.asymmetric(insertion: .scale(scale: 0.96, anchor: .top).combined(with: .opacity), removal: .opacity))
                 }
 
+                accessoriesSection
+
                 if model.settings.recordsHistory {
                     @Bindable var settings = model.settings
                     Divider()
@@ -122,6 +124,7 @@ struct BatteryPanelView: View {
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, Self.inset)
                     .padding(.vertical, 12)
+                accessoriesSection
             }
 
             if let version = model.updater.availableVersion {
@@ -173,6 +176,21 @@ struct BatteryPanelView: View {
         .animation(.snappy(duration: 0.3), value: model.usage.refusal)
         .animation(.snappy(duration: 0.3), value: model.lowPowerMode.suggests(for: snapshot))
         .animation(.snappy(duration: 0.3), value: InsightCards.hasAny(model.insights))
+        .animation(.snappy(duration: 0.35), value: model.accessories.accessories.map(\.id))
+    }
+
+    /// Connected accessories with a battery, when there are any.
+    @ViewBuilder private var accessoriesSection: some View {
+        let accessories = model.accessories.accessories
+        if model.settings.showsAccessories, !accessories.isEmpty {
+            Divider()
+                .padding(.horizontal, Self.inset)
+                .padding(.top, 10)
+            AccessoriesSection(accessories: accessories)
+                .padding(.horizontal, Self.inset)
+                .padding(.top, 8)
+                .transition(.opacity)
+        }
     }
 
     private var header: some View {

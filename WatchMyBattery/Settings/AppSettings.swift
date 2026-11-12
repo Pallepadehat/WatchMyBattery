@@ -34,6 +34,25 @@ enum CenterLabel: String, CaseIterable, Identifiable {
     }
 }
 
+/// Where the AirPods card slides in.
+enum AccessoryCardPosition: String, CaseIterable, Identifiable {
+    /// Under the battery in the menu bar, where the panel opens.
+    case belowIcon
+    case topCenter
+    /// In the corner, where notifications appear.
+    case topRight
+
+    var id: Self { self }
+
+    var title: LocalizedStringResource {
+        switch self {
+        case .belowIcon: "Below the Menu Bar Icon"
+        case .topCenter: "Top Center"
+        case .topRight: "Top Right"
+        }
+    }
+}
+
 /// How far back the panel's history looks.
 enum HistoryRange: String, CaseIterable, Identifiable {
     case day
@@ -140,6 +159,35 @@ final class AppSettings {
         didSet { defaults.set(notifiesAboutNewApps, forKey: Key.notifiesAboutNewApps) }
     }
 
+    /// The panel lists connected accessories with a battery.
+    var showsAccessories: Bool {
+        didSet { defaults.set(showsAccessories, forKey: Key.showsAccessories) }
+    }
+
+    /// A card slides in when AirPods or other headphones connect.
+    var showsAccessoryCard: Bool {
+        didSet { defaults.set(showsAccessoryCard, forKey: Key.showsAccessoryCard) }
+    }
+
+    var accessoryCardPosition: AccessoryCardPosition {
+        didSet { defaults.set(accessoryCardPosition.rawValue, forKey: Key.accessoryCardPosition) }
+    }
+
+    /// Seconds the card stays, unless the pointer is over it.
+    var accessoryCardDuration: Int {
+        didSet { defaults.set(accessoryCardDuration, forKey: Key.accessoryCardDuration) }
+    }
+
+    /// Send a notification when an accessory's battery runs low.
+    var notifiesWhenAccessoryLow: Bool {
+        didSet { defaults.set(notifiesWhenAccessoryLow, forKey: Key.notifiesWhenAccessoryLow) }
+    }
+
+    /// The percentage an accessory notification is sent at.
+    var accessoryLowBatteryLevel: Int {
+        didSet { defaults.set(accessoryLowBatteryLevel, forKey: Key.accessoryLowBatteryLevel) }
+    }
+
     /// The tip about hiding the built-in battery icon, until it's dismissed.
     var showsReplaceTip: Bool {
         didSet { defaults.set(showsReplaceTip, forKey: Key.showsReplaceTip) }
@@ -163,6 +211,10 @@ final class AppSettings {
     static let appCountRange = 1...4
     /// Levels a low battery notification can be sent at.
     static let lowBatteryChoices = [5, 10, 15, 20, 25, 30]
+    /// Levels an accessory notification can be sent at.
+    static let accessoryLowBatteryChoices = [10, 15, 20, 25, 30]
+    /// How long the AirPods card can stay, in seconds.
+    static let accessoryCardDurations = [3, 5, 8, 12]
 
     @ObservationIgnored private let defaults: UserDefaults
 
@@ -199,6 +251,12 @@ final class AppSettings {
             Key.meetingWarningLead: MeetingCheck.defaultLead,
             Key.notifiesAboutUnusualDrain: false,
             Key.notifiesAboutNewApps: false,
+            Key.showsAccessories: true,
+            Key.showsAccessoryCard: true,
+            Key.accessoryCardPosition: AccessoryCardPosition.belowIcon.rawValue,
+            Key.accessoryCardDuration: 5,
+            Key.notifiesWhenAccessoryLow: false,
+            Key.accessoryLowBatteryLevel: 20,
             Key.showsReplaceTip: true,
             Key.hasSeenWelcome: false,
         ])
@@ -222,6 +280,14 @@ final class AppSettings {
         meetingWarningLead = MeetingCheck.leadChoices.contains(lead) ? lead : MeetingCheck.defaultLead
         notifiesAboutUnusualDrain = defaults.bool(forKey: Key.notifiesAboutUnusualDrain)
         notifiesAboutNewApps = defaults.bool(forKey: Key.notifiesAboutNewApps)
+        showsAccessories = defaults.bool(forKey: Key.showsAccessories)
+        showsAccessoryCard = defaults.bool(forKey: Key.showsAccessoryCard)
+        accessoryCardPosition = AccessoryCardPosition(rawValue: defaults.string(forKey: Key.accessoryCardPosition) ?? "") ?? .belowIcon
+        let duration = defaults.integer(forKey: Key.accessoryCardDuration)
+        accessoryCardDuration = Self.accessoryCardDurations.contains(duration) ? duration : 5
+        notifiesWhenAccessoryLow = defaults.bool(forKey: Key.notifiesWhenAccessoryLow)
+        let accessoryLevel = defaults.integer(forKey: Key.accessoryLowBatteryLevel)
+        accessoryLowBatteryLevel = Self.accessoryLowBatteryChoices.contains(accessoryLevel) ? accessoryLevel : 20
         showsReplaceTip = defaults.bool(forKey: Key.showsReplaceTip)
         hasSeenWelcome = defaults.bool(forKey: Key.hasSeenWelcome)
         panelShortcut = defaults.data(forKey: Key.panelShortcut).flatMap { try? JSONDecoder().decode(Hotkey.self, from: $0) }
@@ -257,6 +323,12 @@ final class AppSettings {
         static let meetingWarningLead = "meetingWarningLead"
         static let notifiesAboutUnusualDrain = "notifiesAboutUnusualDrain"
         static let notifiesAboutNewApps = "notifiesAboutNewApps"
+        static let showsAccessories = "showsAccessories"
+        static let showsAccessoryCard = "showsAccessoryCard"
+        static let accessoryCardPosition = "accessoryCardPosition"
+        static let accessoryCardDuration = "accessoryCardDuration"
+        static let notifiesWhenAccessoryLow = "notifiesWhenAccessoryLow"
+        static let accessoryLowBatteryLevel = "accessoryLowBatteryLevel"
         static let showsReplaceTip = "showsReplaceTip"
         static let hasSeenWelcome = "hasSeenWelcome"
         static let panelShortcut = "panelShortcut"

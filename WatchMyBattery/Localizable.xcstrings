@@ -2376,6 +2376,378 @@
           }
         }
       }
+    },
+    "%@ at %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ på %@"
+          }
+        }
+      }
+    },
+    "%@ connected" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ er forbundet"
+          }
+        }
+      }
+    },
+    "%@ connected. %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ er forbundet. %@"
+          }
+        }
+      }
+    },
+    "%@. Put them in their case to charge." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@. Læg dem i etuiet for at oplade dem."
+          }
+        }
+      }
+    },
+    ", charging" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", oplader"
+          }
+        }
+      }
+    },
+    "A notification when AirPods, a Magic Mouse or another accessory needs charging." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En notifikation, når AirPods, en Magic Mouse eller andet tilbehør skal oplades."
+          }
+        }
+      }
+    },
+    "Accessories" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilbehør"
+          }
+        }
+      }
+    },
+    "Accessories Running Low" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilbehør med lavt batteri"
+          }
+        }
+      }
+    },
+    "Accessories in the Panel" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilbehør i panelet"
+          }
+        }
+      }
+    },
+    "AirPods Card" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirPods-kort"
+          }
+        }
+      }
+    },
+    "AirPods, Beats and other headphones, the Magic Mouse, Keyboard and Trackpad, and game controllers." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirPods, Beats og andre hovedtelefoner, Magic Mouse, Keyboard og Trackpad samt spillecontrollere."
+          }
+        }
+      }
+    },
+    "Below the Menu Bar Icon" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Under ikonet på menulinjen"
+          }
+        }
+      }
+    },
+    "Case" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etui"
+          }
+        }
+      }
+    },
+    "Case %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etui %@"
+          }
+        }
+      }
+    },
+    "Charge it soon." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplad det snart."
+          }
+        }
+      }
+    },
+    "Close" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Luk"
+          }
+        }
+      }
+    },
+    "Connect its cable to charge it." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilslut kablet for at oplade det."
+          }
+        }
+      }
+    },
+    "Connected" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forbundet"
+          }
+        }
+      }
+    },
+    "Earbuds" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Begge"
+          }
+        }
+      }
+    },
+    "Earbuds %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Begge %@"
+          }
+        }
+      }
+    },
+    "L" : {
+      "comment" : "Short for the left earbud",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "V"
+          }
+        }
+      }
+    },
+    "Left" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Venstre"
+          }
+        }
+      }
+    },
+    "Left %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Venstre %@"
+          }
+        }
+      }
+    },
+    "No accessories with a battery are connected." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der er ikke forbundet noget tilbehør med batteri."
+          }
+        }
+      }
+    },
+    "Open the Panel" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbn panelet"
+          }
+        }
+      }
+    },
+    "Position" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Placering"
+          }
+        }
+      }
+    },
+    "R" : {
+      "comment" : "Short for the right earbud",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "H"
+          }
+        }
+      }
+    },
+    "Right" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Højre"
+          }
+        }
+      }
+    },
+    "Right %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Højre %@"
+          }
+        }
+      }
+    },
+    "Show Card" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis kort"
+          }
+        }
+      }
+    },
+    "Slides in below the menu bar when AirPods or other headphones connect, with the battery of each earbud and the case." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glider ind under menulinjen, når AirPods eller andre hovedtelefoner forbindes, med batteriet i hver øretelefon og etuiet."
+          }
+        }
+      }
+    },
+    "Stays For" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vises i"
+          }
+        }
+      }
+    },
+    "Stays while the pointer is over it. Click it to open the panel." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bliver, mens markøren er over det. Klik på det for at åbne panelet."
+          }
+        }
+      }
+    },
+    "Top Center" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Øverst i midten"
+          }
+        }
+      }
+    },
+    "Top Right" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Øverst til højre"
+          }
+        }
+      }
+    },
+    "Under the battery, each with the level of every part." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Under batteriet, hver med niveauet for hver del."
+          }
+        }
+      }
+    },
+    "When Headphones Connect" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når hovedtelefoner forbindes"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
