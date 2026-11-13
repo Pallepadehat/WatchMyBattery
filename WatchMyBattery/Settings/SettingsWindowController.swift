@@ -18,7 +18,23 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         if !window.isVisible { window.center() }
         // An accessory app has to step forward for its window to take focus.
         NSApp.setActivationPolicy(.regular)
+        bringForward(window)
+        // Opened from the menu bar icon's menu, the menu is still closing and
+        // the app becoming a regular one takes a moment, so a plain activate()
+        // was turned down and the window opened behind every other one. Ask
+        // again once the menu has gone.
+        DispatchQueue.main.async { [weak self] in
+            guard let window = self?.window, window.isVisible else { return }
+            self?.bringForward(window)
+        }
+    }
+
+    private func bringForward(_ window: NSWindow) {
+        // macOS 14's polite activate() can be refused while another app is in
+        // front. orderFrontRegardless puts the window on top even then, so
+        // it's never hidden behind other windows.
         NSApp.activate()
+        window.orderFrontRegardless()
         window.makeKeyAndOrderFront(nil)
     }
 

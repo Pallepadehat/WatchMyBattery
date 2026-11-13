@@ -116,6 +116,13 @@ Released. See the [changelog](CHANGELOG.md).
 - [x] A cleaner iPhone and iPad row: the whole name, and how old the reading is beside its level
 - [x] A refresh button that shows it's reading, and says when the iPhone couldn't be reached
 
+## 0.3.2: less in the battery ✅
+
+Released. See the [changelog](CHANGELOG.md).
+
+- [x] Hide the Display & System slice from the battery, right from its menu
+- [x] Settings, opened from the menu bar icon's menu, comes to the front
+
 ## 0.4.0: delight
 
 **Charging**
