@@ -25,6 +25,8 @@ struct BatteryGauge: View {
     let exclude: ((AppUsage) -> Void)?
     /// The power no app accounts for (display, graphics, radios, macOS), for a slice of its own; `nil` for none.
     var systemWatts: Double? = nil
+    /// Never give Display & System a slice again (it can be turned back on in Settings › Panel).
+    var hideSystem: (() -> Void)? = nil
     /// The app whose processes are listed under the battery.
     var inspectedApp: pid_t? = nil
     /// Click on a slice: list its processes (or stop listing them).
@@ -175,7 +177,7 @@ struct BatteryGauge: View {
                 case .app(let app):
                     appSlice(app, width: piece.width, visible: visible)
                 case .system(let watts):
-                    SystemSlice(costDescription: costDescription(forWatts: watts))
+                    SystemSlice(costDescription: costDescription(forWatts: watts), hide: hideSystem)
                         .frame(width: piece.width)
                         .transition(.opacity)
                 }
@@ -445,6 +447,7 @@ private struct AppSlice: View {
 /// macOS itself. It can't be quit, so it can't be dragged; turning the brightness down is what shrinks it.
 private struct SystemSlice: View {
     let costDescription: String
+    let hide: (() -> Void)?
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -461,6 +464,10 @@ private struct SystemSlice: View {
         .contentShape(.rect)
         .contextMenu {
             Button("Displays Settings…") { SystemSettings.open(.displays) }
+            if let hide {
+                Divider()
+                Button("Don't Show Display & System in the Battery") { hide() }
+            }
         }
         .help("Display & System: the screen, graphics, Wi‑Fi, Bluetooth and macOS itself. A dimmer screen makes it smaller.")
         .accessibilityElement()
