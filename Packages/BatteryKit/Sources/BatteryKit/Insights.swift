@@ -163,7 +163,9 @@ public enum UsualDrainCheck {
         var sampled = 0.0
         var apps: [String: Double] = [:]
         var perDay: [Date: Double] = [:]
-        for hour in profile.hours where hour.start < today && hour.measuredSeconds > 0 {
+        // The last two weeks, however long the history is kept: what was usual months ago doesn't say what's usual now.
+        let since = today.addingTimeInterval(-UsageProfile.retention)
+        for hour in profile.hours(since: since) where hour.start < today && hour.measuredSeconds > 0 {
             let distance = abs(calendar.component(.hour, from: hour.start) - hourNow)
             guard min(distance, 24 - distance) <= 1 else { continue }
             joules += hour.systemJoules

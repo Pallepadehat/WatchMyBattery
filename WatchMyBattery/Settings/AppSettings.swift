@@ -34,6 +34,25 @@ enum CenterLabel: String, CaseIterable, Identifiable {
     }
 }
 
+/// Where the AirPods card slides in.
+enum AccessoryCardPosition: String, CaseIterable, Identifiable {
+    /// Under the battery in the menu bar, where the panel opens.
+    case belowIcon
+    case topCenter
+    /// In the corner, where notifications appear.
+    case topRight
+
+    var id: Self { self }
+
+    var title: LocalizedStringResource {
+        switch self {
+        case .belowIcon: "Below the Menu Bar Icon"
+        case .topCenter: "Top Center"
+        case .topRight: "Top Right"
+        }
+    }
+}
+
 /// How far back the panel's history looks.
 enum HistoryRange: String, CaseIterable, Identifiable {
     case day
@@ -45,6 +64,26 @@ enum HistoryRange: String, CaseIterable, Identifiable {
         switch self {
         case .day: "24 Hours"
         case .tenDays: "10 Days"
+        }
+    }
+}
+
+/// How long the hourly history is kept.
+enum HistoryRetention: Int, CaseIterable, Identifiable {
+    case twoWeeks = 14
+    case month = 30
+    case threeMonths = 90
+    case year = 365
+
+    var id: Self { self }
+    var interval: TimeInterval { TimeInterval(rawValue) * 24 * 3600 }
+
+    var title: LocalizedStringResource {
+        switch self {
+        case .twoWeeks: "2 Weeks"
+        case .month: "1 Month"
+        case .threeMonths: "3 Months"
+        case .year: "1 Year"
         }
     }
 }
@@ -140,6 +179,83 @@ final class AppSettings {
         didSet { defaults.set(notifiesAboutNewApps, forKey: Key.notifiesAboutNewApps) }
     }
 
+    /// The panel lists connected accessories with a battery.
+    var showsAccessories: Bool {
+        didSet { defaults.set(showsAccessories, forKey: Key.showsAccessories) }
+    }
+
+    /// A card slides in when AirPods or other headphones connect.
+    var showsAccessoryCard: Bool {
+        didSet { defaults.set(showsAccessoryCard, forKey: Key.showsAccessoryCard) }
+    }
+
+    var accessoryCardPosition: AccessoryCardPosition {
+        didSet { defaults.set(accessoryCardPosition.rawValue, forKey: Key.accessoryCardPosition) }
+    }
+
+    /// Seconds the card stays, unless the pointer is over it.
+    var accessoryCardDuration: Int {
+        didSet { defaults.set(accessoryCardDuration, forKey: Key.accessoryCardDuration) }
+    }
+
+    /// Send a notification when an accessory's battery runs low.
+    var notifiesWhenAccessoryLow: Bool {
+        didSet { defaults.set(notifiesWhenAccessoryLow, forKey: Key.notifiesWhenAccessoryLow) }
+    }
+
+    /// The percentage an accessory notification is sent at.
+    var accessoryLowBatteryLevel: Int {
+        didSet { defaults.set(accessoryLowBatteryLevel, forKey: Key.accessoryLowBatteryLevel) }
+    }
+
+    /// The panel gives display, graphics and macOS itself a slice of their own: the power no app accounts for.
+    var showsSystemSlice: Bool {
+        didSet { defaults.set(showsSystemSlice, forKey: Key.showsSystemSlice) }
+    }
+
+    /// The panel shows the battery's temperature, voltage and current.
+    var showsBatteryReadings: Bool {
+        didSet { defaults.set(showsBatteryReadings, forKey: Key.showsBatteryReadings) }
+    }
+
+    /// The panel has the charge limit's control.
+    var showsChargeLimit: Bool {
+        didSet { defaults.set(showsChargeLimit, forKey: Key.showsChargeLimit) }
+    }
+
+    /// The limit to go back to once a one-off charge to 100% is done; 0 for none.
+    var chargeLimitAfterTopUp: Int {
+        didSet { defaults.set(chargeLimitAfterTopUp, forKey: Key.chargeLimitAfterTopUp) }
+    }
+
+    /// Send a notification when the battery has charged to ``chargedLevel``, to unplug it by hand.
+    var notifiesWhenCharged: Bool {
+        didSet { defaults.set(notifiesWhenCharged, forKey: Key.notifiesWhenCharged) }
+    }
+
+    var chargedLevel: Int {
+        didSet { defaults.set(chargedLevel, forKey: Key.chargedLevel) }
+    }
+
+    /// The panel shows the last sleep and what's keeping the Mac awake.
+    var showsSleep: Bool {
+        didSet { defaults.set(showsSleep, forKey: Key.showsSleep) }
+    }
+
+    /// Send a notification after waking when the Mac used clearly too much battery asleep.
+    var notifiesAboutSleepDrain: Bool {
+        didSet { defaults.set(notifiesAboutSleepDrain, forKey: Key.notifiesAboutSleepDrain) }
+    }
+
+    var historyRetention: HistoryRetention {
+        didSet { defaults.set(historyRetention.rawValue, forKey: Key.historyRetention) }
+    }
+
+    /// iPhones and iPads that trust this Mac show with the accessories.
+    var showsDevices: Bool {
+        didSet { defaults.set(showsDevices, forKey: Key.showsDevices) }
+    }
+
     /// The tip about hiding the built-in battery icon, until it's dismissed.
     var showsReplaceTip: Bool {
         didSet { defaults.set(showsReplaceTip, forKey: Key.showsReplaceTip) }
@@ -163,6 +279,12 @@ final class AppSettings {
     static let appCountRange = 1...4
     /// Levels a low battery notification can be sent at.
     static let lowBatteryChoices = [5, 10, 15, 20, 25, 30]
+    /// Levels an accessory notification can be sent at.
+    static let accessoryLowBatteryChoices = [10, 15, 20, 25, 30]
+    /// Levels the "charged" notification can be sent at.
+    static let chargedLevelChoices = [80, 85, 90, 95, 100]
+    /// How long the AirPods card can stay, in seconds.
+    static let accessoryCardDurations = [3, 5, 8, 12]
 
     @ObservationIgnored private let defaults: UserDefaults
 
@@ -199,8 +321,24 @@ final class AppSettings {
             Key.meetingWarningLead: MeetingCheck.defaultLead,
             Key.notifiesAboutUnusualDrain: false,
             Key.notifiesAboutNewApps: false,
+            Key.showsAccessories: true,
+            Key.showsAccessoryCard: true,
+            Key.accessoryCardPosition: AccessoryCardPosition.belowIcon.rawValue,
+            Key.accessoryCardDuration: 5,
+            Key.notifiesWhenAccessoryLow: false,
+            Key.accessoryLowBatteryLevel: 20,
             Key.showsReplaceTip: true,
             Key.hasSeenWelcome: false,
+            Key.showsSystemSlice: true,
+            Key.showsBatteryReadings: true,
+            Key.showsChargeLimit: true,
+            Key.chargeLimitAfterTopUp: 0,
+            Key.notifiesWhenCharged: false,
+            Key.chargedLevel: 80,
+            Key.showsSleep: true,
+            Key.notifiesAboutSleepDrain: false,
+            Key.historyRetention: HistoryRetention.twoWeeks.rawValue,
+            Key.showsDevices: true,
         ])
         percentageStyle = PercentageStyle(rawValue: defaults.string(forKey: Key.percentageStyle) ?? "") ?? .hidden
         usesColor = defaults.bool(forKey: Key.usesColor)
@@ -222,6 +360,25 @@ final class AppSettings {
         meetingWarningLead = MeetingCheck.leadChoices.contains(lead) ? lead : MeetingCheck.defaultLead
         notifiesAboutUnusualDrain = defaults.bool(forKey: Key.notifiesAboutUnusualDrain)
         notifiesAboutNewApps = defaults.bool(forKey: Key.notifiesAboutNewApps)
+        showsAccessories = defaults.bool(forKey: Key.showsAccessories)
+        showsAccessoryCard = defaults.bool(forKey: Key.showsAccessoryCard)
+        accessoryCardPosition = AccessoryCardPosition(rawValue: defaults.string(forKey: Key.accessoryCardPosition) ?? "") ?? .belowIcon
+        let duration = defaults.integer(forKey: Key.accessoryCardDuration)
+        accessoryCardDuration = Self.accessoryCardDurations.contains(duration) ? duration : 5
+        notifiesWhenAccessoryLow = defaults.bool(forKey: Key.notifiesWhenAccessoryLow)
+        let accessoryLevel = defaults.integer(forKey: Key.accessoryLowBatteryLevel)
+        accessoryLowBatteryLevel = Self.accessoryLowBatteryChoices.contains(accessoryLevel) ? accessoryLevel : 20
+        showsSystemSlice = defaults.bool(forKey: Key.showsSystemSlice)
+        showsBatteryReadings = defaults.bool(forKey: Key.showsBatteryReadings)
+        showsChargeLimit = defaults.bool(forKey: Key.showsChargeLimit)
+        chargeLimitAfterTopUp = defaults.integer(forKey: Key.chargeLimitAfterTopUp)
+        notifiesWhenCharged = defaults.bool(forKey: Key.notifiesWhenCharged)
+        let charged = defaults.integer(forKey: Key.chargedLevel)
+        chargedLevel = Self.chargedLevelChoices.contains(charged) ? charged : 80
+        showsSleep = defaults.bool(forKey: Key.showsSleep)
+        notifiesAboutSleepDrain = defaults.bool(forKey: Key.notifiesAboutSleepDrain)
+        historyRetention = HistoryRetention(rawValue: defaults.integer(forKey: Key.historyRetention)) ?? .twoWeeks
+        showsDevices = defaults.bool(forKey: Key.showsDevices)
         showsReplaceTip = defaults.bool(forKey: Key.showsReplaceTip)
         hasSeenWelcome = defaults.bool(forKey: Key.hasSeenWelcome)
         panelShortcut = defaults.data(forKey: Key.panelShortcut).flatMap { try? JSONDecoder().decode(Hotkey.self, from: $0) }
@@ -257,8 +414,24 @@ final class AppSettings {
         static let meetingWarningLead = "meetingWarningLead"
         static let notifiesAboutUnusualDrain = "notifiesAboutUnusualDrain"
         static let notifiesAboutNewApps = "notifiesAboutNewApps"
+        static let showsAccessories = "showsAccessories"
+        static let showsAccessoryCard = "showsAccessoryCard"
+        static let accessoryCardPosition = "accessoryCardPosition"
+        static let accessoryCardDuration = "accessoryCardDuration"
+        static let notifiesWhenAccessoryLow = "notifiesWhenAccessoryLow"
+        static let accessoryLowBatteryLevel = "accessoryLowBatteryLevel"
         static let showsReplaceTip = "showsReplaceTip"
         static let hasSeenWelcome = "hasSeenWelcome"
         static let panelShortcut = "panelShortcut"
+        static let showsSystemSlice = "showsSystemSlice"
+        static let showsBatteryReadings = "showsBatteryReadings"
+        static let showsChargeLimit = "showsChargeLimit"
+        static let chargeLimitAfterTopUp = "chargeLimitAfterTopUp"
+        static let notifiesWhenCharged = "notifiesWhenCharged"
+        static let chargedLevel = "chargedLevel"
+        static let showsSleep = "showsSleep"
+        static let notifiesAboutSleepDrain = "notifiesAboutSleepDrain"
+        static let historyRetention = "historyRetention"
+        static let showsDevices = "showsDevices"
     }
 }

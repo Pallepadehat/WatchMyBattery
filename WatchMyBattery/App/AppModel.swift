@@ -14,16 +14,22 @@ final class AppModel {
     let lowPowerMode = LowPowerMode()
     let history: HistoryRecorder
     let insights = InsightsMonitor()
+    let accessories = AccessoryMonitor()
+    let chargeLimit = ChargeLimit()
+    let sleep = SleepMonitor()
 
-    init(settings: AppSettings = AppSettings(), history: HistoryRecorder = HistoryRecorder()) {
+    init(settings: AppSettings = AppSettings(), history: HistoryRecorder? = nil) {
         self.settings = settings
-        self.history = history
+        // Opened with the chosen retention, as opening it already lets go of anything older.
+        self.history = history ?? HistoryRecorder(retention: settings.historyRetention.interval)
     }
 
     /// Opens the panel under the menu bar icon (set up by the app delegate).
     @ObservationIgnored var showPanel: () -> Void = {}
     /// Opens the panel, or closes it if it's open: what the keyboard shortcut does.
     @ObservationIgnored var togglePanel: () -> Void = {}
+    /// Slides in the AirPods card for these headphones (set up by the app delegate).
+    @ObservationIgnored var showAccessoryCard: (Accessory) -> Void = { _ in }
 
     /// macOS wouldn't take the panel's keyboard shortcut, most likely because another app has it.
     private(set) var isPanelShortcutTaken = false
@@ -50,6 +56,14 @@ final class AppModel {
         notifier.start(model: self)
         history.start(model: self)
         insights.start(model: self)
+        accessories.onArrival = { [weak self] accessory in
+            guard let self, self.settings.showsAccessoryCard else { return }
+            self.showAccessoryCard(accessory)
+        }
+        accessories.includesDevices = settings.showsDevices
+        accessories.start()
+        chargeLimit.start(model: self)
+        sleep.start(model: self)
         lowPowerMode.checkSupport()
         usage.excludedApps = Set(settings.excludedApps)
         GlobalHotkey.shared.action = { [weak self] in self?.togglePanel() }
@@ -88,6 +102,10 @@ final class AppModel {
         insights.refresh()
         let shown = Self.readBuiltInBatteryShown()
         if shown != isBuiltInBatteryShown { isBuiltInBatteryShown = shown }
+        accessories.includesDevices = settings.showsDevices
+        accessories.refresh()
+        chargeLimit.refresh()
+        sleep.panelDidOpen()
         // The suggestion to turn on Low Power Mode comes back after a charge.
         if battery.snapshot.isPluggedIn { lowPowerMode.isSuggestionDismissed = false }
     }
@@ -107,6 +125,19 @@ final class AppModel {
     func panelDidClose() {
         isPanelOpen = false
         usage.stop()
+        sleep.panelDidClose()
+    }
+
+    /// Keeps the hourly history this long from now on.
+    func setHistoryRetention(_ retention: HistoryRetention) {
+        settings.historyRetention = retention
+        history.setRetention(retention.interval)
+    }
+
+    /// Shows or hides iPhones and iPads with the accessories.
+    func setShowsDevices(_ shows: Bool) {
+        settings.showsDevices = shows
+        accessories.includesDevices = shows
     }
 
     /// The app is quitting: save what's left to save.

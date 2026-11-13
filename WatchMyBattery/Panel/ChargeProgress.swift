@@ -26,10 +26,16 @@ struct ChargeProgressRow: View {
                 Spacer(minLength: 8)
                 if snapshot.isAtTarget {
                     // Held on purpose: say why, rather than repeat the level.
-                    Label("Optimized", systemImage: "leaf.fill")
-                        .labelStyle(.titleAndIcon)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(usesColor ? ChargeTrack.green : .secondary)
+                    Group {
+                        if snapshot.targetReason == .chargeLimit {
+                            Label("Charge Limit", systemImage: "shield.lefthalf.filled")
+                        } else {
+                            Label("Optimized", systemImage: "leaf.fill")
+                        }
+                    }
+                    .labelStyle(.titleAndIcon)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(usesColor ? ChargeTrack.green : .secondary)
                 } else {
                     HStack(spacing: 4) {
                         Text(percent(snapshot.percentage))
@@ -63,11 +69,18 @@ struct ChargeProgressRow: View {
     }
 
     private var help: Text {
-        snapshot.hasChargeLimit
-            ? Text(
+        switch (snapshot.hasChargeLimit, snapshot.targetReason) {
+        case (true, .chargeLimit?):
+            Text(
+                "Your charge limit keeps the battery at \(percent(snapshot.chargeTarget)), so it lasts longer. The Mac runs from the adapter once it's there."
+            )
+        case (true, _):
+            Text(
                 "Optimized Battery Charging keeps the battery at \(percent(snapshot.chargeTarget)) for now, so it lasts longer, and finishes charging in time for when you usually unplug."
             )
-            : Text("Charging to 100%.")
+        case (false, _):
+            Text("Charging to 100%.")
+        }
     }
 
     private var tint: Color {

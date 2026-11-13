@@ -1,4 +1,5 @@
 import AppKit
+import BatteryKit
 
 /// WatchMyBattery lives in the menu bar: no Dock icon, no main window.
 /// (`LSUIElement` is set in the build settings.)
@@ -22,11 +23,15 @@ enum WatchMyBatteryApp {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let model = AppModel(settings: .forLaunch())
     private var statusItem: StatusItemController?
+    private var accessoryCard: AccessoryCardController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = StatusItemController(model: model)
         model.showPanel = { [weak self] in self?.statusItem?.showPanel() }
         model.togglePanel = { [weak self] in self?.statusItem?.togglePanel() }
+        let accessoryCard = AccessoryCardController(model: model) { [weak self] in self?.statusItem?.iconFrame }
+        self.accessoryCard = accessoryCard
+        model.showAccessoryCard = { [weak accessoryCard] in accessoryCard?.show($0) }
         model.start()
         #if DEBUG
             if CommandLine.arguments.contains("--show-settings") {
@@ -37,6 +42,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 // `--check-now` presses Check Now, once Sparkle is ready (with `--start-updater`).
                 if arguments.contains("--check-now") {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { self.model.updater.checkNow() }
+                }
+                return
+            }
+            if CommandLine.arguments.contains("--show-accessory-card") {
+                // `--show-accessory-card` slides in the card for the first headphones (add `--pretend-accessories` for made-up ones).
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    if let headphones = self.model.accessories.accessories.first(where: { $0.kind.isAudio }) {
+                        self.model.showAccessoryCard(headphones)
+                    }
                 }
                 return
             }

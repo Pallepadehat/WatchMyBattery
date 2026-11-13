@@ -6,9 +6,10 @@ import UserNotifications
 
 /// Sends a notification when the battery runs low, naming the app that's
 /// using the most energy, with a button that quits it. It also sends the
-/// runaway app notification for ``HistoryRecorder`` and the insights for
-/// ``InsightsMonitor``, as they share the Quit and Low Power Mode buttons and
-/// macOS allows one notification delegate.
+/// runaway app notification for ``HistoryRecorder``, the insights for
+/// ``InsightsMonitor`` and the accessory low battery notification, as they
+/// share the Quit and Low Power Mode buttons and macOS allows one
+/// notification delegate.
 ///
 /// It only watches the battery snapshot, which changes by notification, so
 /// it costs nothing until a level is reached. Then it measures apps for a
@@ -22,6 +23,8 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
     @ObservationIgnored private var alert = LowBatteryAlert()
     @ObservationIgnored private let center = UNUserNotificationCenter.current()
     @ObservationIgnored private var wasEnabled = false
+    @ObservationIgnored private var accessoryAlert = AccessoryLowBatteryAlert()
+    @ObservationIgnored private var chargedAlert = ChargeLevelAlert()
     /// Every kind of notification's buttons; macOS takes them all at once.
     @ObservationIgnored private var categories: [String: UNNotificationCategory] = [:]
 
@@ -38,6 +41,8 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
         wasEnabled = model.settings.notifiesWhenLow
         Task { await refreshAuthorization() }
         observe()
+        observeAccessories()
+        observeCharging()
     }
 
     /// Asks for permission the first time notifications are turned on.
@@ -112,6 +117,109 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
             try await center.add(request)
         } catch {
             Logger.app.error("Couldn't send the low battery notification: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    // MARK: - Charged
+
+    /// Followed even while off, so turning it on mid-charge, already past the level, doesn't notify right away.
+    private func observeCharging() {
+        guard let model else { return }
+        let wasSpent = chargedAlert.isSpent
+        let (reached, enabled, level) = withObservationTracking {
+            // A charge limit below the level stops the battery first: it's charged as far as it goes at the limit.
+            let level = min(model.settings.chargedLevel, model.battery.chargeLimit ?? 100)
+            return (chargedAlert.update(with: model.battery.snapshot, target: level), model.settings.notifiesWhenCharged, level)
+        } onChange: { [weak self] in
+            Task { @MainActor in self?.observeCharging() }
+        }
+        // Unplugged after it went out: it's done its job.
+        if wasSpent, !chargedAlert.isSpent, !model.battery.snapshot.isPluggedIn { removeChargedNotification() }
+        guard reached, enabled else { return }
+        Task { await notifyCharged(level: level) }
+    }
+
+    /// "Charged to 80%: unplug now to keep the battery healthy", or "Fully charged".
+    private func notifyCharged(level: Int) async {
+        let content = UNMutableNotificationContent()
+        let percent = (Double(level) / 100).formatted(.percent.precision(.fractionLength(0)))
+        if level >= 100 {
+            content.title = String(localized: "Fully charged")
+            content.body = String(localized: "You can unplug your Mac.")
+        } else {
+            content.title = String(localized: "Charged to \(percent)")
+            content.body = String(localized: "Unplug now to keep the battery between 20% and \(percent), where it wears the least.")
+        }
+        content.sound = .default
+        content.interruptionLevel = .timeSensitive
+        await send(UNNotificationRequest(identifier: "charged", content: content, trigger: nil), kind: "charged")
+    }
+
+    /// Unplugged: the "charged" notification has done its job.
+    func removeChargedNotification() {
+        center.removeDeliveredNotifications(withIdentifiers: ["charged"])
+    }
+
+    // MARK: - Sleep
+
+    /// "Your Mac used 18% while asleep": much more than a sleep should, with what usually causes it.
+    func notifySleepDrain(_ session: SleepSession, typical: Double?) async {
+        guard let used = session.used else { return }
+        let content = UNMutableNotificationContent()
+        let percent = (Double(used) / 100).formatted(.percent.precision(.fractionLength(0)))
+        content.title = String(localized: "Your Mac used \(percent) while asleep")
+        let hours = DurationText.spoken(session.duration)
+        if let typical, let rate = session.perHour, rate > typical * 2 {
+            let ratio = Int((rate / max(typical, 0.1)).rounded())
+            content.body = String(
+                localized: "In \(hours), about \(ratio) times faster than usual. Something may be waking it: open the panel to see what's keeping it awake.")
+        } else {
+            content.body = String(localized: "In \(hours). A Mac asleep should use about 1% an hour. Open the panel to see what's keeping it awake.")
+        }
+        content.sound = .default
+        await send(UNNotificationRequest(identifier: "sleepDrain", content: content, trigger: nil), kind: "sleep drain")
+    }
+
+    // MARK: - Accessories
+
+    private func observeAccessories() {
+        guard let model else { return }
+        let (low, enabled) = withObservationTracking {
+            // Followed even while off, so turning it on with an accessory already low doesn't notify right away.
+            (
+                accessoryAlert.update(with: model.accessories.accessories, threshold: model.settings.accessoryLowBatteryLevel),
+                model.settings.notifiesWhenAccessoryLow
+            )
+        } onChange: { [weak self] in
+            Task { @MainActor in self?.observeAccessories() }
+        }
+        guard enabled else { return }
+        for accessory in low { Task { await notify(accessory) } }
+    }
+
+    /// "AirPods Pro at 15%": the lowest earbud, or the only battery.
+    private func notify(_ accessory: Accessory) async {
+        guard let level = accessory.lowestLevel else { return }
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "\(accessory.name) at \((Double(level) / 100).formatted(.percent.precision(.fractionLength(0))))")
+        switch accessory.kind {
+        case .earbuds:
+            let earbuds = accessory.parts.filter(\.role.isEarbud).map(\.spokenDescription).joined(separator: ", ")
+            content.body = String(localized: "\(earbuds). Put them in their case to charge.")
+        case .keyboard, .mouse, .trackpad:
+            content.body = String(localized: "Connect its cable to charge it.")
+        case .phone, .tablet, .watch:
+            content.body = String(localized: "Plug it in soon.")
+        case .headphones, .gameController, .other:
+            content.body = String(localized: "Charge it soon.")
+        }
+        content.sound = .default
+        // One per accessory: if it's reported again later, the new one replaces the old.
+        let request = UNNotificationRequest(identifier: "accessory-\(accessory.id)", content: content, trigger: nil)
+        do {
+            try await center.add(request)
+        } catch {
+            Logger.app.error("Couldn't send the accessory notification: \(error.localizedDescription, privacy: .public)")
         }
     }
 

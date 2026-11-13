@@ -12,6 +12,15 @@ final class BatteryMonitor {
     private(set) var snapshot = PowerSourceReader.read()
     /// Condition, maximum capacity and cycle count; `nil` until first read, or on Macs without a battery.
     private(set) var health: BatteryHealth?
+    /// Temperature, voltage and current: read only while the panel shows them.
+    private(set) var readings: BatteryReadings?
+
+    /// The charge limit macOS holds the battery to, when one is set (see ``ChargeLimit``).
+    var chargeLimit: Int? {
+        didSet { if chargeLimit != oldValue { refresh() } }
+    }
+
+    @ObservationIgnored private let readingsReader = BatteryReadingsReader()
 
     @ObservationIgnored private var healthReadAt: Date?
     @ObservationIgnored private var isReadingHealth = false
@@ -40,7 +49,7 @@ final class BatteryMonitor {
     }
 
     func refresh() {
-        var next = PowerSourceReader.read()
+        var next = PowerSourceReader.read().limited(to: chargeLimit)
         // `--pretend-charging` shows the battery charging, to see the charging animation on a full battery.
         if LaunchOptions.pretendsCharging {
             next = BatterySnapshot(
@@ -49,6 +58,13 @@ final class BatteryMonitor {
         }
         // Only publish real changes, so views and the menu bar icon don't redraw for nothing.
         if next != snapshot { snapshot = next }
+    }
+
+    /// Reads the temperature, voltage and current: a handful of registry reads, done while the panel's open.
+    func refreshReadings() {
+        guard snapshot.hasBattery else { return }
+        let next = readingsReader.read()
+        if readings.map({ next.differsVisibly(from: $0) }) ?? true { readings = next }
     }
 
     /// Reads battery health in the background, unless a recent reading is at hand.
@@ -67,9 +83,10 @@ final class BatteryMonitor {
 
     #if DEBUG
         /// Shows a made-up state, for previews.
-        func preview(_ snapshot: BatterySnapshot, health: BatteryHealth? = nil) {
+        func preview(_ snapshot: BatterySnapshot, health: BatteryHealth? = nil, readings: BatteryReadings? = nil) {
             self.snapshot = snapshot
             self.health = health
+            self.readings = readings
             healthReadAt = Date()
         }
     #endif

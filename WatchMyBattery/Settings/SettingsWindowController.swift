@@ -29,18 +29,21 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
     private func makeWindow() -> NSWindow {
         let controller = NSHostingController(rootView: SettingsView(model: model))
-        controller.sizingOptions = [.minSize]
+        // One size, like System Settings' own panes: long panes scroll rather than the window growing.
+        controller.sizingOptions = []
         let window = NSWindow(contentViewController: controller)
         window.title = String(localized: "WatchMyBattery Settings")
-        window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
+        window.styleMask = [.titled, .closable, .miniaturizable, .fullSizeContentView]
         window.toolbarStyle = .unified
-        window.setContentSize(CGSize(width: 720, height: min(580, (NSScreen.main?.visibleFrame.height ?? 700) - 80)))
-        window.isReleasedWhenClosed = false
-        window.setFrameAutosaveName("WatchMyBatterySettings")
+        var size = SettingsView.size
         #if DEBUG
             // `--tall-settings` opens it tall enough to see a whole pane at once, for screenshots.
-            if CommandLine.arguments.contains("--tall-settings") { window.setContentSize(CGSize(width: 720, height: 900)) }
+            if CommandLine.arguments.contains("--tall-settings") { size.height = 900 }
         #endif
+        window.setContentSize(size)
+        window.contentMinSize = size
+        window.contentMaxSize = size
+        window.isReleasedWhenClosed = false
         window.delegate = self
         return window
     }
