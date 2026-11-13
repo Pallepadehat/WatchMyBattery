@@ -71,9 +71,23 @@
 - Every connected accessory with a battery in the panel: AirPods and Beats (each earbud and the case), the Magic Mouse, Keyboard and Trackpad, and game controllers. Even on a Mac without a battery of its own.
 - Every Apple accessory is drawn as itself, with its own symbol (AirPods Pro, AirPods Max, Powerbeats Pro, Studio Buds…), and a renamed one shows its model under your name for it.
 - An optional notification when one runs low, at a level of its own (20% to start with).
+- 📱 **Your iPhone and iPad** too, over the cable or over Wi‑Fi once it's set up in Finder. When it drops off Wi‑Fi, its last reading stays, saying how old it is, with a button to read it again.
+
+**Charging, your way**
+- 🔋 **A charge limit**: hold the battery at 80% to 95% while plugged in, so it lasts longer. It's macOS's own (Apple silicon, macOS 26.4 or later), so it holds even when WatchMyBattery isn't running. Change it from the panel or Settings.
+- **Charge to Full Once** for a long day away from a charger. The limit comes back when you unplug.
+- A notification when the battery reaches a level you choose, if you'd rather unplug by hand.
+
+**Sleep, explained**
+- How much battery the last sleep used, in the panel, and every recent sleep in Settings, with how fast it drained. About 1% an hour is normal.
+- **What's keeping your Mac awake** right now: the app, with its icon and what it's doing (playing audio, say).
+- An optional notification when a sleep drained much more than it should.
 
 **Battery health, and a heads-up when it runs low**
 - Condition, maximum capacity and cycle count, quietly, under the time.
+- The battery's temperature, voltage and current, from its own controller.
+- Click an app's slice to see the processes behind it, with Quit and Force Quit. Display & System get a slice of their own.
+- Export the history as CSV or JSON, and keep it for up to a year.
 - An optional notification at the levels you choose, naming the hungriest app, with a button that quits it.
 - A soft glow flows into the battery while it charges, in the menu bar and the panel. Turn it off if you prefer a still icon.
 - Shortcuts actions for the battery level, the time left and the app using the most energy, also in Spotlight.
@@ -186,6 +200,8 @@ So treat **−48m** as "this app is a big reason your battery is draining", not 
 - WatchMyBattery reads process **energy counters and names**, never what those apps contain or do.
 - It isn't sandboxed, because the sandbox doesn't allow reading other processes' energy use or quitting other apps. It only ever quits an app you ask it to: one you drag out of the panel, delete with the keyboard, or quit from a low battery notification.
 - **Calendar access is opt in**, asked for only when you click *Allow…* under *Charge Before Meetings* in Settings › Notifications. Opening the app never brings up the prompt. It reads when events start and end, whether they're all day or marked as free, and whether you declined them: never titles, places, notes or who's invited. Nothing from your calendar is stored or sent anywhere.
+- **Your iPhone and iPad** are read the way Finder reads them, only once they trust this Mac, and only their name, model and battery. Nothing is asked of the phone, and nothing leaves your Mac.
+- **The charge limit** is macOS's own setting: WatchMyBattery only sets it to one of the levels macOS offers.
 - **Accessories** are read from what macOS already knows about them, without Bluetooth permission and without talking to the devices. Connecting, disconnecting and AirPods' levels changing arrive as notifications. The Magic accessories' levels don't, so while one is connected they're also read every quarter of an hour (and when the panel opens): a handful of IOKit calls.
 - The low battery, runaway app, accessory and insight notifications are off until you turn them on. When the low battery one goes off, apps are measured for two seconds to find the hungriest one.
 - Battery changes arrive as IOPowerSources notifications, so there's no polling timer, and the menu bar icon is redrawn **only when something visible changes**.
@@ -199,9 +215,11 @@ Settings is laid out like System Settings, with a pane for each part:
 | --- | --- |
 | General | Open at login, language (System, English or Dansk), shortcuts to hide the built-in battery and to System Settings › Battery |
 | Menu Bar | Percentage hidden, inside the battery or beside it; coloured states (red when low, green when charging) or monochrome; the charging animation |
-| Panel | Time remaining or percentage in the centre of the battery, how many apps get a slice, asking before quitting, hidden apps that never get a slice, the battery history (on, off, or clear it), and insights in the panel |
-| Accessories | The accessories connected now, the AirPods card (on or off, below the menu bar icon, top center or top right, and how long it stays, with a button to try it), and accessories in the panel |
-| Notifications | A low battery notification and the levels it's sent at, a notification for apps using a lot of energy, a notification for accessories running low and its level, and insights: charge before meetings (and how far ahead), more than usual, and new apps using a lot |
+| Panel | Time remaining or percentage in the centre of the battery, how many apps get a slice, asking before quitting, hidden apps that never get a slice, a Display & System slice, temperature, voltage and current, the battery history (on, off, how long to keep it, export or clear it), and insights in the panel |
+| Charging | The charge limit (a slider from 80% to 100%), Charge to Full Once, the "when it's charged" notification, and the charge limit in the panel |
+| Sleep | Recent sleeps and how much each used, what's keeping the Mac awake now, Wake for Network Access, sleep in the panel, and a notification for heavy drain while asleep |
+| Accessories | The accessories connected now, the AirPods card (on or off, below the menu bar icon, top center or top right, and how long it stays, with a button to try it), accessories in the panel, and your iPhone and iPad (with how to set them up) |
+| Notifications | A low battery notification and the levels it's sent at, a notification for apps using a lot of energy, a notification for accessories running low and its level, a notification when it's charged, a notification for heavy drain while asleep, and insights: charge before meetings (and how far ahead), more than usual, and new apps using a lot |
 | Updates | Check now (the answer shows right in the row), and check for and install updates automatically |
 | About | The version, and links to the source code, the changelog and the bug report form |
 

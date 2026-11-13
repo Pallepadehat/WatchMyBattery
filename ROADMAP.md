@@ -94,9 +94,9 @@ Released. See the [changelog](CHANGELOG.md).
 
 - [x] Ask for calendar access with a button in Settings, instead of macOS's prompt appearing when the app opens
 
-## 0.3.0: accessories
+## 0.3.0: accessories ✅
 
-In progress. See the [changelog](CHANGELOG.md).
+Released, with a charge limit, sleep, your iPhone and iPad, and more besides. See the [changelog](CHANGELOG.md).
 
 **The AirPods card** ([#31](https://github.com/Pallepadehat/WatchMyBattery/issues/31))
 

@@ -4,7 +4,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
-Accessories: your AirPods and Magic accessories, and a card for your AirPods.
+## [0.3.0] - 2026-11-13
+
+Accessories, your iPhone, a charge limit, and what happens while your Mac sleeps.
 
 ### Added
 
@@ -12,10 +14,20 @@ Accessories: your AirPods and Magic accessories, and a card for your AirPods.
 - 🖱️ **Accessories in the panel**: each connected AirPods, Beats, Magic Mouse, Magic Keyboard, Magic Trackpad or game controller, with the level of every part ([#32](https://github.com/Pallepadehat/WatchMyBattery/issues/32)). It shows on Macs without a battery too.
 - 🔔 **A notification when an accessory runs low**, at its own level: 10% to 30%, 20% to start with ([#33](https://github.com/Pallepadehat/WatchMyBattery/issues/33)). It goes by the lower earbud, never the case, and comes again only once the accessory has charged. Turn it on in Settings › Notifications.
 - 🍏 **Every Apple accessory, by name and by look.** All AirPods (from the first ones to AirPods 4, AirPods Pro 3 and AirPods Max), the Beats line (Powerbeats, Powerbeats Pro, Fit Pro, Studio Buds and Studio Buds +, Solo Buds, Flex, Solo, Studio, Pill) and the Magic Mouse, Keyboard and Trackpad each get their own symbol, for each earbud and the case too. Renamed ones show their model under the name ("Gym", Powerbeats Pro 2).
-- A new Settings pane, Accessories, with the accessories connected now.
+- 📱 **Your iPhone and iPad** in the panel, next to your accessories: over the cable, or over Wi‑Fi once you've turned on *Show this iPhone when on Wi‑Fi* in Finder. Settings › Accessories walks you through it. An iPhone drops off Wi‑Fi whenever it locks, so its last reading stays for a day, saying how old it is, with a button to read it again.
+- 🔋 **A charge limit.** Hold the battery at 80%, 85%, 90% or 95% while plugged in, so it lasts longer. It's macOS's own charge limit (Apple silicon, macOS 26.4 or later), so it holds when WatchMyBattery isn't running, and System Settings › Battery shows the same thing. Change it from the panel or with a slider in Settings › Charging. **Charge to Full Once** lifts it for a long day away from a charger, and it comes back when you unplug.
+- 🔌 **When it's charged**: a notification when the battery reaches a level you choose (80% to 100%), for unplugging by hand. With a charge limit below that level, it comes at the limit.
+- 🌙 **Sleep.** How much battery the last sleep used, right in the panel, and every recent sleep in Settings › Sleep, with how fast each one drained. A Mac asleep should use about 1% an hour: when a sleep used much more, an optional notification says so on waking.
+- 👀 **What's keeping your Mac awake**: the app that's stopping it from sleeping right now, with its icon and what it's doing, like Music playing audio. It names the app behind macOS's own helpers (sound playing for a browser, say), and leaves out macOS's background processes.
+- 🌡️ **Temperature, voltage and current** in the panel, from the battery's own controller, with a note when it's warm enough for macOS to slow charging.
+- 🔍 **Click an app's slice** to see the processes behind it (a browser's helpers and renderers) and how much each uses, with Quit, and Force Quit for an app that's stopped responding.
+- 🖥️ **Display & System**: a slice of its own for the power no app accounts for (the screen, graphics, Wi‑Fi, Bluetooth and macOS itself).
+- 📤 **Export the history** as a spreadsheet (CSV) or JSON, and keep it for 2 weeks, 1 or 3 months, or a year.
+- New Settings panes: Accessories, Charging and Sleep.
 
 ### Changed
 
+- Settings › Charging is made of standard macOS controls: a stepped slider for the limit, like System Settings' own.
 - Accessories are read from what macOS already knows, without Bluetooth permission: macOS announces connections and AirPods' levels, so nothing is polled for them. The Magic accessories' levels are read again every quarter of an hour, only while one is connected.
 
 ## [0.2.6] - 2026-11-12
@@ -165,7 +177,8 @@ The first release.
 - Automatic updates with Sparkle, from EdDSA-signed releases.
 - One-command install, and build, packaging and release scripts.
 
-[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.6...HEAD
+[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.6...v0.3.0
 [0.2.6]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.2...v0.2.5
 [0.2.2]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.1...v0.2.2
