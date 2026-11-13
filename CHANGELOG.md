@@ -4,6 +4,20 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-13
+
+Your iPhone in the panel, tidied up, and a refresh button that does what it says.
+
+### Changed
+
+- 📱 **A cleaner row for your iPhone and iPad.** When its reading is old, the name has room to show in full, the level sits at the end of the line like every other accessory's, and under it, how old the reading is, with a **Refresh** button right beside it.
+- The row keeps up while the panel is open: a reading that turns old says so, and how old it is, without closing and opening the panel.
+
+### Fixed
+
+- 🔄 **Refresh works.** Clicking it says *Reading…* while it reads, and when the iPhone is asleep or off your Wi‑Fi, the row says *Couldn't reach it* for a few seconds instead of doing nothing. It gives up after 12 seconds, and a reading that comes in later still shows.
+- A read on a timer, or a device coming or going, could cut a refresh short and leave the button greyed out until the app restarted.
+
 ## [0.3.0] - 2026-11-13
 
 Accessories, your iPhone, a charge limit, and what happens while your Mac sleeps.
@@ -177,7 +191,8 @@ The first release.
 - Automatic updates with Sparkle, from EdDSA-signed releases.
 - One-command install, and build, packaging and release scripts.
 
-[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.6...v0.3.0
 [0.2.6]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.2...v0.2.5
