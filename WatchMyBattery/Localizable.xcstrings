@@ -1326,6 +1326,16 @@
         }
       }
     },
+    "Couldn’t reach it" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunne ikke nå den"
+          }
+        }
+      }
+    },
     "CSV has a row for every hour. JSON has everything, sleeps included." : {
       "localizations" : {
         "da" : {
@@ -2833,6 +2843,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Læs den igen. Den skal være vågen og på samme Wi‑Fi."
+          }
+        }
+      }
+    },
+    "Reading…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Læser…"
           }
         }
       }

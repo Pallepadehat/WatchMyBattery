@@ -53,6 +53,16 @@ final class AccessoryMonitor {
     private(set) var deviceReadDates: [String: Date] = [:]
     /// Reading the iPhones and iPads after the refresh button was clicked.
     private(set) var isRefreshingDevices = false
+    /// The devices a refresh just couldn't reach, said in their rows for a few seconds.
+    private(set) var unreachableDeviceIDs: Set<String> = []
+    /// Tells the refresh in progress from one already over.
+    @ObservationIgnored private var refreshGeneration = 0
+    @ObservationIgnored private var missedDeviceChange = false
+    @ObservationIgnored private var unreachableReset: Task<Void, Never>?
+    /// How long the refresh waits for a phone on Wi‑Fi before saying it couldn't reach it.
+    private static let refreshTimeout: Duration = .seconds(12)
+    /// The spinner shows at least this long, so a quick answer still looks like something happened.
+    private static let refreshMinimum: Duration = .milliseconds(700)
     /// A reading older than this says how old it is, and offers to refresh.
     static let deviceStaleAfter: TimeInterval = 12 * 60
     private static let deviceCacheLifetime: TimeInterval = 24 * 60 * 60
@@ -101,9 +111,62 @@ final class AccessoryMonitor {
 
     /// Reads the iPhones and iPads now: the refresh button, for a reading that has grown old.
     func refreshDevices() {
-        guard includesDevices, deviceReader != nil, !isRefreshingDevices else { return }
+        guard includesDevices, let reader = deviceReader, !isRefreshingDevices else { return }
+        let wanted = Set(devices.filter { staleReadDate(of: $0) != nil }.map(\.id))
+        let started = ContinuousClock.now
         isRefreshingDevices = true
-        readDevices(force: true, waits: false)
+        unreachableReset?.cancel()
+        unreachableDeviceIDs = []
+        // Its own read, which the reads on a timer or as the panel opens leave alone.
+        deviceRead?.cancel()
+        lastDeviceRead = .now
+        refreshGeneration += 1
+        let generation = refreshGeneration
+        Task { [weak self] in
+            let live = await reader.read()
+            self?.finishRefresh(generation, live: live, wanted: wanted, started: started)
+        }
+        // A phone on Wi‑Fi that has gone to sleep can keep the read waiting a long while.
+        Task { [weak self] in
+            try? await Task.sleep(for: Self.refreshTimeout)
+            self?.finishRefresh(generation, live: nil, wanted: wanted, started: started)
+        }
+    }
+
+    /// The refresh's read answered (`live`), or it ran out of time (nil): whichever comes first ends the refresh.
+    /// A reading that comes in after that is still kept.
+    private func finishRefresh(_ generation: Int, live: [Accessory]?, wanted: Set<String>, started: ContinuousClock.Instant) {
+        if let live, let reader = deviceReader {
+            remember(live)
+            updateDeviceRefresh(hasDevices: reader.hasDevices)
+        }
+        guard generation == refreshGeneration, isRefreshingDevices else { return }
+        refreshGeneration += 1
+        let unreachable = wanted.subtracting((live ?? []).map(\.id))
+        Task { [weak self] in
+            // The spinner shows a moment even when the answer is instant, so the click visibly did something.
+            let elapsed = ContinuousClock.now - started
+            if elapsed < Self.refreshMinimum { try? await Task.sleep(for: Self.refreshMinimum - elapsed) }
+            guard let self else { return }
+            self.isRefreshingDevices = false
+            self.showUnreachable(unreachable)
+            // A device came or went while it read: read once more, so it isn't missed.
+            if self.missedDeviceChange {
+                self.missedDeviceChange = false
+                self.readDevices(force: true)
+            }
+        }
+    }
+
+    /// Says in these devices' rows that they couldn't be reached, for a few seconds.
+    private func showUnreachable(_ ids: Set<String>) {
+        unreachableDeviceIDs = ids
+        guard !ids.isEmpty else { return }
+        unreachableReset = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(4))
+            guard !Task.isCancelled else { return }
+            self?.unreachableDeviceIDs = []
+        }
     }
 
     /// When an iPhone or iPad's level shown was read, if it's old enough to say so.
@@ -113,9 +176,11 @@ final class AccessoryMonitor {
     }
 
     /// Reads the phones' levels, unless that was done a moment ago.
-    private func readDevices(force: Bool = false, waits: Bool = true) {
-        guard includesDevices, let reader = deviceReader else {
-            isRefreshingDevices = false
+    private func readDevices(force: Bool = false) {
+        guard includesDevices, let reader = deviceReader else { return }
+        // A refresh is reading already, and shows what it finds.
+        if isRefreshingDevices {
+            if force { missedDeviceChange = true }
             return
         }
         if !force, let lastDeviceRead, ContinuousClock.now - lastDeviceRead < Self.deviceReadInterval { return }
@@ -123,10 +188,9 @@ final class AccessoryMonitor {
         deviceRead?.cancel()
         deviceRead = Task { [weak self] in
             // A phone that just arrived needs a moment before it answers.
-            if force, waits { try? await Task.sleep(for: .seconds(2)) }
+            if force { try? await Task.sleep(for: .seconds(2)) }
             let live = await reader.read()
             guard let self, !Task.isCancelled else { return }
-            self.isRefreshingDevices = false
             self.remember(live)
             self.updateDeviceRefresh(hasDevices: reader.hasDevices)
         }
@@ -259,8 +323,14 @@ final class AccessoryMonitor {
 
     #if DEBUG
         /// Shows made-up accessories, for previews.
-        func preview(_ accessories: [Accessory]) {
+        func preview(_ accessories: [Accessory], readDates: [String: Date] = [:]) {
             self.accessories = accessories
+            deviceReadDates = readDates
+        }
+
+        func preview(refreshing: Bool = false, unreachable: Set<String> = []) {
+            isRefreshingDevices = refreshing
+            unreachableDeviceIDs = unreachable
         }
     #endif
 
