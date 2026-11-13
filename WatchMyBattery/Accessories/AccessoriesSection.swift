@@ -32,31 +32,66 @@ struct AccessoryRow: View {
 
     /// An iPhone or iPad out of reach, showing its last reading: when that was.
     private var staleSince: Date? { monitor?.staleReadDate(of: accessory) }
+    private var isRefreshing: Bool { monitor?.isRefreshingDevices ?? false }
+    /// A refresh just now couldn't reach it.
+    private var isUnreachable: Bool { monitor?.unreachableDeviceIDs.contains(accessory.id) ?? false }
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 9) {
-                icon
-                name.fixedSize()
-                Spacer(minLength: 10)
-                levels
-                refreshButton
-            }
-            HStack(alignment: .top, spacing: 9) {
-                icon
-                VStack(alignment: .leading, spacing: 3) {
-                    name
-                    levels
-                }
-                Spacer(minLength: 0)
-                refreshButton
-            }
+        // Each minute, so a reading turns old, and says how old, while the panel is open.
+        TimelineView(.everyMinute) { _ in
+            row
         }
         .frame(minHeight: 24)
         .animation(.snappy(duration: 0.3), value: accessory.displayParts)
+        .animation(.snappy(duration: 0.3), value: staleSince == nil)
+        .animation(.easeInOut(duration: 0.18), value: isRefreshing)
+        .animation(.easeInOut(duration: 0.18), value: isUnreachable)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessory.name)
         .accessibilityValue(spokenValue)
+    }
+
+    @ViewBuilder private var row: some View {
+        if staleSince != nil {
+            staleRow
+        } else {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 9) {
+                    icon
+                    name.fixedSize()
+                    Spacer(minLength: 10)
+                    levels
+                }
+                HStack(spacing: 9) {
+                    icon
+                    VStack(alignment: .leading, spacing: 3) {
+                        name
+                        levels
+                    }
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+    }
+
+    /// An old reading:
+    ///
+    ///     Kim's iPhone 17 Pro Max         ◯ 71 %
+    ///     31 min. ago · ↻ Refresh
+    private var staleRow: some View {
+        HStack(spacing: 9) {
+            icon
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 8) {
+                    name
+                    Spacer(minLength: 8)
+                    levels
+                }
+                statusLine
+                    .font(.system(size: 11))
+                    .lineLimit(1)
+            }
+        }
     }
 
     private var spokenValue: String {
@@ -65,28 +100,42 @@ struct AccessoryRow: View {
         return levels + ", " + String(localized: "read \(staleSince.formatted(.relative(presentation: .named)))")
     }
 
-    /// Reads it again, for an iPhone or iPad whose reading has grown old.
-    @ViewBuilder private var refreshButton: some View {
-        if staleSince != nil, let monitor {
-            Button {
-                monitor.refreshDevices()
-            } label: {
-                Image(systemName: "arrow.clockwise")
-                    .font(.system(size: 10, weight: .semibold))
+    /// Under an old reading: when it was read (or that a refresh couldn't reach it), and a way to read it again.
+    private var statusLine: some View {
+        HStack(spacing: 5) {
+            if isRefreshing {
+                Spinner()
+                    .frame(width: 9, height: 9)
                     .foregroundStyle(.secondary)
-                    .rotationEffect(.degrees(monitor.isRefreshingDevices ? 360 : 0))
-                    .animation(
-                        monitor.isRefreshingDevices ? .linear(duration: 0.9).repeatForever(autoreverses: false) : .default,
-                        value: monitor.isRefreshingDevices
-                    )
-                    .frame(width: 18, height: 18)
-                    .contentShape(.rect)
+                Text("Reading…")
+                    .foregroundStyle(.secondary)
+            } else {
+                if isUnreachable {
+                    Image(systemName: "wifi.slash")
+                        .font(.system(size: 9.5, weight: .semibold))
+                        .foregroundStyle(.orange)
+                    Text("Couldn’t reach it")
+                        .foregroundStyle(.orange)
+                } else if let staleSince {
+                    Text(staleSince, format: .relative(presentation: .numeric, unitsStyle: .abbreviated))
+                        .foregroundStyle(.tertiary)
+                }
+                if let monitor {
+                    Text(verbatim: "·").foregroundStyle(.quaternary)
+                    Button {
+                        monitor.refreshDevices()
+                    } label: {
+                        Label("Refresh", systemImage: "arrow.clockwise")
+                            .labelStyle(.titleAndIcon)
+                            .imageScale(.small)
+                    }
+                    .buttonStyle(InlineLinkButtonStyle())
+                    .help("Read it again. It needs to be awake and on the same Wi‑Fi.")
+                }
             }
-            .buttonStyle(.plain)
-            .disabled(monitor.isRefreshingDevices)
-            .help("Read it again. It needs to be awake and on the same Wi‑Fi.")
-            .accessibilityLabel("Refresh")
         }
+        .transition(.opacity)
+        .id(isRefreshing ? "reading" : isUnreachable ? "unreachable" : "stale")
     }
 
     /// The device's symbol on a small tile, like the icons in the system's Bluetooth menu.
@@ -100,18 +149,10 @@ struct AccessoryRow: View {
     }
 
     private var name: some View {
-        HStack(spacing: 4) {
-            Text(accessory.name)
-                .lineLimit(1)
-                .truncationMode(.middle)
-            if let staleSince {
-                Text(staleSince, format: .relative(presentation: .numeric, unitsStyle: .abbreviated))
-                    .foregroundStyle(.tertiary)
-                    .lineLimit(1)
-                    .fixedSize()
-            }
-        }
-        .font(.system(size: 12))
+        Text(accessory.name)
+            .font(.system(size: 12))
+            .lineLimit(1)
+            .truncationMode(.tail)
     }
 
     private var levels: some View {
@@ -123,6 +164,38 @@ struct AccessoryRow: View {
         .fixedSize()
         // An old reading: there, but not to be relied on.
         .opacity(staleSince == nil ? 1 : 0.55)
+    }
+}
+
+/// A small text button, like a link: secondary until the pointer is over it, with a soft capsule behind it then.
+private struct InlineLinkButtonStyle: ButtonStyle {
+    @State private var isHovering = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(isHovering ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+            .padding(.horizontal, 5)
+            .padding(.vertical, 1)
+            .background(.primary.opacity(configuration.isPressed ? 0.14 : isHovering ? 0.07 : 0), in: .capsule)
+            .padding(.horizontal, -5)
+            .contentShape(.capsule)
+            .opacity(configuration.isPressed ? 0.7 : 1)
+            .animation(.easeOut(duration: 0.12), value: isHovering)
+            .onHover { isHovering = $0 }
+    }
+}
+
+/// A small spinning arc, drawn in SwiftUI: AppKit's spinner complains about its size while it animates in a list.
+private struct Spinner: View {
+    @State private var isSpinning = false
+
+    var body: some View {
+        Circle()
+            .trim(from: 0.12, to: 0.88)
+            .stroke(style: StrokeStyle(lineWidth: 1.6, lineCap: .round))
+            .rotationEffect(.degrees(isSpinning ? 360 : 0))
+            .animation(.linear(duration: 0.8).repeatForever(autoreverses: false), value: isSpinning)
+            .onAppear { isSpinning = true }
     }
 }
 

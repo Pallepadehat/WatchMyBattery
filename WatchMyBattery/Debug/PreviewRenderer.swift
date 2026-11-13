@@ -93,6 +93,38 @@
                     if name == "tendays" { model.settings.historyRange = .tenDays }
                     if name == "insights" { previewInsights(model.insights, history: history) }
                     if name == "discharging" || name == "charging" { model.accessories.preview(AccessoryMonitor.samples) }
+                    if name == "discharging" {
+                        // An iPhone out of reach with a long name: its last reading, from a while ago.
+                        model.accessories.preview(
+                            AccessoryMonitor.samples.dropLast() + [
+                                Accessory(
+                                    id: "device:iphone", name: "Kim’s iPhone 17 Pro Max", kind: .phone,
+                                    parts: [.init(role: .single, percentage: 71)], vendorID: 0x004C)
+                            ],
+                            readDates: ["device:iphone": Date.now.addingTimeInterval(-31 * 60)])
+                    }
+                    // A refresh reading the iPhone.
+                    if name == "half" {
+                        model.accessories.preview(
+                            [
+                                Accessory(
+                                    id: "device:ipad", name: "iPad Air", kind: .tablet,
+                                    parts: [.init(role: .single, percentage: 38)], vendorID: 0x004C)
+                            ],
+                            readDates: ["device:ipad": Date.now.addingTimeInterval(-3 * 60 * 60)])
+                        model.accessories.preview(refreshing: true)
+                    }
+                    // A refresh that couldn't reach the iPhone, as it says so in the row.
+                    if name == "charging" {
+                        model.accessories.preview(
+                            AccessoryMonitor.samples.dropLast() + [
+                                Accessory(
+                                    id: "device:iphone", name: "iPhone", kind: .phone,
+                                    parts: [.init(role: .single, percentage: 54)], vendorID: 0x004C)
+                            ],
+                            readDates: ["device:iphone": Date.now.addingTimeInterval(-2 * 60 * 60)])
+                        model.accessories.preview(unreachable: ["device:iphone"])
+                    }
                     if name == "care" || name == "limit" { previewSleep(model.sleep, now: Date()) }
                     if name == "care" {
                         model.usage.preview(

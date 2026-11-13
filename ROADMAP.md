@@ -109,6 +109,13 @@ Released, with a charge limit, sleep, your iPhone and iPad, and more besides. Se
 - [x] Battery levels of AirPods, Magic Mouse, Magic Keyboard and Magic Trackpad ([#32](https://github.com/Pallepadehat/WatchMyBattery/issues/32))
 - [x] Low battery notifications for accessories, with their own threshold ([#33](https://github.com/Pallepadehat/WatchMyBattery/issues/33))
 
+## 0.3.1: your iPhone, tidied up ✅
+
+Released. See the [changelog](CHANGELOG.md).
+
+- [x] A cleaner iPhone and iPad row: the whole name, and how old the reading is beside its level
+- [x] A refresh button that shows it's reading, and says when the iPhone couldn't be reached
+
 ## 0.4.0: delight
 
 **Charging**
