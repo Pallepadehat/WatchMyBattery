@@ -24,6 +24,7 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
     @ObservationIgnored private let center = UNUserNotificationCenter.current()
     @ObservationIgnored private var wasEnabled = false
     @ObservationIgnored private var accessoryAlert = AccessoryLowBatteryAlert()
+    @ObservationIgnored private var chargedAlert = ChargeLevelAlert()
     /// Every kind of notification's buttons; macOS takes them all at once.
     @ObservationIgnored private var categories: [String: UNNotificationCategory] = [:]
 
@@ -41,6 +42,7 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
         Task { await refreshAuthorization() }
         observe()
         observeAccessories()
+        observeCharging()
     }
 
     /// Asks for permission the first time notifications are turned on.
@@ -118,6 +120,66 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
         }
     }
 
+    // MARK: - Charged
+
+    /// Followed even while off, so turning it on mid-charge, already past the level, doesn't notify right away.
+    private func observeCharging() {
+        guard let model else { return }
+        let wasSpent = chargedAlert.isSpent
+        let (reached, enabled, level) = withObservationTracking {
+            // A charge limit below the level stops the battery first: it's charged as far as it goes at the limit.
+            let level = min(model.settings.chargedLevel, model.battery.chargeLimit ?? 100)
+            return (chargedAlert.update(with: model.battery.snapshot, target: level), model.settings.notifiesWhenCharged, level)
+        } onChange: { [weak self] in
+            Task { @MainActor in self?.observeCharging() }
+        }
+        // Unplugged after it went out: it's done its job.
+        if wasSpent, !chargedAlert.isSpent, !model.battery.snapshot.isPluggedIn { removeChargedNotification() }
+        guard reached, enabled else { return }
+        Task { await notifyCharged(level: level) }
+    }
+
+    /// "Charged to 80%: unplug now to keep the battery healthy", or "Fully charged".
+    private func notifyCharged(level: Int) async {
+        let content = UNMutableNotificationContent()
+        let percent = (Double(level) / 100).formatted(.percent.precision(.fractionLength(0)))
+        if level >= 100 {
+            content.title = String(localized: "Fully charged")
+            content.body = String(localized: "You can unplug your Mac.")
+        } else {
+            content.title = String(localized: "Charged to \(percent)")
+            content.body = String(localized: "Unplug now to keep the battery between 20% and \(percent), where it wears the least.")
+        }
+        content.sound = .default
+        content.interruptionLevel = .timeSensitive
+        await send(UNNotificationRequest(identifier: "charged", content: content, trigger: nil), kind: "charged")
+    }
+
+    /// Unplugged: the "charged" notification has done its job.
+    func removeChargedNotification() {
+        center.removeDeliveredNotifications(withIdentifiers: ["charged"])
+    }
+
+    // MARK: - Sleep
+
+    /// "Your Mac used 18% while asleep": much more than a sleep should, with what usually causes it.
+    func notifySleepDrain(_ session: SleepSession, typical: Double?) async {
+        guard let used = session.used else { return }
+        let content = UNMutableNotificationContent()
+        let percent = (Double(used) / 100).formatted(.percent.precision(.fractionLength(0)))
+        content.title = String(localized: "Your Mac used \(percent) while asleep")
+        let hours = DurationText.spoken(session.duration)
+        if let typical, let rate = session.perHour, rate > typical * 2 {
+            let ratio = Int((rate / max(typical, 0.1)).rounded())
+            content.body = String(
+                localized: "In \(hours), about \(ratio) times faster than usual. Something may be waking it: open the panel to see what's keeping it awake.")
+        } else {
+            content.body = String(localized: "In \(hours). A Mac asleep should use about 1% an hour. Open the panel to see what's keeping it awake.")
+        }
+        content.sound = .default
+        await send(UNNotificationRequest(identifier: "sleepDrain", content: content, trigger: nil), kind: "sleep drain")
+    }
+
     // MARK: - Accessories
 
     private func observeAccessories() {
@@ -146,6 +208,8 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
             content.body = String(localized: "\(earbuds). Put them in their case to charge.")
         case .keyboard, .mouse, .trackpad:
             content.body = String(localized: "Connect its cable to charge it.")
+        case .phone, .tablet, .watch:
+            content.body = String(localized: "Plug it in soon.")
         case .headphones, .gameController, .other:
             content.body = String(localized: "Charge it soon.")
         }

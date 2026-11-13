@@ -68,6 +68,26 @@ enum HistoryRange: String, CaseIterable, Identifiable {
     }
 }
 
+/// How long the hourly history is kept.
+enum HistoryRetention: Int, CaseIterable, Identifiable {
+    case twoWeeks = 14
+    case month = 30
+    case threeMonths = 90
+    case year = 365
+
+    var id: Self { self }
+    var interval: TimeInterval { TimeInterval(rawValue) * 24 * 3600 }
+
+    var title: LocalizedStringResource {
+        switch self {
+        case .twoWeeks: "2 Weeks"
+        case .month: "1 Month"
+        case .threeMonths: "3 Months"
+        case .year: "1 Year"
+        }
+    }
+}
+
 /// The user's preferences, saved in `UserDefaults` as they change.
 @Observable
 final class AppSettings {
@@ -188,6 +208,54 @@ final class AppSettings {
         didSet { defaults.set(accessoryLowBatteryLevel, forKey: Key.accessoryLowBatteryLevel) }
     }
 
+    /// The panel gives display, graphics and macOS itself a slice of their own: the power no app accounts for.
+    var showsSystemSlice: Bool {
+        didSet { defaults.set(showsSystemSlice, forKey: Key.showsSystemSlice) }
+    }
+
+    /// The panel shows the battery's temperature, voltage and current.
+    var showsBatteryReadings: Bool {
+        didSet { defaults.set(showsBatteryReadings, forKey: Key.showsBatteryReadings) }
+    }
+
+    /// The panel has the charge limit's control.
+    var showsChargeLimit: Bool {
+        didSet { defaults.set(showsChargeLimit, forKey: Key.showsChargeLimit) }
+    }
+
+    /// The limit to go back to once a one-off charge to 100% is done; 0 for none.
+    var chargeLimitAfterTopUp: Int {
+        didSet { defaults.set(chargeLimitAfterTopUp, forKey: Key.chargeLimitAfterTopUp) }
+    }
+
+    /// Send a notification when the battery has charged to ``chargedLevel``, to unplug it by hand.
+    var notifiesWhenCharged: Bool {
+        didSet { defaults.set(notifiesWhenCharged, forKey: Key.notifiesWhenCharged) }
+    }
+
+    var chargedLevel: Int {
+        didSet { defaults.set(chargedLevel, forKey: Key.chargedLevel) }
+    }
+
+    /// The panel shows the last sleep and what's keeping the Mac awake.
+    var showsSleep: Bool {
+        didSet { defaults.set(showsSleep, forKey: Key.showsSleep) }
+    }
+
+    /// Send a notification after waking when the Mac used clearly too much battery asleep.
+    var notifiesAboutSleepDrain: Bool {
+        didSet { defaults.set(notifiesAboutSleepDrain, forKey: Key.notifiesAboutSleepDrain) }
+    }
+
+    var historyRetention: HistoryRetention {
+        didSet { defaults.set(historyRetention.rawValue, forKey: Key.historyRetention) }
+    }
+
+    /// iPhones and iPads that trust this Mac show with the accessories.
+    var showsDevices: Bool {
+        didSet { defaults.set(showsDevices, forKey: Key.showsDevices) }
+    }
+
     /// The tip about hiding the built-in battery icon, until it's dismissed.
     var showsReplaceTip: Bool {
         didSet { defaults.set(showsReplaceTip, forKey: Key.showsReplaceTip) }
@@ -213,6 +281,8 @@ final class AppSettings {
     static let lowBatteryChoices = [5, 10, 15, 20, 25, 30]
     /// Levels an accessory notification can be sent at.
     static let accessoryLowBatteryChoices = [10, 15, 20, 25, 30]
+    /// Levels the "charged" notification can be sent at.
+    static let chargedLevelChoices = [80, 85, 90, 95, 100]
     /// How long the AirPods card can stay, in seconds.
     static let accessoryCardDurations = [3, 5, 8, 12]
 
@@ -259,6 +329,16 @@ final class AppSettings {
             Key.accessoryLowBatteryLevel: 20,
             Key.showsReplaceTip: true,
             Key.hasSeenWelcome: false,
+            Key.showsSystemSlice: true,
+            Key.showsBatteryReadings: true,
+            Key.showsChargeLimit: true,
+            Key.chargeLimitAfterTopUp: 0,
+            Key.notifiesWhenCharged: false,
+            Key.chargedLevel: 80,
+            Key.showsSleep: true,
+            Key.notifiesAboutSleepDrain: false,
+            Key.historyRetention: HistoryRetention.twoWeeks.rawValue,
+            Key.showsDevices: true,
         ])
         percentageStyle = PercentageStyle(rawValue: defaults.string(forKey: Key.percentageStyle) ?? "") ?? .hidden
         usesColor = defaults.bool(forKey: Key.usesColor)
@@ -288,6 +368,17 @@ final class AppSettings {
         notifiesWhenAccessoryLow = defaults.bool(forKey: Key.notifiesWhenAccessoryLow)
         let accessoryLevel = defaults.integer(forKey: Key.accessoryLowBatteryLevel)
         accessoryLowBatteryLevel = Self.accessoryLowBatteryChoices.contains(accessoryLevel) ? accessoryLevel : 20
+        showsSystemSlice = defaults.bool(forKey: Key.showsSystemSlice)
+        showsBatteryReadings = defaults.bool(forKey: Key.showsBatteryReadings)
+        showsChargeLimit = defaults.bool(forKey: Key.showsChargeLimit)
+        chargeLimitAfterTopUp = defaults.integer(forKey: Key.chargeLimitAfterTopUp)
+        notifiesWhenCharged = defaults.bool(forKey: Key.notifiesWhenCharged)
+        let charged = defaults.integer(forKey: Key.chargedLevel)
+        chargedLevel = Self.chargedLevelChoices.contains(charged) ? charged : 80
+        showsSleep = defaults.bool(forKey: Key.showsSleep)
+        notifiesAboutSleepDrain = defaults.bool(forKey: Key.notifiesAboutSleepDrain)
+        historyRetention = HistoryRetention(rawValue: defaults.integer(forKey: Key.historyRetention)) ?? .twoWeeks
+        showsDevices = defaults.bool(forKey: Key.showsDevices)
         showsReplaceTip = defaults.bool(forKey: Key.showsReplaceTip)
         hasSeenWelcome = defaults.bool(forKey: Key.hasSeenWelcome)
         panelShortcut = defaults.data(forKey: Key.panelShortcut).flatMap { try? JSONDecoder().decode(Hotkey.self, from: $0) }
@@ -332,5 +423,15 @@ final class AppSettings {
         static let showsReplaceTip = "showsReplaceTip"
         static let hasSeenWelcome = "hasSeenWelcome"
         static let panelShortcut = "panelShortcut"
+        static let showsSystemSlice = "showsSystemSlice"
+        static let showsBatteryReadings = "showsBatteryReadings"
+        static let showsChargeLimit = "showsChargeLimit"
+        static let chargeLimitAfterTopUp = "chargeLimitAfterTopUp"
+        static let notifiesWhenCharged = "notifiesWhenCharged"
+        static let chargedLevel = "chargedLevel"
+        static let showsSleep = "showsSleep"
+        static let notifiesAboutSleepDrain = "notifiesAboutSleepDrain"
+        static let historyRetention = "historyRetention"
+        static let showsDevices = "showsDevices"
     }
 }

@@ -19,10 +19,14 @@ public final class HistoryStore {
     /// Every hour and app row, loaded once: there are a few hundred at most, and they're updated all the time.
     private var hourRows: [Date: StoredHour] = [:]
     private var appRows: [String: StoredApp] = [:]
+    private var retention: TimeInterval
 
     /// Opens the store at `url`, creating it if needed; `nil` keeps it in memory only (for previews, tests, and a
     /// made-up battery that mustn't reach the real history).
-    public init(url: URL?, now: Date = Date()) throws {
+    /// - Parameter retention: how long the hourly summaries are kept (see ``UsageProfile/retention``). Given here
+    ///   rather than set afterwards, as opening the store already lets go of anything older.
+    public init(url: URL?, now: Date = Date(), retention: TimeInterval = UsageProfile.retention) throws {
+        self.retention = retention
         let configuration: ModelConfiguration
         if let url {
             try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -46,16 +50,18 @@ public final class HistoryStore {
 
     /// Opens the store at `url`, starting it over if it can't be read (a damaged file, say), and falling back to
     /// memory if even that fails. `problem` hears about either.
-    public static func open(at url: URL?, problem: (Error) -> Void = { _ in }) -> HistoryStore {
+    public static func open(
+        at url: URL?, retention: TimeInterval = UsageProfile.retention, problem: (Error) -> Void = { _ in }
+    ) -> HistoryStore {
         do {
-            return try HistoryStore(url: url)
+            return try HistoryStore(url: url, retention: retention)
         } catch {
             problem(error)
         }
         if let url {
             removeFiles(at: url)
             do {
-                return try HistoryStore(url: url)
+                return try HistoryStore(url: url, retention: retention)
             } catch {
                 problem(error)
             }
@@ -119,6 +125,15 @@ public final class HistoryStore {
         storeApp(key)
     }
 
+    /// Keeps the hourly summaries for `retention` from now on. A shorter time lets go of the older hours right away
+    /// (on disk too, once saved); a longer one keeps what's there and lets it grow.
+    public func setRetention(_ retention: TimeInterval) {
+        guard retention != self.retention else { return }
+        self.retention = retention
+        profile.retention = retention
+        pruneProfileRows()
+    }
+
     /// Forgets everything, on disk too once saved.
     public func removeAll() {
         history.removeAll()
@@ -175,7 +190,7 @@ public final class HistoryStore {
         history = BatteryHistory(
             levels: levels.map(\.point), samples: samples.map(\.sample), apps: profileApps.mapValues(\.identity), unplugged: unplugged?.point,
             now: now)
-        profile = UsageProfile(hours: hours.map(\.hour), apps: profileApps, lastLevel: history.levels.last, now: now)
+        profile = UsageProfile(hours: hours.map(\.hour), apps: profileApps, lastLevel: history.levels.last, now: now, retention: retention)
 
         // What the value types dropped as too old goes from the disk too.
         if let first = history.levels.first?.date {

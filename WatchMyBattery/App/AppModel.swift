@@ -15,10 +15,13 @@ final class AppModel {
     let history: HistoryRecorder
     let insights = InsightsMonitor()
     let accessories = AccessoryMonitor()
+    let chargeLimit = ChargeLimit()
+    let sleep = SleepMonitor()
 
-    init(settings: AppSettings = AppSettings(), history: HistoryRecorder = HistoryRecorder()) {
+    init(settings: AppSettings = AppSettings(), history: HistoryRecorder? = nil) {
         self.settings = settings
-        self.history = history
+        // Opened with the chosen retention, as opening it already lets go of anything older.
+        self.history = history ?? HistoryRecorder(retention: settings.historyRetention.interval)
     }
 
     /// Opens the panel under the menu bar icon (set up by the app delegate).
@@ -57,7 +60,10 @@ final class AppModel {
             guard let self, self.settings.showsAccessoryCard else { return }
             self.showAccessoryCard(accessory)
         }
+        accessories.includesDevices = settings.showsDevices
         accessories.start()
+        chargeLimit.start(model: self)
+        sleep.start(model: self)
         lowPowerMode.checkSupport()
         usage.excludedApps = Set(settings.excludedApps)
         GlobalHotkey.shared.action = { [weak self] in self?.togglePanel() }
@@ -96,7 +102,10 @@ final class AppModel {
         insights.refresh()
         let shown = Self.readBuiltInBatteryShown()
         if shown != isBuiltInBatteryShown { isBuiltInBatteryShown = shown }
+        accessories.includesDevices = settings.showsDevices
         accessories.refresh()
+        chargeLimit.refresh()
+        sleep.panelDidOpen()
         // The suggestion to turn on Low Power Mode comes back after a charge.
         if battery.snapshot.isPluggedIn { lowPowerMode.isSuggestionDismissed = false }
     }
@@ -116,6 +125,19 @@ final class AppModel {
     func panelDidClose() {
         isPanelOpen = false
         usage.stop()
+        sleep.panelDidClose()
+    }
+
+    /// Keeps the hourly history this long from now on.
+    func setHistoryRetention(_ retention: HistoryRetention) {
+        settings.historyRetention = retention
+        history.setRetention(retention.interval)
+    }
+
+    /// Shows or hides iPhones and iPads with the accessories.
+    func setShowsDevices(_ shows: Bool) {
+        settings.showsDevices = shows
+        accessories.includesDevices = shows
     }
 
     /// The app is quitting: save what's left to save.

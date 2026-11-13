@@ -5,6 +5,7 @@ import SwiftUI
 /// part, like the batteries in the system's Bluetooth menu.
 struct AccessoriesSection: View {
     let accessories: [Accessory]
+    let monitor: AccessoryMonitor
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -14,7 +15,7 @@ struct AccessoriesSection: View {
                 .accessibilityAddTraits(.isHeader)
             VStack(spacing: 7) {
                 ForEach(accessories) { accessory in
-                    AccessoryRow(accessory: accessory)
+                    AccessoryRow(accessory: accessory, monitor: monitor)
                         .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }
@@ -26,6 +27,11 @@ struct AccessoriesSection: View {
 /// When the levels don't fit beside the name, they go on a line under it.
 struct AccessoryRow: View {
     let accessory: Accessory
+    /// For an iPhone or iPad: how old its reading is, and refreshing it.
+    var monitor: AccessoryMonitor?
+
+    /// An iPhone or iPad out of reach, showing its last reading: when that was.
+    private var staleSince: Date? { monitor?.staleReadDate(of: accessory) }
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
@@ -34,6 +40,7 @@ struct AccessoryRow: View {
                 name.fixedSize()
                 Spacer(minLength: 10)
                 levels
+                refreshButton
             }
             HStack(alignment: .top, spacing: 9) {
                 icon
@@ -42,13 +49,44 @@ struct AccessoryRow: View {
                     levels
                 }
                 Spacer(minLength: 0)
+                refreshButton
             }
         }
         .frame(minHeight: 24)
         .animation(.snappy(duration: 0.3), value: accessory.displayParts)
-        .accessibilityElement(children: .ignore)
+        .accessibilityElement(children: .combine)
         .accessibilityLabel(accessory.name)
-        .accessibilityValue(accessory.displayParts.map(\.spokenDescription).joined(separator: ", "))
+        .accessibilityValue(spokenValue)
+    }
+
+    private var spokenValue: String {
+        let levels = accessory.displayParts.map(\.spokenDescription).joined(separator: ", ")
+        guard let staleSince else { return levels }
+        return levels + ", " + String(localized: "read \(staleSince.formatted(.relative(presentation: .named)))")
+    }
+
+    /// Reads it again, for an iPhone or iPad whose reading has grown old.
+    @ViewBuilder private var refreshButton: some View {
+        if staleSince != nil, let monitor {
+            Button {
+                monitor.refreshDevices()
+            } label: {
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .rotationEffect(.degrees(monitor.isRefreshingDevices ? 360 : 0))
+                    .animation(
+                        monitor.isRefreshingDevices ? .linear(duration: 0.9).repeatForever(autoreverses: false) : .default,
+                        value: monitor.isRefreshingDevices
+                    )
+                    .frame(width: 18, height: 18)
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .disabled(monitor.isRefreshingDevices)
+            .help("Read it again. It needs to be awake and on the same Wi‑Fi.")
+            .accessibilityLabel("Refresh")
+        }
     }
 
     /// The device's symbol on a small tile, like the icons in the system's Bluetooth menu.
@@ -62,10 +100,18 @@ struct AccessoryRow: View {
     }
 
     private var name: some View {
-        Text(accessory.name)
-            .font(.system(size: 12))
-            .lineLimit(1)
-            .truncationMode(.middle)
+        HStack(spacing: 4) {
+            Text(accessory.name)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            if let staleSince {
+                Text(staleSince, format: .relative(presentation: .numeric, unitsStyle: .abbreviated))
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+                    .fixedSize()
+            }
+        }
+        .font(.system(size: 12))
     }
 
     private var levels: some View {
@@ -75,6 +121,8 @@ struct AccessoryRow: View {
             }
         }
         .fixedSize()
+        // An old reading: there, but not to be relied on.
+        .opacity(staleSince == nil ? 1 : 0.55)
     }
 }
 

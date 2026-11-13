@@ -79,6 +79,11 @@ public struct UsageProfile: Sendable, Equatable {
     }
 
     public static let retention: TimeInterval = 14 * 24 * 3600
+    /// How long hours are kept for, from two weeks (the default) to a year, as chosen in Settings. Insights still
+    /// only look at the last two weeks; the rest is there to look back on and export.
+    public var retention: TimeInterval = UsageProfile.retention {
+        didSet { if retention < oldValue { trim() } }
+    }
     /// A gap between two level readings longer than this isn't counted at all: the app wasn't running, so what the
     /// battery did in between is unknown. Shorter ones are usually the Mac asleep on battery, which does count.
     static let longestGap: TimeInterval = 24 * 3600
@@ -94,7 +99,11 @@ public struct UsageProfile: Sendable, Equatable {
     public init() {}
 
     /// A profile put back together from what was saved.
-    public init(hours: [Hour], apps: [String: App], lastLevel: BatteryHistory.LevelPoint?, now: Date = Date()) {
+    public init(
+        hours: [Hour], apps: [String: App], lastLevel: BatteryHistory.LevelPoint?, now: Date = Date(),
+        retention: TimeInterval = UsageProfile.retention
+    ) {
+        self.retention = retention
         self.hours = hours.sorted { $0.start < $1.start }
         self.apps = apps
         self.lastLevel = lastLevel
@@ -182,12 +191,14 @@ public struct UsageProfile: Sendable, Equatable {
     }
 
     public mutating func removeAll() {
+        let retention = retention
         self = UsageProfile()
+        self.retention = retention
     }
 
     /// Drops hours older than ``retention``, and apps not seen since.
     public mutating func trim(now: Date = Date()) {
-        let cutoff = now.addingTimeInterval(-Self.retention)
+        let cutoff = now.addingTimeInterval(-retention)
         if let oldest = hours.first, oldest.start < cutoff {
             hours.removeFirst(BatteryHistory.partitionIndex(in: hours) { $0.start < cutoff })
         }

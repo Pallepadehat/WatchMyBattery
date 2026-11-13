@@ -16,12 +16,19 @@ public struct Accessory: Sendable, Equatable, Identifiable {
         case mouse
         case trackpad
         case gameController
+        /// An iPhone, read over its cable or Wi‑Fi sync (see ``AppleDeviceReader``).
+        case phone
+        case tablet
+        case watch
         case other
 
         public static func < (lhs: Kind, rhs: Kind) -> Bool { lhs.rawValue < rhs.rawValue }
 
         /// Headphones of any kind: what the AirPods card is for.
         public var isAudio: Bool { self == .earbuds || self == .headphones }
+
+        /// An iPhone, iPad or Apple Watch: a device of its own rather than an accessory to this Mac.
+        public var isDevice: Bool { self == .phone || self == .tablet || self == .watch }
     }
 
     /// One battery in an accessory.

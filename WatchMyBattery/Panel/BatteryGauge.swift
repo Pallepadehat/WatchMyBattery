@@ -23,6 +23,12 @@ struct BatteryGauge: View {
     let confirmQuit: (AppUsage) -> Void
     /// Never give this app a slice again.
     let exclude: ((AppUsage) -> Void)?
+    /// The power no app accounts for (display, graphics, radios, macOS), for a slice of its own; `nil` for none.
+    var systemWatts: Double? = nil
+    /// The app whose processes are listed under the battery.
+    var inspectedApp: pid_t? = nil
+    /// Click on a slice: list its processes (or stop listing them).
+    var inspect: (AppUsage) -> Void = { _ in }
 
     @State private var draggedApp: AppUsage.ID?
     /// The slice with focus (Tab moves between slices).
@@ -80,16 +86,75 @@ struct BatteryGauge: View {
 
     // MARK: - Layout
 
+    /// A slice of the pill: an app's, or the one for display and system.
+    private struct Piece: Identifiable {
+        enum Kind {
+            case app(AppUsage)
+            case system(watts: Double)
+        }
+
+        let kind: Kind
+        let offset: CGFloat
+        let width: CGFloat
+
+        var id: String {
+            switch kind {
+            case .app(let app): "app-\(app.id)"
+            case .system: "system"
+            }
+        }
+    }
+
+    private struct Layout {
+        let baseWidth: CGFloat
+        let pieces: [Piece]
+    }
+
     /// Each app's share of the pill: its cost out of all the time there'd be
     /// without it. On the adapter, where time doesn't apply, its share of the power draw.
-    private func layout(width: CGFloat) -> GaugeLayout {
-        let shares = estimates.sliceShares(forAppsDrawing: apps.map(\.watts))
-        return GaugeLayout(width: width, level: 1, shares: shares, minimumSliceWidth: 36, labelWidth: Self.labelWidth)
+    ///
+    /// Display and system come last, at the end of the battery: what's left once every app has had its share. The
+    /// apps come first for room too, as they're what you can do something about; display and system get what's
+    /// left, if that's enough for a slice.
+    private func layout(width: CGFloat) -> Layout {
+        let system = systemWatts.flatMap { $0 >= Self.minimumSystemWatts ? $0 : nil }
+        let watts = apps.map(\.watts) + (system.map { [$0] } ?? [])
+        let shares = estimates.sliceShares(forAppsDrawing: watts)
+        let layout = GaugeLayout(
+            width: width, level: 1, shares: shares, minimumSliceWidth: Self.minimumSliceWidth, labelWidth: Self.labelWidth)
+        let appWidths = Array(layout.sliceWidths.prefix(apps.count))
+        var systemWidth: CGFloat?
+        if system != nil {
+            if layout.sliceWidths.count > apps.count {
+                systemWidth = layout.sliceWidths.last
+            } else if appWidths.count == apps.count {
+                // Didn't fit at its full share: take the room that's left, if there's enough for a slice.
+                let room = width - Self.labelWidth - appWidths.reduce(0, +)
+                if room >= Self.minimumSliceWidth { systemWidth = room }
+            }
+        }
+        let used = appWidths.reduce(0, +) + (systemWidth ?? 0)
+        let baseWidth = max(width - used, 0)
+        var pieces: [Piece] = []
+        var offset = baseWidth
+        for (app, width) in zip(apps, appWidths) {
+            pieces.append(Piece(kind: .app(app), offset: offset, width: width))
+            offset += width
+        }
+        if let system, let systemWidth {
+            pieces.append(Piece(kind: .system(watts: system), offset: offset, width: systemWidth))
+        }
+        return Layout(baseWidth: baseWidth, pieces: pieces)
     }
+
+    private static let minimumSliceWidth: CGFloat = 36
+
+    /// Less than this and it isn't worth a slice: the display is off, or the reading hasn't settled.
+    private static let minimumSystemWatts = 0.3
 
     // MARK: - The pill
 
-    private func pill(_ layout: GaugeLayout) -> some View {
+    private func pill(_ layout: Layout) -> some View {
         HStack(spacing: 0) {
             ZStack {
                 Rectangle().fill(baseFill)
@@ -102,39 +167,59 @@ struct BatteryGauge: View {
             .chargingAnimation(showsChargingAnimation)
             .frame(width: layout.baseWidth)
 
-            let visible = Array(apps.prefix(layout.sliceWidths.count))
-            ForEach(Array(zip(visible, layout.sliceWidths)), id: \.0.id) { app, width in
-                AppSlice(
-                    app: app,
-                    costDescription: costDescription(for: app),
-                    isDragged: draggedApp == app.id,
-                    isKeyboardFocused: keyboardSlice == app.id,
-                    focusedApp: $focusedApp,
-                    draggedApp: $draggedApp,
-                    quit: quit,
-                    exclude: app.bundleIdentifier == nil ? nil : exclude
-                )
-                .frame(width: width)
-                .focusable()
-                .focusEffectDisabled()
-                .focused($focusedSlice, equals: app.id)
-                .onKeyPress(keys: [.delete, .deleteForward]) { _ in
-                    guard keyboardSlice == app.id else { return .ignored }
-                    confirmQuit(app)
-                    return .handled
+            let visible: [AppUsage] = layout.pieces.compactMap {
+                if case .app(let app) = $0.kind { app } else { nil }
+            }
+            ForEach(layout.pieces) { piece in
+                switch piece.kind {
+                case .app(let app):
+                    appSlice(app, width: piece.width, visible: visible)
+                case .system(let watts):
+                    SystemSlice(costDescription: costDescription(forWatts: watts))
+                        .frame(width: piece.width)
+                        .transition(.opacity)
                 }
-                .onKeyPress(keys: [.leftArrow, .rightArrow]) { press in
-                    guard let index = visible.firstIndex(where: { $0.id == app.id }) else { return .ignored }
-                    let next = press.key == .leftArrow ? index - 1 : index + 1
-                    guard visible.indices.contains(next) else { return .ignored }
-                    focusedSlice = visible[next].id
-                    keyboardSlice = visible[next].id
-                    return .handled
-                }
-                .transition(.asymmetric(insertion: .opacity, removal: .scale(scale: 0.2, anchor: .leading).combined(with: .opacity)))
             }
         }
         .clipShape(.rect(cornerRadius: Self.cornerRadius, style: .continuous))
+    }
+
+    private func appSlice(_ app: AppUsage, width: CGFloat, visible: [AppUsage]) -> some View {
+        AppSlice(
+            app: app,
+            costDescription: costDescription(forWatts: app.watts),
+            isDragged: draggedApp == app.id,
+            isKeyboardFocused: keyboardSlice == app.id,
+            isInspected: inspectedApp == app.id,
+            focusedApp: $focusedApp,
+            draggedApp: $draggedApp,
+            quit: quit,
+            inspect: inspect,
+            exclude: app.bundleIdentifier == nil ? nil : exclude
+        )
+        .frame(width: width)
+        .focusable()
+        .focusEffectDisabled()
+        .focused($focusedSlice, equals: app.id)
+        .onKeyPress(keys: [.delete, .deleteForward]) { _ in
+            guard keyboardSlice == app.id else { return .ignored }
+            confirmQuit(app)
+            return .handled
+        }
+        .onKeyPress(keys: [.leftArrow, .rightArrow]) { press in
+            guard let index = visible.firstIndex(where: { $0.id == app.id }) else { return .ignored }
+            let next = press.key == .leftArrow ? index - 1 : index + 1
+            guard visible.indices.contains(next) else { return .ignored }
+            focusedSlice = visible[next].id
+            keyboardSlice = visible[next].id
+            return .handled
+        }
+        .onKeyPress(keys: [.return, .space]) { _ in
+            guard keyboardSlice == app.id else { return .ignored }
+            inspect(app)
+            return .handled
+        }
+        .transition(.asymmetric(insertion: .opacity, removal: .scale(scale: 0.2, anchor: .leading).combined(with: .opacity)))
     }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -200,46 +285,53 @@ struct BatteryGauge: View {
 
     // MARK: - Costs under the slices
 
-    private func costLabels(_ layout: GaugeLayout) -> some View {
+    private func costLabels(_ layout: Layout) -> some View {
         ZStack(alignment: .topLeading) {
-            ForEach(Array(zip(apps.prefix(layout.sliceWidths.count), zip(layout.sliceOffsets, layout.sliceWidths))), id: \.0.id) {
-                app, frame in
-                Text(costText(for: app))
-                    .font(.system(size: 11, weight: .medium))
-                    .monospacedDigit()
-                    .foregroundStyle(focusedApp?.id == app.id ? .primary : .secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .frame(width: frame.1)
-                    .offset(x: frame.0)
-                    .opacity(draggedApp == app.id ? 0 : 1)
+            ForEach(layout.pieces) { piece in
+                Group {
+                    switch piece.kind {
+                    case .app(let app):
+                        Text(costText(forWatts: app.watts))
+                            .foregroundStyle(focusedApp?.id == app.id || inspectedApp == app.id ? .primary : .secondary)
+                            .opacity(draggedApp == app.id ? 0 : 1)
+                    case .system(let watts):
+                        Text(costText(forWatts: watts))
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .font(.system(size: 11, weight: .medium))
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .frame(width: piece.width)
+                .offset(x: piece.offset)
             }
         }
         .allowsHitTesting(false)
     }
 
     /// What VoiceOver reads for a slice: "costs 48 minutes", or its power draw on the adapter.
-    private func costDescription(for app: AppUsage) -> String {
+    private func costDescription(forWatts watts: Double) -> String {
         if estimates.appliesToTime {
-            let cost = estimates.timeGained(byQuitting: app.watts)
+            let cost = estimates.timeGained(byQuitting: watts)
             guard cost >= 60 else { return String(localized: "costs less than a minute") }
             let formatter = DateComponentsFormatter()
             formatter.unitsStyle = .full
             formatter.allowedUnits = cost >= 3600 ? [.hour, .minute] : [.minute]
             return String(localized: "costs \(formatter.string(from: (cost / 60).rounded() * 60) ?? "")")
         }
-        let watts = app.watts.formatted(.number.precision(.fractionLength(1)))
-        return String(localized: "uses \(watts) watts")
+        let formatted = watts.formatted(.number.precision(.fractionLength(1)))
+        return String(localized: "uses \(formatted) watts")
     }
 
-    private func costText(for app: AppUsage) -> String {
+    private func costText(forWatts watts: Double) -> String {
         if estimates.appliesToTime {
-            let cost = estimates.timeGained(byQuitting: app.watts)
+            let cost = estimates.timeGained(byQuitting: watts)
             return cost >= 60 ? TimeFormat.cost(cost) : "<1m"
         }
         // "0.0 W" would read as nothing at all; the app is using something, just not much.
-        guard app.watts >= 0.05 else { return "<" + (0.1).formatted(.number.precision(.fractionLength(1))) + " W" }
-        return app.watts.formatted(.number.precision(.fractionLength(1))) + " W"
+        guard watts >= 0.05 else { return "<" + (0.1).formatted(.number.precision(.fractionLength(1))) + " W" }
+        return watts.formatted(.number.precision(.fractionLength(1))) + " W"
     }
 }
 
@@ -249,9 +341,12 @@ private struct AppSlice: View {
     let costDescription: String
     let isDragged: Bool
     let isKeyboardFocused: Bool
+    /// Its processes are listed under the battery.
+    let isInspected: Bool
     @Binding var focusedApp: AppUsage?
     @Binding var draggedApp: AppUsage.ID?
     let quit: (AppUsage) -> Void
+    let inspect: (AppUsage) -> Void
     let exclude: ((AppUsage) -> Void)?
 
     @State private var isHovered = false
@@ -271,6 +366,13 @@ private struct AppSlice: View {
                 .opacity(isDragged ? 0 : 1)
         }
         // The keyboard focus ring, drawn inside the slice so the pill's rounded clip doesn't cut it off.
+        // Selected: its processes are listed below, so it keeps the hover's lift.
+        .overlay {
+            if isInspected && !isKeyboardFocused && !isHovered {
+                Rectangle().fill(.white.opacity(0.16)).transition(.opacity)
+            }
+        }
+        .animation(.snappy(duration: 0.2), value: isInspected)
         .overlay {
             if isKeyboardFocused {
                 Rectangle()
@@ -294,7 +396,10 @@ private struct AppSlice: View {
             }
         }
         .gesture(dragToQuit)
+        .simultaneousGesture(TapGesture().onEnded { inspect(app) })
         .contextMenu {
+            Button("Show Processes") { inspect(app) }
+            Divider()
             Button("Quit \(app.name)") { quit(app) }
             Button("Show \(app.name)") {
                 NSRunningApplication(processIdentifier: app.id)?.activate()
@@ -308,10 +413,11 @@ private struct AppSlice: View {
         .accessibilityElement()
         .accessibilityLabel(app.name)
         .accessibilityValue(costDescription)
-        .accessibilityHint("Drag out of the panel, or press Delete, to quit")
+        .accessibilityHint("Click to see its processes. Drag out of the panel, or press Delete, to quit")
         .accessibilityAddTraits(.isButton)
         .accessibilityAction(named: "Quit \(app.name)") { quit(app) }
         .accessibilityAction(named: "Show \(app.name)") { NSRunningApplication(processIdentifier: app.id)?.activate() }
+        .accessibilityAction(named: "Show Processes") { inspect(app) }
     }
 
     /// Starts the drag; `DragToQuitController` follows it from there and reports how it ended.
@@ -332,5 +438,33 @@ private struct AppSlice: View {
                 withAnimation(.snappy(duration: 0.2)) { draggedApp = app.id }
                 focusedApp = app
             }
+    }
+}
+
+/// The slice for what no app accounts for: the display (usually most of it), graphics, Wi‑Fi and Bluetooth, and
+/// macOS itself. It can't be quit, so it can't be dragged; turning the brightness down is what shrinks it.
+private struct SystemSlice: View {
+    let costDescription: String
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        ZStack {
+            Rectangle()
+                .fill(Color.gray.opacity(colorScheme == .dark ? 0.5 : 0.38))
+            Image(systemName: "sun.max.fill")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.9))
+        }
+        .overlay(alignment: .leading) {
+            Rectangle().fill(.black.opacity(0.15)).frame(width: 1)
+        }
+        .contentShape(.rect)
+        .contextMenu {
+            Button("Displays Settings…") { SystemSettings.open(.displays) }
+        }
+        .help("Display & System: the screen, graphics, Wi‑Fi, Bluetooth and macOS itself. A dimmer screen makes it smaller.")
+        .accessibilityElement()
+        .accessibilityLabel("Display and system")
+        .accessibilityValue(costDescription)
     }
 }

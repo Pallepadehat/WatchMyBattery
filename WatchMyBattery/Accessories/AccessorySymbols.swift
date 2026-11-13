@@ -35,6 +35,9 @@ struct AccessorySymbols {
         case .mouse: self.init(Self.first("magicmouse.fill", "computermouse.fill"))
         case .trackpad: self.init("rectangle.and.hand.point.up.left.fill")
         case .gameController: self.init("gamecontroller.fill")
+        case .phone: self.init("iphone")
+        case .tablet: self.init("ipad")
+        case .watch: self.init("applewatch")
         case .other: self.init("battery.100percent")
         }
     }

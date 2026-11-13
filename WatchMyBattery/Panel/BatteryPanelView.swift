@@ -36,10 +36,29 @@ struct BatteryPanelView: View {
                     focusedApp: $focusedApp,
                     quit: { quit($0, asking: model.settings.confirmsQuit) },
                     confirmQuit: { quit($0, asking: true) },
-                    exclude: { app in withAnimation(.snappy) { model.exclude(app) } }
+                    exclude: { app in withAnimation(.snappy) { model.exclude(app) } },
+                    systemWatts: model.settings.showsSystemSlice ? model.usage.systemSliceWatts : nil,
+                    inspectedApp: model.usage.inspectedApp,
+                    inspect: { app in
+                        withAnimation(.snappy(duration: 0.3)) {
+                            model.usage.inspectedApp = model.usage.inspectedApp == app.id ? nil : app.id
+                        }
+                    }
                 )
                 .padding(.horizontal, Self.inset)
                 .padding(.top, 14)
+
+                if let app = inspectedApp {
+                    AppDetailCard(
+                        app: app, processes: model.usage.inspectedProcesses,
+                        quit: { quit(app, asking: model.settings.confirmsQuit) },
+                        forceQuit: { withAnimation(.snappy) { model.usage.forceQuit(app.id) } },
+                        close: { withAnimation(.snappy(duration: 0.3)) { model.usage.inspectedApp = nil } }
+                    )
+                    .padding(.horizontal, 10)
+                    .padding(.top, 8)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
 
                 // The details, one rhythm for all of them: a label on the left, its value on the right.
                 VStack(spacing: Self.rowSpacing) {
@@ -60,6 +79,15 @@ struct BatteryPanelView: View {
                         HealthRow(health: health)
                             .frame(minHeight: Self.rowHeight)
                             .transition(.opacity)
+                    }
+                    if model.settings.showsChargeLimit, model.chargeLimit.isSupported {
+                        ChargeLimitRow(chargeLimit: model.chargeLimit)
+                            .frame(minHeight: Self.rowHeight)
+                            .transition(.opacity)
+                    }
+                    if model.settings.showsBatteryReadings {
+                        BatteryReadingsRows(
+                            battery: model.battery, isVisible: model.isPanelOpen, usesColor: model.settings.usesColor, rowHeight: Self.rowHeight)
                     }
                     if model.lowPowerMode.isSupported {
                         LowPowerModeRow(isOn: snapshot.isLowPowerModeOn, isChanging: model.lowPowerMode.isChanging) { on in
@@ -98,6 +126,7 @@ struct BatteryPanelView: View {
                             close()
                             model.usage.showRefusedApp()
                         },
+                        forceQuit: { withAnimation(.snappy) { model.usage.forceQuit(refusal.id) } },
                         dismiss: { withAnimation(.snappy) { model.usage.dismissRefusal() } }
                     )
                     .padding(.horizontal, 10)
@@ -106,6 +135,16 @@ struct BatteryPanelView: View {
                 }
 
                 accessoriesSection
+
+                if model.settings.showsSleep, SleepSection.applies(to: model.sleep) {
+                    Divider()
+                        .padding(.horizontal, Self.inset)
+                        .padding(.top, 10)
+                    SleepSection(sleep: model.sleep, usesColor: model.settings.usesColor, rowHeight: Self.rowHeight)
+                        .padding(.horizontal, Self.inset)
+                        .padding(.top, 8)
+                        .transition(.opacity)
+                }
 
                 if model.settings.recordsHistory {
                     @Bindable var settings = model.settings
@@ -177,6 +216,14 @@ struct BatteryPanelView: View {
         .animation(.snappy(duration: 0.3), value: model.lowPowerMode.suggests(for: snapshot))
         .animation(.snappy(duration: 0.3), value: InsightCards.hasAny(model.insights))
         .animation(.snappy(duration: 0.35), value: model.accessories.accessories.map(\.id))
+        .animation(.snappy(duration: 0.3), value: model.usage.inspectedApp)
+        .animation(.snappy(duration: 0.3), value: model.chargeLimit.isSupported)
+    }
+
+    /// The app whose slice was clicked, while it still has one.
+    private var inspectedApp: AppUsage? {
+        guard let pid = model.usage.inspectedApp else { return nil }
+        return model.usage.apps.first { $0.id == pid }
     }
 
     /// Connected accessories with a battery, when there are any.
@@ -186,7 +233,7 @@ struct BatteryPanelView: View {
             Divider()
                 .padding(.horizontal, Self.inset)
                 .padding(.top, 10)
-            AccessoriesSection(accessories: accessories)
+            AccessoriesSection(accessories: accessories, monitor: model.accessories)
                 .padding(.horizontal, Self.inset)
                 .padding(.top, 8)
                 .transition(.opacity)
@@ -428,7 +475,9 @@ private struct LowPowerSuggestion: View {
 private struct RefusalNotice: View {
     let refusal: QuitRefusal
     let show: () -> Void
+    let forceQuit: () -> Void
     let dismiss: () -> Void
+    @State private var isConfirmingForceQuit = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -438,13 +487,23 @@ private struct RefusalNotice: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text("\(refusal.name) didn't quit")
                     .font(.system(size: 12, weight: .semibold))
-                Text("It may be asking what to do with unsaved changes.")
+                Text("It may be asking what to do with unsaved changes, or have stopped responding.")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                Button("Show \(refusal.name)", action: show)
-                    .buttonStyle(.link)
-                    .font(.system(size: 11, weight: .medium))
+                HStack(spacing: 12) {
+                    Button("Show \(refusal.name)", action: show)
+                    if isConfirmingForceQuit {
+                        Button("Force Quit, Losing Unsaved Changes", action: forceQuit)
+                            .foregroundStyle(.red)
+                            .transition(.opacity)
+                    } else {
+                        Button("Force Quit…") { withAnimation(.snappy(duration: 0.2)) { isConfirmingForceQuit = true } }
+                            .help("Quits it straight away, without asking about unsaved changes.")
+                    }
+                }
+                .buttonStyle(.link)
+                .font(.system(size: 11, weight: .medium))
             }
             Spacer(minLength: 0)
             DismissButton(action: dismiss)
