@@ -56,7 +56,8 @@ public enum PowerSourceReader {
             chargeState: chargeState,
             timeRemaining: timeRemaining,
             isLowPowerModeOn: isLowPowerModeOn,
-            chargeTarget: target
+            chargeTarget: target,
+            targetReason: target < 100 ? .optimized : nil
         )
     }
 

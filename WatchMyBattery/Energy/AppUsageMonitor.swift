@@ -16,6 +16,20 @@ final class AppUsageMonitor {
     private(set) var systemWatts: Double?
     /// `true` from ``start()`` until the first measurement arrives.
     private(set) var isWarmingUp = false
+    /// The power no app accounts for: the display, graphics, Wi‑Fi and Bluetooth, and macOS's own processes. The
+    /// Mac's whole draw, less what every app you could quit uses. `nil` until there's a reading of both.
+    private(set) var systemSliceWatts: Double?
+
+    /// The app whose processes the panel lists (its slice was clicked); `nil` for none.
+    var inspectedApp: pid_t? {
+        didSet {
+            guard inspectedApp != oldValue else { return }
+            inspectedProcesses = []
+            refreshInspected()
+        }
+    }
+    /// ``inspectedApp`` and the helpers it started, hungriest first, from the latest sample.
+    private(set) var inspectedProcesses: [ProcessEnergy] = []
 
     /// An app that was asked to quit and is still open a moment later, most
     /// likely asking about unsaved changes.
@@ -65,6 +79,7 @@ final class AppUsageMonitor {
     func stop() {
         task?.cancel()
         task = nil
+        inspectedApp = nil
         Task { [sampler] in await sampler.reset() }
     }
 
@@ -87,6 +102,19 @@ final class AppUsageMonitor {
             try? await Task.sleep(for: Self.quitGracePeriod)
             guard !running.isTerminated, self?.quitting[app.id] != nil else { return }
             self?.refuse(app, running: running)
+        }
+    }
+
+    /// Quits an app straight away, without letting it ask about unsaved changes: for an app that's stopped
+    /// responding, or one that wouldn't quit. Unsaved work is lost.
+    func forceQuit(_ pid: pid_t) {
+        guard let running = NSRunningApplication(processIdentifier: pid) else { return }
+        if refusal?.id == pid { refusal = nil }
+        if inspectedApp == pid { inspectedApp = nil }
+        quitting[pid] = .now
+        apps.removeAll { $0.id == pid }
+        if !running.forceTerminate() {
+            Logger.app.error("Couldn't force \(running.localizedName ?? "an app", privacy: .public) to quit")
         }
     }
 
@@ -150,6 +178,13 @@ final class AppUsageMonitor {
             self.apps = apps
             self.systemWatts = systemWatts
             self.refusal = refusal
+            systemSliceWatts = max(systemWatts - apps.reduce(0) { $0 + $1.watts } - 1.2, 0)
+        }
+
+        /// Shows made-up processes for the inspected app, for previews.
+        func preview(inspecting pid: pid_t, processes: [ProcessEnergy]) {
+            inspectedApp = pid
+            inspectedProcesses = processes
         }
     #endif
 
@@ -181,10 +216,36 @@ final class AppUsageMonitor {
                     watts: watts))
         }
         appInfo.forget(except: Set(appPower.values.keys))
+        updateSystemSlice()
+        refreshInspected()
 
         // Keep the slices still while one is being dragged, so the drag isn't pulled out from under the pointer.
         if Self.differsVisibly(next, from: apps), !DragToQuitController.shared.isDragging { apps = next }
+        // Its slice is gone (it quit, or others overtook it), so its processes go too.
+        if let inspectedApp, !apps.contains(where: { $0.id == inspectedApp }) { self.inspectedApp = nil }
         if isWarmingUp { isWarmingUp = false }
+    }
+
+    /// The Mac's draw less every app's, apps hidden from the battery included: they use power, just not a slice.
+    private func updateSystemSlice() {
+        guard let total = systemWatts else { return }
+        var apps = 0.0
+        for (pid, watts) in appPower.values where appInfo.info(for: pid) != nil { apps += watts }
+        let next = max(total - apps, 0)
+        if DisplayThreshold.watts.isVisible(from: systemSliceWatts, to: next) { systemSliceWatts = next }
+    }
+
+    /// The inspected app's processes, from the sample just taken (nothing more is measured).
+    private func refreshInspected() {
+        guard let pid = inspectedApp else { return }
+        Task { [weak self, sampler] in
+            let processes = await sampler.processes(of: pid)
+            guard let self, self.inspectedApp == pid else { return }
+            let changed =
+                processes.map(\.pid) != self.inspectedProcesses.map(\.pid)
+                || zip(processes, self.inspectedProcesses).contains { DisplayThreshold.watts.isVisible(from: $1.watts, to: $0.watts) }
+            if changed { self.inspectedProcesses = processes }
+        }
     }
 
     /// Other apps, another order, or an app's power moved enough to show.

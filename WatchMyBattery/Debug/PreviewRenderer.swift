@@ -23,6 +23,26 @@
             ("/System/Applications/Notes.app", 0.1),
         ]
 
+        /// Last night's sleep, a few before it, and Music keeping the Mac awake.
+        private static func previewSleep(_ sleep: SleepMonitor, now: Date) {
+            let morning = Calendar.current.startOfDay(for: now).addingTimeInterval(7 * 3600 + 20 * 60)
+            var log = SleepLog()
+            for (day, used) in [(3, 6), (2, 5), (1, 21)] {
+                let end = morning.addingTimeInterval(-Double(day - 1) * 24 * 3600)
+                log.record(
+                    SleepSession(start: end.addingTimeInterval(-8.2 * 3600), end: end, startLevel: 92, endLevel: 92 - used, wasPluggedIn: false),
+                    now: now)
+            }
+            sleep.preview(
+                log,
+                holders: [
+                    AwakeHolder(
+                        id: "com.apple.Music", name: "Music", icon: NSWorkspace.shared.icon(forFile: "/System/Applications/Music.app"),
+                        reasons: [String(localized: "Playing audio")], effect: .keepsSystemAwake, since: now.addingTimeInterval(-40 * 60),
+                        activity: .audio)
+                ])
+        }
+
         private static func render(to folder: URL) {
             let apps = sampleApps.enumerated().map { index, sample in
                 let icon = NSWorkspace.shared.icon(forFile: sample.path)
@@ -42,6 +62,14 @@
                 // 0.2.5: the insights, and the history's ten days.
                 ("insights", BatterySnapshot(percentage: 23, powerSource: .battery, chargeState: .discharging, timeRemaining: 70 * 60)),
                 ("tendays", BatterySnapshot(percentage: 64, powerSource: .battery, chargeState: .discharging, timeRemaining: 4 * 3600 + 50 * 60)),
+                // 0.3.0: held at a charge limit, and a slice's processes with the last sleep.
+                (
+                    "limit",
+                    BatterySnapshot(
+                        percentage: 85, powerSource: .powerAdapter, chargeState: .notCharging, timeRemaining: nil, chargeTarget: 85,
+                        targetReason: .chargeLimit)
+                ),
+                ("care", BatterySnapshot(percentage: 58, powerSource: .battery, chargeState: .discharging, timeRemaining: 3 * 3600 + 40 * 60)),
             ]
 
             let health = BatteryHealth(condition: .normal, maximumCapacity: 0.88, cycleCount: 564)
@@ -52,7 +80,11 @@
                     model.settings.showsReplaceTip = false
                     model.lowPowerMode.preview(isSupported: true)
                     model.battery.preview(
-                        snapshot, health: name == "low" ? BatteryHealth(condition: .serviceRecommended, maximumCapacity: 0.74, cycleCount: 1012) : health)
+                        snapshot, health: name == "low" ? BatteryHealth(condition: .serviceRecommended, maximumCapacity: 0.74, cycleCount: 1012) : health,
+                        readings: BatteryReadings(
+                            temperature: name == "charging" ? 36.4 : 29.6, voltage: 12.41,
+                            current: snapshot.isCharging ? 2.35 : snapshot.isPluggedIn ? 0 : -1.12))
+                    model.chargeLimit.preview(limit: name == "limit" ? 85 : name == "charging" ? 100 : 80)
                     model.usage.preview(
                         apps: Array(apps.prefix(model.settings.maximumApps)), systemWatts: 14,
                         refusal: name == "half" ? QuitRefusal(id: apps[1].id, name: apps[1].name, icon: apps[1].icon) : nil)
@@ -60,6 +92,18 @@
                     model.history.preview(history, profile: sampleProfile(history: history))
                     if name == "tendays" { model.settings.historyRange = .tenDays }
                     if name == "insights" { previewInsights(model.insights, history: history) }
+                    if name == "discharging" || name == "charging" { model.accessories.preview(AccessoryMonitor.samples) }
+                    if name == "care" || name == "limit" { previewSleep(model.sleep, now: Date()) }
+                    if name == "care" {
+                        model.usage.preview(
+                            inspecting: apps[0].id,
+                            processes: [
+                                ProcessEnergy(pid: 1000, name: "Xcode", watts: 1.1, isApp: true),
+                                ProcessEnergy(pid: 2001, name: "SourceKitService", watts: 0.8, isApp: false),
+                                ProcessEnergy(pid: 2002, name: "swift-frontend", watts: 0.5, isApp: false),
+                                ProcessEnergy(pid: 2003, name: "com.apple.dt.SKAgent", watts: 0.2, isApp: false),
+                            ])
+                    }
                     let view = BatteryPanelView(model: model, close: {})
                         .background(scheme == .dark ? Color(white: 0.16) : Color(white: 0.94))
                         .clipShape(.rect(cornerRadius: 16))
@@ -72,6 +116,57 @@
                         .environment(\.colorScheme, scheme)
                     save(view, to: folder.appending(path: "panel-\(name)-\(scheme == .dark ? "dark" : "light").png"))
                 }
+            }
+
+            // The AirPods card, for a few kinds of headphones, in dark and light.
+            let cards: [Accessory] = [
+                AccessoryMonitor.samples[0],
+                Accessory(
+                    id: "a", name: "Patrick’s AirPods", kind: .earbuds,
+                    parts: [.init(role: .left, percentage: 100), .init(role: .right, percentage: 97), .init(role: .case, percentage: 12)],
+                    productID: 0x201B, vendorID: 0x004C),
+                Accessory(
+                    id: "b", name: "AirPods Max", kind: .headphones, parts: [.init(role: .single, percentage: 38, isCharging: true)],
+                    productID: 0x201F, vendorID: 0x004C),
+                Accessory(
+                    id: "c", name: "Gym", kind: .earbuds,
+                    parts: [.init(role: .left, percentage: 9), .init(role: .right, percentage: 26), .init(role: .case, percentage: 55)],
+                    productID: 0x201D, vendorID: 0x004C),
+                Accessory(
+                    id: "d", name: "Beats Studio Pro", kind: .headphones, parts: [.init(role: .single, percentage: 72)], productID: 0x2017,
+                    vendorID: 0x004C),
+            ]
+            for scheme in [ColorScheme.dark, .light] {
+                let sheet = VStack(spacing: 22) {
+                    ForEach(cards) { accessory in
+                        AccessoryCard(accessory: accessory, fillsOnAppear: false)
+                            .background(scheme == .dark ? Color(white: 0.17) : Color(white: 0.96))
+                            .clipShape(.rect(cornerRadius: AccessoryCardWindow.cornerRadius, style: .continuous))
+                            .shadow(color: .black.opacity(0.3), radius: 16, y: 6)
+                    }
+                }
+                .padding(30)
+                .background(
+                    LinearGradient(
+                        colors: [Color(red: 0.1, green: 0.2, blue: 0.75), Color(red: 0.25, green: 0.1, blue: 0.55)],
+                        startPoint: .topLeading, endPoint: .bottomTrailing)
+                )
+                .environment(\.colorScheme, scheme)
+                save(sheet, to: folder.appending(path: "card-\(scheme == .dark ? "dark" : "light").png"))
+
+                // One card on its own, for the README.
+                let single = AccessoryCard(accessory: cards[0], fillsOnAppear: false)
+                    .background(scheme == .dark ? Color(white: 0.17) : Color(white: 0.96))
+                    .clipShape(.rect(cornerRadius: AccessoryCardWindow.cornerRadius, style: .continuous))
+                    .shadow(color: .black.opacity(0.3), radius: 16, y: 6)
+                    .padding(30)
+                    .background(
+                        LinearGradient(
+                            colors: [Color(red: 0.1, green: 0.2, blue: 0.75), Color(red: 0.25, green: 0.1, blue: 0.55)],
+                            startPoint: .topLeading, endPoint: .bottomTrailing)
+                    )
+                    .environment(\.colorScheme, scheme)
+                save(single, to: folder.appending(path: "airpods-card-\(scheme == .dark ? "dark" : "light").png"))
             }
 
             // Menu bar icons, every state and style, on a dark and a light bar.

@@ -19,6 +19,14 @@ public struct BatterySnapshot: Sendable, Equatable {
         case notCharging
     }
 
+    /// Who holds the battery short of full.
+    public enum TargetReason: Sendable, Hashable {
+        /// Optimized Battery Charging, for now, until you'd usually unplug.
+        case optimized
+        /// The charge limit you chose (in WatchMyBattery or System Settings).
+        case chargeLimit
+    }
+
     /// Charge level, 0–100.
     public var percentage: Int
     public var powerSource: PowerSource
@@ -31,6 +39,8 @@ public struct BatterySnapshot: Sendable, Equatable {
     public var hasBattery: Bool
     /// The level macOS charges to, 1–100: 80 while Optimized Battery Charging holds the battery there, otherwise 100.
     public var chargeTarget: Int
+    /// Why ``chargeTarget`` is short of 100; `nil` when it isn't.
+    public var targetReason: TargetReason?
 
     public init(
         percentage: Int,
@@ -39,7 +49,8 @@ public struct BatterySnapshot: Sendable, Equatable {
         timeRemaining: TimeInterval?,
         isLowPowerModeOn: Bool = false,
         hasBattery: Bool = true,
-        chargeTarget: Int = 100
+        chargeTarget: Int = 100,
+        targetReason: TargetReason? = nil
     ) {
         self.percentage = min(max(percentage, 0), 100)
         self.powerSource = powerSource
@@ -48,6 +59,19 @@ public struct BatterySnapshot: Sendable, Equatable {
         self.isLowPowerModeOn = isLowPowerModeOn
         self.hasBattery = hasBattery
         self.chargeTarget = min(max(chargeTarget, 1), 100)
+        self.targetReason = self.chargeTarget < 100 ? targetReason ?? .optimized : nil
+    }
+
+    /// Held at a charge limit you chose, when it's lower than where macOS would stop anyway. On the adapter only:
+    /// on battery there's nothing to hold.
+    public func limited(to limit: Int?) -> BatterySnapshot {
+        guard let limit, hasBattery, isPluggedIn, limit < chargeTarget else { return self }
+        var limited = self
+        limited.chargeTarget = min(max(limit, 1), 100)
+        limited.targetReason = .chargeLimit
+        // Held at the limit, macOS says it's charged; it's being held.
+        if chargeState == .charged, percentage < 100 { limited.chargeState = .notCharging }
+        return limited
     }
 
     /// Charging (or holding its charge) short of full, on purpose.

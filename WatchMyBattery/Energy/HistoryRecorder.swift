@@ -38,10 +38,13 @@ final class HistoryRecorder {
     /// Level changes are saved at most this often; samples are saved as they come.
     private static let saveInterval: TimeInterval = 5 * 60
 
-    init(storeURL: URL? = HistoryRecorder.defaultStoreURL, legacyFileURL: URL? = HistoryRecorder.legacyFileURL) {
+    init(
+        storeURL: URL? = HistoryRecorder.defaultStoreURL, legacyFileURL: URL? = HistoryRecorder.legacyFileURL,
+        retention: TimeInterval = UsageProfile.retention
+    ) {
         // A made-up battery shouldn't end up in the real history.
         let storeURL = LaunchOptions.pretendsCharging ? nil : storeURL
-        store = HistoryStore.open(at: storeURL) { error in
+        store = HistoryStore.open(at: storeURL, retention: retention) { error in
             Logger.app.error("Couldn't open the battery history, starting it over: \(error.localizedDescription, privacy: .public)")
         }
         if store.isOnDisk, let legacyFileURL { Self.importLegacy(from: legacyFileURL, into: store) }
@@ -97,6 +100,18 @@ final class HistoryRecorder {
         if let model { store.record(model.battery.snapshot) }
         publish()
         save(force: true)
+    }
+
+    /// Keeps the hourly history this long from now on (Settings › Panel). A shorter time lets the older hours go.
+    func setRetention(_ retention: TimeInterval) {
+        store.setRetention(retention)
+        publish()
+        save(force: true)
+    }
+
+    /// The history as a file, for a spreadsheet or a script.
+    func export(_ format: HistoryExport.Format, sleeps: SleepLog) throws -> Data {
+        try HistoryExport.data(format, history: history, profile: profile, sleeps: sleeps)
     }
 
     /// The "new app" notification went out for an app, so it isn't sent again.

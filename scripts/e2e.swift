@@ -365,7 +365,7 @@ if let debugApp = options.debugApp {
         check(
             "renders previews and exits", !process.isRunning && process.terminationStatus == 0,
             String(format: "%.1f s", Date().timeIntervalSince(started)))
-        var expected = ["icons.png", "glint.png"]
+        var expected = ["icons.png", "glint.png", "card-dark.png", "card-light.png", "airpods-card-dark.png", "airpods-card-light.png"]
         for state in ["discharging", "low", "charging", "half", "full"] {
             for scheme in ["dark", "light"] { expected.append("panel-\(state)-\(scheme).png") }
         }

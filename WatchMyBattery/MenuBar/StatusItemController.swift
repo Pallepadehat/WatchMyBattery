@@ -46,6 +46,12 @@ final class StatusItemController: NSObject {
         panel.toggle()
     }
 
+    /// The icon's frame on screen.
+    var iconFrame: CGRect? {
+        guard let button = statusItem.button, let window = button.window else { return nil }
+        return window.convertToScreen(button.convert(button.bounds, to: nil))
+    }
+
     @objc private func buttonPressed(_ sender: NSStatusBarButton) {
         let event = NSApp.currentEvent
         if event?.type == .rightMouseDown || event?.modifierFlags.contains(.control) == true {

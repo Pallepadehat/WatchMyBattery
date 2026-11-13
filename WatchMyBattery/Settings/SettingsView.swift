@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 
 /// The panes of Settings, in the sidebar.
 enum SettingsPane: String, CaseIterable, Identifiable {
-    case general, menuBar, panel, notifications, updates, about
+    case general, menuBar, panel, charging, sleep, accessories, notifications, updates, about
 
     var id: Self { self }
 
@@ -14,6 +14,9 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .general: "General"
         case .menuBar: "Menu Bar"
         case .panel: "Panel"
+        case .charging: "Charging"
+        case .sleep: "Sleep"
+        case .accessories: "Accessories"
         case .notifications: "Notifications"
         case .updates: "Updates"
         case .about: "About"
@@ -25,6 +28,9 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .general: String(localized: "General")
         case .menuBar: String(localized: "Menu Bar")
         case .panel: String(localized: "Panel")
+        case .charging: String(localized: "Charging")
+        case .sleep: String(localized: "Sleep")
+        case .accessories: String(localized: "Accessories")
         case .notifications: String(localized: "Notifications")
         case .updates: String(localized: "Updates")
         case .about: String(localized: "About")
@@ -36,6 +42,9 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .general: "gearshape.fill"
         case .menuBar: "rectangle.topthird.inset.filled"
         case .panel: SettingIcon.battery
+        case .charging: "powerplug.fill"
+        case .sleep: "moon.zzz.fill"
+        case .accessories: "airpodspro"
         case .notifications: "bell.fill"
         case .updates: "arrow.triangle.2.circlepath"
         case .about: "info"
@@ -47,6 +56,9 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .general: .gray
         case .menuBar: .blue
         case .panel: .green
+        case .charging: Color(red: 0.2, green: 0.74, blue: 0.62)
+        case .sleep: .purple
+        case .accessories: .cyan
         case .notifications: .red
         case .updates: .indigo
         case .about: .orange
@@ -77,6 +89,9 @@ struct SettingsView: View {
                 case .general: GeneralPane(model: model)
                 case .menuBar: MenuBarPane(model: model)
                 case .panel: PanelPane(model: model)
+                case .charging: ChargingPane(model: model)
+                case .sleep: SleepPane(model: model)
+                case .accessories: AccessoriesPane(model: model)
                 case .notifications: NotificationsPane(model: model)
                 case .updates: UpdatesPane(model: model)
                 case .about: AboutPane(model: model)
@@ -87,8 +102,12 @@ struct SettingsView: View {
             // The title bar names the pane, as in System Settings.
             .background(WindowTitle(title: model.settingsPane?.titleString ?? ""))
         }
-        .frame(minWidth: 700, idealWidth: 720, minHeight: 480, idealHeight: 560)
+        .frame(width: Self.size.width)
+        .frame(minHeight: Self.size.height, maxHeight: .infinity)
     }
+
+    /// The window's one size: wide enough for a row and its subtitle, tall enough for most panes without scrolling.
+    static let size = CGSize(width: 720, height: 560)
 }
 
 /// Sets the title of the window it's in.
@@ -243,6 +262,16 @@ private struct PanelPane: View {
                         Text("The apps using the most energy each get a slice.")
                     }
                 }
+                Toggle(isOn: $settings.showsSystemSlice) {
+                    SettingLabel("Display & System", symbol: "sun.max.fill", color: .gray) {
+                        Text("A slice for the power no app accounts for: the screen, graphics, Wi‑Fi, Bluetooth and macOS itself.")
+                    }
+                }
+                Toggle(isOn: $settings.showsBatteryReadings) {
+                    SettingLabel("Temperature, Voltage and Current", symbol: "thermometer.medium", color: .orange) {
+                        Text("What the battery controller measures, under the battery.")
+                    }
+                }
             } header: {
                 Text("Battery")
             }
@@ -262,6 +291,7 @@ private struct PanelPane: View {
             }
             Section {
                 HistoryRows(model: model)
+                HistoryKeepRows(model: model)
                 Toggle(isOn: $settings.showsInsights) {
                     SettingLabel("Insights", symbol: "lightbulb.fill", color: .yellow) {
                         Text("A line in the panel when the battery won't last through a meeting, the Mac uses more power than usual, or a new app uses a lot.")
@@ -296,7 +326,150 @@ private struct NotificationsPane: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
+            Section {
+                ChargedNotificationRows(model: model)
+                SleepDrainNotificationRows(model: model)
+            } header: {
+                Text("Charging and Sleep")
+            }
+            Section {
+                AccessoryLowBatteryRows(model: model)
+            }
         }
+    }
+}
+
+/// How to get an iPhone or iPad to show up, once over a cable and then over Wi‑Fi for good. Folded away until asked
+/// for.
+private struct DeviceSetupSteps: View {
+    @State private var isExpanded = false
+
+    var body: some View {
+        DisclosureGroup(isExpanded: $isExpanded) {
+            VStack(alignment: .leading, spacing: 14) {
+                step(
+                    "cable.connector", color: .gray, title: "Connect it once",
+                    detail: "Plug it into this Mac with a cable, unlock it, and tap Trust.")
+                step(
+                    "macwindow", color: .blue, title: "Turn on Wi‑Fi in Finder",
+                    detail: "Select it in Finder's sidebar. On the General tab, turn on “Show this iPhone when on Wi‑Fi” and click Apply.")
+                step(
+                    "wifi", color: .green, title: "Unplug it",
+                    detail: "It now shows up whenever it's on the same Wi‑Fi as this Mac and awake.")
+                Button("Open Finder") {
+                    NSWorkspace.shared.open(URL(filePath: "/System/Library/CoreServices/Finder.app"))
+                }
+                .padding(.leading, 34)
+            }
+            .padding(.top, 10)
+            .padding(.bottom, 4)
+        } label: {
+            Text("How to Show Your iPhone or iPad")
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func step(_ symbol: String, color: Color, title: LocalizedStringKey, detail: LocalizedStringKey) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            SettingIcon(symbol: symbol, color: color, size: 24)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+private struct AccessoriesPane: View {
+    let model: AppModel
+
+    var body: some View {
+        @Bindable var settings = model.settings
+        let accessories = model.accessories.accessories
+        Form {
+            Section {
+                if accessories.isEmpty {
+                    Text("No accessories with a battery are connected.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(accessories) { accessory in
+                        AccessoryRow(accessory: accessory, monitor: model.accessories)
+                    }
+                }
+            } header: {
+                Text("Connected")
+            } footer: {
+                Text("AirPods, Beats and other headphones, the Magic Mouse, Keyboard and Trackpad, game controllers, and your iPhone and iPad.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
+                Toggle(isOn: $settings.showsAccessoryCard) {
+                    SettingLabel("AirPods Card", symbol: "airpodspro", color: .cyan) {
+                        Text("Slides in below the menu bar when AirPods or other headphones connect, with the battery of each earbud and the case.")
+                    }
+                }
+                if settings.showsAccessoryCard {
+                    Picker("Position", selection: $settings.accessoryCardPosition) {
+                        ForEach(AccessoryCardPosition.allCases) { position in
+                            Text(position.title).tag(position)
+                        }
+                    }
+                    .padding(.leading, 34)
+                    Picker("Stays For", selection: $settings.accessoryCardDuration) {
+                        ForEach(AppSettings.accessoryCardDurations, id: \.self) { seconds in
+                            Text(Duration.seconds(seconds), format: .units(allowed: [.seconds], width: .wide)).tag(seconds)
+                        }
+                    }
+                    .padding(.leading, 34)
+                    LabeledContent {
+                        Button("Show Card") { model.showAccessoryCard(previewHeadphones) }
+                    } label: {
+                        Text("Stays while the pointer is over it. Click it to open the panel.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.leading, 34)
+                }
+            } header: {
+                Text("When Headphones Connect")
+            }
+            .animation(.snappy, value: settings.showsAccessoryCard)
+
+            Section {
+                Toggle(isOn: $settings.showsAccessories) {
+                    SettingLabel("Accessories in the Panel", symbol: "list.bullet", color: .gray) {
+                        Text("Under the battery, each with the level of every part.")
+                    }
+                }
+                Toggle(isOn: Binding(get: { settings.showsDevices }, set: { model.setShowsDevices($0) })) {
+                    SettingLabel("iPhone and iPad", symbol: "iphone", color: .blue) {
+                        Text("Their battery, next to your accessories.")
+                    }
+                }
+                // Until one shows up, how to get it there.
+                if settings.showsDevices, !accessories.contains(where: { $0.kind == .phone || $0.kind == .tablet }) {
+                    DeviceSetupSteps()
+                }
+            } footer: {
+                Text("An Apple Watch only talks to its iPhone, so a Mac can't read its battery.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    /// The headphones that are connected, or a pair of AirPods Pro to show what the card looks like.
+    private var previewHeadphones: Accessory {
+        model.accessories.accessories.first { $0.kind.isAudio }
+            ?? Accessory(
+                id: "preview", name: "AirPods Pro", kind: .earbuds,
+                parts: [.init(role: .left, percentage: 84), .init(role: .right, percentage: 84), .init(role: .case, percentage: 61, isCharging: true)],
+                productID: 0x2027, vendorID: 0x004C)
     }
 }
 
@@ -446,7 +619,7 @@ private struct AboutLink: View {
 // MARK: - Rows
 
 /// A row title with a coloured icon badge, the way System Settings labels its rows.
-private struct SettingLabel<Subtitle: View>: View {
+struct SettingLabel<Subtitle: View>: View {
     let title: LocalizedStringKey
     let symbol: String
     let color: Color
@@ -483,7 +656,7 @@ extension SettingLabel where Subtitle == EmptyView {
 /// Symbols come in very different shapes (a wide battery, a tall bolt), so
 /// each is sized to fit the same box rather than drawn at one point size:
 /// that way a set of them looks even, like System Settings' sidebar.
-private struct SettingIcon: View {
+struct SettingIcon: View {
     let symbol: String
     let color: Color
     let size: CGFloat
@@ -591,7 +764,7 @@ private struct UpdateCheckRow: View {
 }
 
 /// A small coloured icon before a caption.
-private struct InlineIconLabelStyle: LabelStyle {
+struct InlineIconLabelStyle: LabelStyle {
     let color: Color
 
     func makeBody(configuration: Configuration) -> some View {
@@ -844,6 +1017,49 @@ private struct LowBatteryRows: View {
     }
 }
 
+// MARK: - Accessories
+
+/// The accessory low battery notification: on or off, and at which level.
+private struct AccessoryLowBatteryRows: View {
+    let model: AppModel
+
+    var body: some View {
+        @Bindable var settings = model.settings
+        Toggle(isOn: $settings.notifiesWhenAccessoryLow) {
+            SettingLabel("Accessories Running Low", symbol: "airpodspro", color: .cyan) {
+                Text("A notification when AirPods, a Magic Mouse or another accessory needs charging.")
+            }
+        }
+        .onChange(of: settings.notifiesWhenAccessoryLow) { _, on in
+            if on { Task { await model.notifier.requestAuthorization() } }
+        }
+
+        if settings.notifiesWhenAccessoryLow {
+            LabeledContent("Notify At") {
+                HStack(spacing: 4) {
+                    ForEach(AppSettings.accessoryLowBatteryChoices.reversed(), id: \.self) { level in
+                        LevelChip(level: level, isOn: settings.accessoryLowBatteryLevel == level) {
+                            settings.accessoryLowBatteryLevel = level
+                        }
+                    }
+                }
+            }
+            .padding(.leading, 34)
+
+            if model.notifier.isDenied {
+                LabeledContent {
+                    Button("Open…") { model.notifier.openNotificationSettings() }
+                } label: {
+                    Label("Notifications are turned off for WatchMyBattery.", systemImage: "exclamationmark.triangle.fill")
+                        .labelStyle(InlineIconLabelStyle(color: .orange))
+                        .font(.caption)
+                }
+                .padding(.leading, 34)
+            }
+        }
+    }
+}
+
 // MARK: - History
 
 /// Keeping a history on or off, and clearing it.
@@ -1048,7 +1264,7 @@ private struct InsightRows: View {
 }
 
 /// "20%": one level to be notified at, on or off.
-private struct LevelChip: View {
+struct LevelChip: View {
     let level: Int
     let isOn: Bool
     let action: () -> Void

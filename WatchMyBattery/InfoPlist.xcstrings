@@ -1,6 +1,30 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Bundle display name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "WatchMyBattery"
+          }
+        }
+      }
+    },
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "WatchMyBattery"
+          }
+        }
+      }
+    },
     "NSCalendarsFullAccessUsageDescription" : {
       "comment" : "Shown when macOS asks for calendar access, after \"Allow Access…\" is clicked in Settings › Notifications.",
       "extractionState" : "manual",
@@ -15,6 +39,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "WatchMyBattery reads when your meetings start and end, to warn you when the battery won't last through one. It never reads what they're about, and nothing leaves your Mac."
+          }
+        }
+      }
+    },
+    "NSHumanReadableCopyright" : {
+      "comment" : "Copyright (human-readable)",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "© 2026 Patrick Jakobsen"
           }
         }
       }

@@ -58,8 +58,36 @@
 - ✨ **A new app using a lot**: one that hadn't used much battery in the last two weeks, and is now among the hungriest.
 - In the panel, and as notifications if you want them.
 
+**Your AirPods and Magic accessories**
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/airpods-card-dark.png">
+    <img src="docs/airpods-card-light.png" width="388" alt="The AirPods card: AirPods Pro, with rings for the left earbud at 82%, the right at 64% and the case at 47%, charging">
+  </picture>
+</p>
+
+- 🎧 **The AirPods card.** Put your AirPods in and a glass card slides in below the menu bar, with a ring for each earbud and the case that fills up as it appears, like on iPhone. A bolt marks what's charging. It stays while the pointer is over it, and a click opens the panel. Choose where it appears and how long it stays, or turn it off.
+- Every connected accessory with a battery in the panel: AirPods and Beats (each earbud and the case), the Magic Mouse, Keyboard and Trackpad, and game controllers. Even on a Mac without a battery of its own.
+- Every Apple accessory is drawn as itself, with its own symbol (AirPods Pro, AirPods Max, Powerbeats Pro, Studio Buds…), and a renamed one shows its model under your name for it.
+- An optional notification when one runs low, at a level of its own (20% to start with).
+- 📱 **Your iPhone and iPad** too, over the cable or over Wi‑Fi once it's set up in Finder. When it drops off Wi‑Fi, its last reading stays, saying how old it is, with a button to read it again.
+
+**Charging, your way**
+- 🔋 **A charge limit**: hold the battery at 80% to 95% while plugged in, so it lasts longer. It's macOS's own (Apple silicon, macOS 26.4 or later), so it holds even when WatchMyBattery isn't running. Change it from the panel or Settings.
+- **Charge to Full Once** for a long day away from a charger. The limit comes back when you unplug.
+- A notification when the battery reaches a level you choose, if you'd rather unplug by hand.
+
+**Sleep, explained**
+- How much battery the last sleep used, in the panel, and every recent sleep in Settings, with how fast it drained. About 1% an hour is normal.
+- **What's keeping your Mac awake** right now: the app, with its icon and what it's doing (playing audio, say).
+- An optional notification when a sleep drained much more than it should.
+
 **Battery health, and a heads-up when it runs low**
 - Condition, maximum capacity and cycle count, quietly, under the time.
+- The battery's temperature, voltage and current, from its own controller.
+- Click an app's slice to see the processes behind it, with Quit and Force Quit. Display & System get a slice of their own.
+- Export the history as CSV or JSON, and keep it for up to a year.
 - An optional notification at the levels you choose, naming the hungriest app, with a button that quits it.
 - A soft glow flows into the battery while it charges, in the menu bar and the panel. Turn it off if you prefer a still icon.
 - Shortcuts actions for the battery level, the time left and the app using the most energy, also in Spotlight.
@@ -146,6 +174,8 @@ The numbers in the panel are **estimates**. They're good at answering "what's ea
 
 **Insights.** *More than usual* compares the Mac's average power draw over the last 45 minutes with the same time of day (give or take an hour) on earlier days, and only once at least five days have readings then. It speaks up at 20% and 1 W more, rounds to the nearest 10%, and names an app only if it accounts for at least half of the difference. *A new app* needs a week of history: an app first seen in the last three days that's among the three hungriest of the last 24 hours, with at least a fifth of their energy. *Charge before your meeting* adds macOS's time left to now, and warns when that's before the end of a meeting starting within the warning time you chose (or already under way). It skips all-day events, ones you've declined and ones marked as free.
 
+**Accessories.** AirPods, Beats and other headphones are listed in IOPowerSources too, as accessories: each earbud and the case as a battery of its own, which is where `pmset -g accps` and the system's Bluetooth menu read them. That list comes from `IOPSCopyPowerSourcesByType`, which IOKit exports but doesn't declare in its headers, so WatchMyBattery looks it up when it runs: if a future macOS removed it, accessories would simply not show up. The Magic Mouse, Keyboard and Trackpad keep their level in the IORegistry, as `BatteryPercent`, and are found by that property, the way `ioreg -r -k BatteryPercent` finds them, so a macOS update that moves them elsewhere in the registry doesn't lose them. The search runs only when one comes or goes; in between, the devices it found are read directly. Neither needs Bluetooth permission. When both earbuds are within 5% of each other and charging alike, they're shown as one, at the lower level, like on iPhone. A low battery notification goes by the lower earbud, never the case.
+
 **Runaway apps.** An app counts as running away when it averages 4 W or more over 15 minutes on battery. You hear about each one once, until it calms down or you plug in, and never about the app you're using.
 
 **How much power the whole Mac is using.** The battery's own controller reports its voltage and current (the `AppleSmartBattery` entry in the IORegistry). Voltage × current is the power flowing out of the battery right now, for everything: apps, the display, the radios, the system itself.
@@ -170,7 +200,10 @@ So treat **−48m** as "this app is a big reason your battery is draining", not 
 - WatchMyBattery reads process **energy counters and names**, never what those apps contain or do.
 - It isn't sandboxed, because the sandbox doesn't allow reading other processes' energy use or quitting other apps. It only ever quits an app you ask it to: one you drag out of the panel, delete with the keyboard, or quit from a low battery notification.
 - **Calendar access is opt in**, asked for only when you click *Allow…* under *Charge Before Meetings* in Settings › Notifications. Opening the app never brings up the prompt. It reads when events start and end, whether they're all day or marked as free, and whether you declined them: never titles, places, notes or who's invited. Nothing from your calendar is stored or sent anywhere.
-- The low battery, runaway app and insight notifications are off until you turn them on. When the low battery one goes off, apps are measured for two seconds to find the hungriest one.
+- **Your iPhone and iPad** are read the way Finder reads them, only once they trust this Mac, and only their name, model and battery. Nothing is asked of the phone, and nothing leaves your Mac.
+- **The charge limit** is macOS's own setting: WatchMyBattery only sets it to one of the levels macOS offers.
+- **Accessories** are read from what macOS already knows about them, without Bluetooth permission and without talking to the devices. Connecting, disconnecting and AirPods' levels changing arrive as notifications. The Magic accessories' levels don't, so while one is connected they're also read every quarter of an hour (and when the panel opens): a handful of IOKit calls.
+- The low battery, runaway app, accessory and insight notifications are off until you turn them on. When the low battery one goes off, apps are measured for two seconds to find the hungriest one.
 - Battery changes arrive as IOPowerSources notifications, so there's no polling timer, and the menu bar icon is redrawn **only when something visible changes**.
 - Processes are sampled every two seconds while the panel is open, and otherwise **only on battery, every five minutes**, for the history. A sample is about a millisecond of CPU time (on a Mac running around 900 processes), so roughly 12 ms an hour. macOS gets a minute's leeway on each one to fold it into other wake-ups. Turn the history off in **Settings › Panel** and the app is idle with the panel closed, as before. The history never leaves your Mac. The insights are worked out from those same samples, with no sampling of their own; the meeting warning is checked when the battery or your calendar changes, and once more when a meeting comes close, never on a timer.
 
@@ -182,8 +215,11 @@ Settings is laid out like System Settings, with a pane for each part:
 | --- | --- |
 | General | Open at login, language (System, English or Dansk), shortcuts to hide the built-in battery and to System Settings › Battery |
 | Menu Bar | Percentage hidden, inside the battery or beside it; coloured states (red when low, green when charging) or monochrome; the charging animation |
-| Panel | Time remaining or percentage in the centre of the battery, how many apps get a slice, asking before quitting, hidden apps that never get a slice, the battery history (on, off, or clear it), and insights in the panel |
-| Notifications | A low battery notification and the levels it's sent at, a notification for apps using a lot of energy, and insights: charge before meetings (and how far ahead), more than usual, and new apps using a lot |
+| Panel | Time remaining or percentage in the centre of the battery, how many apps get a slice, asking before quitting, hidden apps that never get a slice, a Display & System slice, temperature, voltage and current, the battery history (on, off, how long to keep it, export or clear it), and insights in the panel |
+| Charging | The charge limit (a slider from 80% to 100%), Charge to Full Once, the "when it's charged" notification, and the charge limit in the panel |
+| Sleep | Recent sleeps and how much each used, what's keeping the Mac awake now, Wake for Network Access, sleep in the panel, and a notification for heavy drain while asleep |
+| Accessories | The accessories connected now, the AirPods card (on or off, below the menu bar icon, top center or top right, and how long it stays, with a button to try it), accessories in the panel, and your iPhone and iPad (with how to set them up) |
+| Notifications | A low battery notification and the levels it's sent at, a notification for apps using a lot of energy, a notification for accessories running low and its level, a notification when it's charged, a notification for heavy drain while asleep, and insights: charge before meetings (and how far ahead), more than usual, and new apps using a lot |
 | Updates | Check now (the answer shows right in the row), and check for and install updates automatically |
 | About | The version, and links to the source code, the changelog and the bug report form |
 
@@ -214,7 +250,7 @@ swift test
 
 | Folder | What's inside |
 | --- | --- |
-| [`Packages/BatteryKit`](Packages/BatteryKit) | The testable logic: battery state and health, per-app energy, the time estimates, and when to send a low battery notification. |
+| [`Packages/BatteryKit`](Packages/BatteryKit) | The testable logic: battery state and health, accessories' batteries, per-app energy, the time estimates, and when to send a low battery notification. |
 | [`WatchMyBattery`](WatchMyBattery) | The app: the menu bar icon and its charging animation, the panel, notifications, settings, updates, and the strings and their translations (`Localizable.xcstrings`). |
 | [`Config`](Config) | Signing settings and `Info.plist` (including Sparkle's feed URL and public key). |
 | [`scripts`](scripts) | Building, packaging and releasing, plus `generate-icon.swift`, which writes the app icon (`WatchMyBattery/AppIcon.icon`, an Icon Composer icon) and logo, and `generate-social-preview.swift`, which draws the GitHub social preview. |

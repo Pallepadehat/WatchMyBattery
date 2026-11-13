@@ -108,6 +108,29 @@ final class BatteryPanelController: NSObject, NSWindowDelegate {
     }
 }
 
+/// The rounded glass behind the panel and the AirPods card: Liquid Glass on
+/// macOS 26, and a translucent material before it.
+enum GlassCard {
+    static func make(around content: NSView, cornerRadius: CGFloat, material: NSVisualEffectView.Material) -> NSView {
+        if #available(macOS 26.0, *) {
+            let glass = NSGlassEffectView()
+            glass.cornerRadius = cornerRadius
+            glass.contentView = content
+            return glass
+        }
+        let effect = NSVisualEffectView()
+        effect.material = material
+        effect.blendingMode = .behindWindow
+        effect.state = .active
+        effect.wantsLayer = true
+        effect.layer?.cornerRadius = cornerRadius
+        effect.layer?.cornerCurve = .continuous
+        effect.layer?.masksToBounds = true
+        effect.addSubview(content)
+        return effect
+    }
+}
+
 /// A rounded, glassy panel that hosts SwiftUI content. It grows and shrinks
 /// downward, keeping its top edge under the menu bar.
 ///
@@ -151,24 +174,7 @@ final class BatteryPanel: NSPanel {
     /// Puts `content` on a Liquid Glass card (the menu material before macOS 26).
     func install(_ content: NSView) {
         let container = NSView(frame: CGRect(origin: .zero, size: frame.size))
-        let background: NSView
-        if #available(macOS 26.0, *) {
-            let glass = NSGlassEffectView()
-            glass.cornerRadius = Self.cornerRadius
-            glass.contentView = content
-            background = glass
-        } else {
-            let effect = NSVisualEffectView()
-            effect.material = .menu
-            effect.blendingMode = .behindWindow
-            effect.state = .active
-            effect.wantsLayer = true
-            effect.layer?.cornerRadius = Self.cornerRadius
-            effect.layer?.cornerCurve = .continuous
-            effect.layer?.masksToBounds = true
-            effect.addSubview(content)
-            background = effect
-        }
+        let background = GlassCard.make(around: content, cornerRadius: Self.cornerRadius, material: .menu)
         background.frame = container.bounds.insetBy(dx: Self.margin, dy: Self.margin)
         background.autoresizingMask = [.width, .height]
         content.frame = background.bounds
