@@ -1416,6 +1416,16 @@
         }
       }
     },
+    "Don't Show Display & System in the Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis ikke Skærm og system i batteriet"
+          }
+        }
+      }
+    },
     "Don't Show %@ in the Battery" : {
       "localizations" : {
         "da" : {

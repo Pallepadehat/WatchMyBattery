@@ -38,6 +38,7 @@ struct BatteryPanelView: View {
                     confirmQuit: { quit($0, asking: true) },
                     exclude: { app in withAnimation(.snappy) { model.exclude(app) } },
                     systemWatts: model.settings.showsSystemSlice ? model.usage.systemSliceWatts : nil,
+                    hideSystem: { withAnimation(.snappy) { model.settings.showsSystemSlice = false } },
                     inspectedApp: model.usage.inspectedApp,
                     inspect: { app in
                         withAnimation(.snappy(duration: 0.3)) {
