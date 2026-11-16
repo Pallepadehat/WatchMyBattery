@@ -18,8 +18,9 @@ struct BatteryIcon: Hashable {
     var isLowPowerModeOn: Bool
     /// The level macOS charges to, 0–1: where the charging glint comes to rest.
     var chargeTarget: Double
-    /// Where the charging glint is in its sweep, 0–1, or `nil` for a still icon.
-    var chargeGlint: Double?
+    /// Where the animation is, 0–1: the charging glint's sweep while charging, the resting breath while holding the
+    /// charge (see ``ChargingAnimator``), or `nil` for a still icon.
+    var animationPhase: Double?
     /// Draw for a dark (`true`) or light menu bar, instead of the one being drawn into.
     /// For previews, like the samples in Settings, which aren't drawn into a menu bar at all.
     var drawsForDarkBar: Bool?
@@ -168,8 +169,15 @@ struct BatteryIcon: Hashable {
         fill.fill()
         context.restoreGState()
 
-        if let chargeGlint, chargeState == .charging {
-            drawGlint(at: chargeGlint, body: body, bodyPath: bodyPath, fill: fill, terminal: terminal, color: accentColor ?? foreground, context: context)
+        if let animationPhase {
+            switch chargeState {
+            case .charging:
+                drawGlint(at: animationPhase, body: body, bodyPath: bodyPath, fill: fill, terminal: terminal, color: palette.charge, context: context)
+            case .notCharging:
+                drawBreath(at: animationPhase, edge: fill.maxX, bodyPath: bodyPath, color: palette.charge, context: context)
+            case .charged, .discharging:
+                break
+            }
         }
 
         // The percentage or a symbol on top: cut out of the charge, so the menu
@@ -275,6 +283,22 @@ struct BatteryIcon: Hashable {
                 context.restoreGState()
             }
         }
+    }
+
+    /// Holding its charge: a soft glow that swells and fades at the edge of the charge, where it's being held.
+    private func drawBreath(at phase: Double, edge: CGFloat, bodyPath: NSBezierPath, color: NSColor, context: CGContext) {
+        let strength = CGFloat(RestingBreath.strength(at: phase))
+        let rgb = color.usingColorSpace(.deviceRGB) ?? color
+        let reach = 3 + 2 * strength
+        guard
+            let glow = CGGradient(
+                colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                colors: [0, 1, 0].map { rgb.withAlphaComponent($0 * 0.75 * strength).cgColor } as CFArray, locations: [0, 0.5, 1])
+        else { return }
+        context.saveGState()
+        bodyPath.addClip()
+        context.drawLinearGradient(glow, start: CGPoint(x: edge - reach, y: 0), end: CGPoint(x: edge + reach, y: 0), options: [])
+        context.restoreGState()
     }
 
     /// How strongly the drained part of the pill shows, like the built-in icon.

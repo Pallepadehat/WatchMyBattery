@@ -33,7 +33,7 @@ final class StatusItemController: NSObject {
             button.imagePosition = .imageRight
             button.imageHugsTitle = true
         }
-        chargingAnimator.onFrame = { [weak self] glint in self?.drawIcon(glint: glint) }
+        chargingAnimator.onFrame = { [weak self] phase in self?.drawIcon(phase: phase) }
         watchVisibility()
         observeChanges()
     }
@@ -107,11 +107,8 @@ final class StatusItemController: NSObject {
 
         let item = MenuBarItem(snapshot: snapshot, settings: settings, watts: model.powerDraw.watts)
         currentIcon = item.icon
-        let animates =
-            settings.showsChargingAnimation && item.icon.style != .textOnly && snapshot.chargeState == .charging
-            && !snapshot.isLowPowerModeOn
-        updateAnimation(wanted: animates, level: snapshot.level, target: Double(snapshot.chargeTarget) / 100)
-        if !chargingAnimator.isRunning { drawIcon(glint: nil) }
+        updateAnimation(Self.motion(for: snapshot, icon: item.icon, settings: settings))
+        if !chargingAnimator.isRunning { drawIcon(phase: nil) }
 
         let title = Self.title(for: item)
         if title != drawnTitle {
@@ -134,11 +131,11 @@ final class StatusItemController: NSObject {
 // MARK: - Charging animation
 
 extension StatusItemController {
-    /// Draws the current icon, with the glint where the animation has it. The
-    /// icon is compared with the one on screen, so nothing is redrawn for nothing.
-    fileprivate func drawIcon(glint: Double?) {
+    /// Draws the current icon, at the animation's phase. The icon is compared
+    /// with the one on screen, so nothing is redrawn for nothing.
+    fileprivate func drawIcon(phase: Double?) {
         guard let button = statusItem.button, var icon = currentIcon else { return }
-        icon.chargeGlint = glint
+        icon.animationPhase = phase
         guard icon != drawnIcon else { return }
         button.image = icon.isEmpty ? nil : image(for: icon)
         if icon.percentage != drawnIcon?.percentage || icon.chargeState != drawnIcon?.chargeState {
@@ -167,11 +164,22 @@ extension StatusItemController {
 
     private static let cachedImages = 64
 
+    /// What the icon should be doing: the glint while charging, the breath while plugged in and holding the charge,
+    /// and nothing when the animation is off, in Low Power Mode, or for text only, which has no battery to animate.
+    fileprivate static func motion(for snapshot: BatterySnapshot, icon: BatteryIcon, settings: AppSettings) -> ChargingAnimator.Motion? {
+        guard settings.showsChargingAnimation, icon.style != .textOnly, !snapshot.isLowPowerModeOn else { return nil }
+        switch snapshot.chargeState {
+        case .charging: return .charging(level: snapshot.level, target: Double(snapshot.chargeTarget) / 100)
+        case .notCharging: return .resting
+        case .charged, .discharging: return nil
+        }
+    }
+
     /// Runs the animation only when it's wanted and someone could see it.
-    fileprivate func updateAnimation(wanted: Bool, level: Double, target: Double) {
+    fileprivate func updateAnimation(_ motion: ChargingAnimator.Motion?) {
         let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
-        if wanted && !reduceMotion && !isOutOfSight {
-            chargingAnimator.start(level: level, target: target)
+        if let motion, !reduceMotion, !isOutOfSight {
+            chargingAnimator.start(motion)
         } else {
             chargingAnimator.stop()
         }

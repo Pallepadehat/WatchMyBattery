@@ -1,16 +1,31 @@
 import SwiftUI
 
+/// What the panel's battery animates: charge flowing in, or a battery plugged in and holding its charge.
+enum ChargingMotion: Equatable {
+    /// A wave of light rolls across, lighting the bolt as it passes.
+    case charging
+    /// A soft light breathes in the middle, around the plug, and fades: nothing flows, it's just held.
+    case resting
+}
+
 /// Where the panel's charging animation is: the wave of light rolling across
 /// the battery, and the glow it lights the bolt with as it passes.
 nonisolated struct ChargingPhase: Equatable, Sendable {
     /// The wave's position, 0 (off the left edge) to 1 (off the right edge).
     var wave: Double = 0
-    /// How brightly the bolt glows, 0–1. It peaks as the wave reaches the middle.
+    /// How brightly the bolt (or the plug) glows, 0–1. It peaks as the wave reaches the middle.
     var glow: Double = 0
+    /// How strongly the light shows, 0–1: always 1 while charging; the breath while resting.
+    var intensity: Double = 1
 
     /// One cycle: a pause, the wave rolling across, the bolt lighting up as it passes.
     static let rest: TimeInterval = 0.6
     static let roll: TimeInterval = 2.0
+
+    /// Resting: a slow breath in and out, then a long pause, timed like the menu bar's (``RestingBreath``).
+    static let breatheIn: TimeInterval = 1.6
+    static let breatheOut: TimeInterval = 1.9
+    static let breathRest: TimeInterval = 2.5
 }
 
 private nonisolated struct ChargingPhaseKey: EnvironmentKey {
@@ -28,19 +43,21 @@ extension EnvironmentValues {
 extension View {
     /// Plays the charging animation for everything inside, which reads it from
     /// ``EnvironmentValues/chargingPhase``. A single repeating keyframe
-    /// timeline drives both the wave and the glow, so they stay in step.
-    func chargingAnimation(_ isOn: Bool) -> some View {
-        modifier(ChargingAnimationModifier(isOn: isOn))
+    /// timeline drives the wave, the glow and the breath, so they stay in step.
+    /// `nil` plays nothing.
+    func chargingAnimation(_ motion: ChargingMotion?) -> some View {
+        modifier(ChargingAnimationModifier(motion: motion))
     }
 }
 
 /// A modifier rather than code in the `View` extension, so the animation's
 /// closures don't capture the generic view type, which isn't `Sendable`.
 private struct ChargingAnimationModifier: ViewModifier {
-    let isOn: Bool
+    let motion: ChargingMotion?
 
     @ViewBuilder func body(content: Content) -> some View {
-        if isOn {
+        switch motion {
+        case .charging:
             content.keyframeAnimator(initialValue: ChargingPhase(), repeating: true) { content, phase in
                 content.environment(\.chargingPhase, phase)
             } keyframes: { _ in
@@ -54,7 +71,23 @@ private struct ChargingAnimationModifier: ViewModifier {
                     CubicKeyframe(0, duration: ChargingPhase.roll * 0.48)
                 }
             }
-        } else {
+        case .resting:
+            // The light stays in the middle, where the plug is, and only breathes.
+            content.keyframeAnimator(initialValue: ChargingPhase(wave: 0.5, intensity: 0), repeating: true) { content, phase in
+                content.environment(\.chargingPhase, phase)
+            } keyframes: { _ in
+                KeyframeTrack(\.intensity) {
+                    CubicKeyframe(0.75, duration: ChargingPhase.breatheIn)
+                    CubicKeyframe(0, duration: ChargingPhase.breatheOut)
+                    LinearKeyframe(0, duration: ChargingPhase.breathRest)
+                }
+                KeyframeTrack(\.glow) {
+                    CubicKeyframe(0.55, duration: ChargingPhase.breatheIn)
+                    CubicKeyframe(0, duration: ChargingPhase.breatheOut)
+                    LinearKeyframe(0, duration: ChargingPhase.breathRest)
+                }
+            }
+        case nil:
             content
         }
     }
@@ -79,7 +112,7 @@ struct ChargingWave: View {
             let wave = phase?.wave ?? 0
             // Brightest mid-way, fading in at the left and out at the right. Raised to a power, so it eases in from
             // nothing rather than appearing at the edge.
-            let strength = pow(sin(Double.pi * wave), 1.6)
+            let strength = pow(sin(Double.pi * wave), 1.6) * (phase?.intensity ?? 1)
             // It swells a little as it rolls through the middle, like a breath of charge.
             let glowWidth = size.width * (0.44 + 0.12 * strength)
             Ellipse()

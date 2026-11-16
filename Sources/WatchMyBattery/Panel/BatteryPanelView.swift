@@ -55,6 +55,10 @@ struct BatteryPanelView: View {
         .animation(.snappy(duration: 0.3), value: model.chargeLimit.isSupported)
         .animation(.snappy(duration: 0.3), value: chargingNote)
         .animation(.snappy(duration: 0.3), value: model.battery.adapter)
+        // Read a moment after the panel opens: they slide in rather than pop.
+        .animation(.snappy(duration: 0.3), value: model.battery.health)
+        .animation(.snappy(duration: 0.3), value: SleepSection.applies(to: model.sleep))
+        .animation(.snappy(duration: 0.3), value: model.updater.availableVersion)
     }
 
     /// Why charging is paused or slow, when there's something to say.
@@ -80,7 +84,7 @@ struct BatteryPanelView: View {
                     inspectedApp: model.usage.inspectedApp,
                     inspect: { app in
                         withAnimation(.snappy(duration: 0.3)) {
-                            model.usage.inspectedApp = model.usage.inspectedApp == app.id ? nil : app.id
+                            model.usage.inspected = model.usage.inspected?.id == app.id ? nil : app
                         }
                     }
                 )
@@ -92,7 +96,7 @@ struct BatteryPanelView: View {
                         app: app, processes: model.usage.inspectedProcesses,
                         quit: { quit(app, asking: model.settings.confirmsQuit) },
                         forceQuit: { withAnimation(.snappy) { model.usage.forceQuit(app.id) } },
-                        close: { withAnimation(.snappy(duration: 0.3)) { model.usage.inspectedApp = nil } }
+                        close: { withAnimation(.snappy(duration: 0.3)) { model.usage.inspected = nil } }
                     )
                     .padding(.horizontal, 10)
                     .padding(.top, 8)
@@ -268,11 +272,8 @@ struct BatteryPanelView: View {
         }
     }
 
-    /// The app whose slice was clicked, while it still has one.
-    private var inspectedApp: AppUsage? {
-        guard let pid = model.usage.inspectedApp else { return nil }
-        return model.usage.apps.first { $0.id == pid }
-    }
+    /// The app whose slice was clicked, until its card is closed or it quits.
+    private var inspectedApp: AppUsage? { model.usage.inspected }
 
     /// Connected accessories with a battery, when there are any.
     @ViewBuilder private var accessoriesSection: some View {

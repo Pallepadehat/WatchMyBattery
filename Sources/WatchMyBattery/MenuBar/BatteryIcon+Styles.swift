@@ -44,8 +44,12 @@ extension BatteryIcon {
             }
         }
 
-        if let chargeGlint, chargeState == .charging {
-            drawRingGlint(at: chargeGlint, center: center, color: palette.charge, context: context)
+        if let animationPhase {
+            switch chargeState {
+            case .charging: drawRingGlint(at: animationPhase, center: center, color: palette.charge, context: context)
+            case .notCharging: drawRingBreath(at: animationPhase, center: center, color: palette.charge)
+            case .charged, .discharging: break
+            }
         }
 
         switch chargeState {
@@ -93,6 +97,25 @@ extension BatteryIcon {
         glow.lineCapStyle = .round
         color.withAlphaComponent(0.65 * glint.flash).setStroke()
         glow.stroke()
+    }
+
+    /// Holding its charge: the end of the charge glows softly, swelling and fading, like the battery's breath.
+    private func drawRingBreath(at phase: Double, center: CGPoint, color: NSColor) {
+        let strength = RestingBreath.strength(at: phase)
+        let length = Double(Self.ringLength)
+        let end = ChargingGlint.fillWidth(bodyWidth: length, level: level)
+        // Brightest at the end of the charge, fading either side of it.
+        let reach = 3 + 2 * strength
+        let segments = 8
+        for index in 0..<segments {
+            let from = end - reach + 2 * reach * Double(index) / Double(segments)
+            let to = from + 2 * reach / Double(segments)
+            let brightness = sin(.pi * (Double(index) + 0.5) / Double(segments))
+            color.withAlphaComponent(0.7 * brightness * strength).setStroke()
+            let piece = arc(around: center, from: from, to: to)
+            piece.lineCapStyle = .butt
+            piece.stroke()
+        }
     }
 
     /// An arc of the ring between two distances along it, in points, measured clockwise from the top.

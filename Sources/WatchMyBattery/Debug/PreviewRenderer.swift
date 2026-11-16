@@ -269,15 +269,17 @@
             let toFull = BatterySnapshot(percentage: 45, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 3600)
             // Charging to 80%: the glint settles at the target instead of running on to the terminal.
             let toTarget = BatterySnapshot(percentage: 45, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 3600, chargeTarget: 80)
+            // Plugged in and held at 80%: the resting breath, instead of a sweep.
+            let holding = BatterySnapshot(percentage: 80, powerSource: .powerAdapter, chargeState: .notCharging, timeRemaining: nil, chargeTarget: 80)
             for (style, inside, usesColor, charging) in [
                 (MenuBarIconStyle.battery, false, true, toFull), (.battery, false, false, toFull), (.battery, true, true, toFull),
                 (.battery, true, false, toFull), (.battery, false, true, toTarget), (.ring, false, true, toFull), (.ring, false, false, toFull),
-                (.ring, false, true, toTarget),
+                (.ring, false, true, toTarget), (.battery, false, true, holding), (.battery, false, false, holding), (.ring, false, false, holding),
             ] {
                 for dark in [true, false] {
                     let frames = stride(from: 0, to: ChargingAnimator.framesPerSweep, by: 3).map { frame in
                         var icon = BatteryIcon(snapshot: charging, style: style, showsPercentageInside: inside, usesColor: usesColor)
-                        icon.chargeGlint = Double(frame) / Double(ChargingAnimator.framesPerSweep - 1)
+                        icon.animationPhase = Double(frame) / Double(ChargingAnimator.framesPerSweep - 1)
                         icon.drawsForDarkBar = dark
                         return icon.image()
                     }

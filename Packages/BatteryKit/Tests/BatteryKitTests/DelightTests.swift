@@ -103,6 +103,38 @@ import Testing
         #expect(ChargingNote.evaluate(snapshot: .noBattery, adapter: PowerAdapter(watts: 30), systemWatts: 40, readings: nil) == nil)
     }
 
+    // MARK: - Resting
+
+    @Test func theRestingBreathEasesInAndOut() {
+        #expect(RestingBreath.strength(at: 0) == 0)
+        #expect(RestingBreath.strength(at: 1) < 0.0001)
+        #expect(abs(RestingBreath.strength(at: 0.5) - 1) < 0.0001)
+        // Gentle at the edges: a quarter of the way in, it's only half as bright.
+        #expect(abs(RestingBreath.strength(at: 0.25) - 0.5) < 0.0001)
+        let phases = RestingBreath.phases
+        #expect(phases == phases.sorted())
+        #expect(!phases.contains(0) && !phases.contains(1))
+        // Fewer frames, less often, than the charging glint.
+        let restingRate = Double(phases.count) / (RestingBreath.duration + RestingBreath.rest)
+        #expect(restingRate < Double(ChargingGlint.maximumFrames) / ChargingGlint.sweepDuration / 4)
+    }
+
+    // MARK: - An app's processes
+
+    @Test func helpersDropTheAppsName() {
+        func short(_ name: String, in app: String) -> String {
+            ProcessEnergy(pid: 1, name: name, watts: 0, isApp: false).shortName(inApp: app)
+        }
+        #expect(short("T3 Code (Nightly) Helper (Renderer)", in: "T3 Code (Nightly)") == "Helper (Renderer)")
+        #expect(short("Google Chrome Helper (GPU)", in: "Google Chrome") == "Helper (GPU)")
+        #expect(short("Xcode-Helper", in: "Xcode") == "Helper")
+        // The app itself, another name, and a name that only starts like the app's keep theirs.
+        #expect(short("T3 Code (Nightly)", in: "T3 Code (Nightly)") == "T3 Code (Nightly)")
+        #expect(short("cloudflared", in: "T3 Code (Nightly)") == "cloudflared")
+        #expect(short("SafariBookmarksSyncAgent", in: "Safari") == "SafariBookmarksSyncAgent")
+        #expect(short("Safari", in: "") == "Safari")
+    }
+
     // MARK: - The chime
 
     @Test func theChimeFollowsPluggingInAndUnplugging() {
