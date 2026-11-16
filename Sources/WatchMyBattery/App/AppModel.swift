@@ -17,6 +17,8 @@ final class AppModel {
     let accessories = AccessoryMonitor()
     let chargeLimit = ChargeLimit()
     let sleep = SleepMonitor()
+    let powerDraw = PowerDrawMonitor()
+    let chime = ChargingChime()
 
     init(settings: AppSettings = AppSettings(), history: HistoryRecorder? = nil) {
         self.settings = settings
@@ -58,6 +60,7 @@ final class AppModel {
         battery.start()
         updater.start()
         notifier.start(model: self)
+        chime.start(model: self)
         history.start(model: self)
         insights.start(model: self)
         accessories.onArrival = { [weak self] accessory in
@@ -172,6 +175,13 @@ final class AppModel {
         CFPreferencesSynchronize(domain, kCFPreferencesCurrentUser, kCFPreferencesCurrentHost)
         let value = CFPreferencesCopyValue(ControlCenterBattery.key as CFString, domain, kCFPreferencesCurrentUser, kCFPreferencesCurrentHost)
         return ControlCenterBattery.isShownInMenuBar(flags: value as? Int)
+    }
+
+    /// Why charging is paused or slow, when the panel can tell. It needs the panel's measurements (the Mac's power
+    /// draw and the battery's readings), so it's only known while the panel is open.
+    var chargingNote: ChargingNote? {
+        ChargingNote.evaluate(
+            snapshot: battery.snapshot, adapter: battery.adapter, systemWatts: usage.systemWatts, readings: battery.readings)
     }
 
     /// The numbers behind the panel's estimates, for the current moment.

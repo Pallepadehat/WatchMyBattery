@@ -12,8 +12,10 @@ final class BatteryMonitor {
     private(set) var snapshot = PowerSourceReader.read()
     /// Condition, maximum capacity and cycle count; `nil` until first read, or on Macs without a battery.
     private(set) var health: BatteryHealth?
-    /// Temperature, voltage and current: read only while the panel shows them.
+    /// Temperature, voltage and current: read only while the panel is open.
     private(set) var readings: BatteryReadings?
+    /// The charger, while one is connected. Read with the power source, which macOS announces whenever it changes.
+    private(set) var adapter: PowerAdapter?
 
     /// The charge limit macOS holds the battery to, when one is set (see ``ChargeLimit``).
     var chargeLimit: Int? {
@@ -50,17 +52,21 @@ final class BatteryMonitor {
 
     func refresh() {
         var next = PowerSourceReader.read().limited(to: chargeLimit)
+        var nextAdapter = next.isPluggedIn && next.hasBattery ? PowerAdapterReader.read() : nil
         // `--pretend-charging` shows the battery charging, to see the charging animation on a full battery.
         if LaunchOptions.pretendsCharging {
             next = BatterySnapshot(
                 percentage: 62, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 48 * 60,
                 isLowPowerModeOn: next.isLowPowerModeOn)
+            nextAdapter = PowerAdapter(watts: 70, name: "70W USB-C Power Adapter")
         }
         // Only publish real changes, so views and the menu bar icon don't redraw for nothing.
         if next != snapshot { snapshot = next }
+        if nextAdapter != adapter { adapter = nextAdapter }
     }
 
-    /// Reads the temperature, voltage and current: a handful of registry reads, done while the panel's open.
+    /// Reads the temperature, voltage and current: a handful of registry reads, done every few seconds while the panel's
+    /// open, for its readings and to tell why charging is paused.
     func refreshReadings() {
         guard snapshot.hasBattery else { return }
         let next = readingsReader.read()
@@ -83,10 +89,13 @@ final class BatteryMonitor {
 
     #if DEBUG
         /// Shows a made-up state, for previews.
-        func preview(_ snapshot: BatterySnapshot, health: BatteryHealth? = nil, readings: BatteryReadings? = nil) {
+        func preview(
+            _ snapshot: BatterySnapshot, health: BatteryHealth? = nil, readings: BatteryReadings? = nil, adapter: PowerAdapter? = nil
+        ) {
             self.snapshot = snapshot
             self.health = health
             self.readings = readings
+            self.adapter = adapter
             healthReadAt = Date()
         }
     #endif

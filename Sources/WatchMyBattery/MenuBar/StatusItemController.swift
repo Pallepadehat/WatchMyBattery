@@ -11,7 +11,7 @@ final class StatusItemController: NSObject {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private lazy var panel = BatteryPanelController(model: model, statusItem: statusItem)
     private var drawnIcon: BatteryIcon?
-    private var drawnTitle: String?
+    private var drawnTitle: NSAttributedString?
     /// The icon as the battery and settings would have it, before any animation.
     private var currentIcon: BatteryIcon?
     private let chargingAnimator = ChargingAnimator()
@@ -99,20 +99,36 @@ final class StatusItemController: NSObject {
 
     private func updateButton() {
         guard let button = statusItem.button else { return }
+        let settings = model.settings
         let snapshot = model.battery.snapshot
-        let icon = BatteryIcon(snapshot: snapshot, settings: model.settings)
+        let label = settings.effectiveMenuBarLabel
+        // The power draw is the one thing read on a timer: only while it's shown, and someone could see it.
+        model.powerDraw.setActive(label == .powerDraw && !isOutOfSight)
+
+        let icon = BatteryIcon(snapshot: snapshot, settings: settings)
         currentIcon = icon
-        let animates = model.settings.showsChargingAnimation && snapshot.chargeState == .charging && !snapshot.isLowPowerModeOn
+        let animates =
+            settings.showsChargingAnimation && icon.style != .textOnly && snapshot.chargeState == .charging && !snapshot.isLowPowerModeOn
         updateAnimation(wanted: animates, level: snapshot.level, target: Double(snapshot.chargeTarget) / 100)
         if !chargingAnimator.isRunning { drawIcon(glint: nil) }
 
-        let title = model.settings.percentageStyle == .beside ? snapshot.percentage.formatted(.percent) : ""
+        let readout = MenuBarReadout(label: label, snapshot: snapshot, watts: model.powerDraw.watts)
+        let title = Self.title(for: readout, icon: icon)
         if title != drawnTitle {
-            button.attributedTitle = NSAttributedString(
-                string: title.isEmpty ? "" : title + " ",
-                attributes: [.font: NSFont.menuBarFont(ofSize: 0).monospacedDigits])
+            button.attributedTitle = title
+            // Text only puts its bolt in front of the text; otherwise the text leads, as macOS's own battery has it.
+            button.imagePosition = icon.style == .textOnly ? .imageLeft : .imageRight
             drawnTitle = title
         }
+    }
+
+    /// The text beside the icon, spaced from it, in red when it's all there is to say the battery is low.
+    private static func title(for readout: MenuBarReadout?, icon: BatteryIcon) -> NSAttributedString {
+        guard let text = readout?.text else { return NSAttributedString() }
+        var attributes: [NSAttributedString.Key: Any] = [.font: NSFont.menuBarFont(ofSize: 0).monospacedDigits]
+        if icon.style == .textOnly, icon.accent == .low { attributes[.foregroundColor] = NSColor.systemRed }
+        let spaced = icon.isEmpty ? text : icon.style == .textOnly ? " " + text : text + " "
+        return NSAttributedString(string: spaced, attributes: attributes)
     }
 }
 
@@ -125,7 +141,7 @@ extension StatusItemController {
         guard let button = statusItem.button, var icon = currentIcon else { return }
         icon.chargeGlint = glint
         guard icon != drawnIcon else { return }
-        button.image = image(for: icon)
+        button.image = icon.isEmpty ? nil : image(for: icon)
         if icon.percentage != drawnIcon?.percentage || icon.chargeState != drawnIcon?.chargeState {
             button.setAccessibilityLabel(icon.accessibilityLabel)
         }

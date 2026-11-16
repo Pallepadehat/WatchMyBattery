@@ -55,6 +55,12 @@ public enum ChargingNote: Sendable, Equatable {
         }
     }
 
+    /// Not a problem: just how macOS charges.
+    public var isResting: Bool {
+        if case .restingNearTarget = self { return true }
+        return false
+    }
+
     // MARK: - Thresholds
 
     /// The Mac drawing this share of the charger's watts leaves nothing for the battery. Not the whole of it: a

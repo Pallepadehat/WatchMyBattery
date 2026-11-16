@@ -2,12 +2,9 @@ import BatteryKit
 import SwiftUI
 
 /// "Temperature  30 °C" and "Voltage & Current  12.41 V · 1.12 A out": the battery controller's readings, as two of
-/// the panel's detail rows. Read every five seconds while the panel is open (they change slowly), and not at all
-/// otherwise.
+/// the panel's detail rows. The panel reads them every few seconds while it's open (see ``BatteryReadingsRefresh``).
 struct BatteryReadingsRows: View {
     let battery: BatteryMonitor
-    /// The panel is on screen; reading stops when it isn't.
-    let isVisible: Bool
     let usesColor: Bool
     let rowHeight: CGFloat
 
@@ -23,13 +20,6 @@ struct BatteryReadingsRows: View {
                 Text(electrical(readings))
             }
             .help(electricalHelp(readings))
-        }
-        .task(id: isVisible) {
-            guard isVisible else { return }
-            while !Task.isCancelled {
-                battery.refreshReadings()
-                try? await Task.sleep(for: .seconds(5), tolerance: .seconds(1))
-            }
         }
     }
 
@@ -51,8 +41,12 @@ struct BatteryReadingsRows: View {
     // MARK: - Temperature
 
     private func temperature(_ readings: BatteryReadings) -> String {
-        guard let celsius = readings.temperature else { return "–" }
-        return Measurement(value: celsius, unit: UnitTemperature.celsius)
+        readings.temperature.map(Self.format(temperature:)) ?? "–"
+    }
+
+    /// `30 °C`, or in Fahrenheit where that's what's used.
+    static func format(temperature celsius: Double) -> String {
+        Measurement(value: celsius, unit: UnitTemperature.celsius)
             .formatted(.measurement(width: .narrow, usage: .weather, numberFormatStyle: .number.precision(.fractionLength(0))))
     }
 
@@ -91,5 +85,22 @@ struct BatteryReadingsRows: View {
         let formatted = abs(watts).formatted(.number.precision(.fractionLength(1)))
         return watts > 0
             ? String(localized: "\(formatted) W going into the battery.") : String(localized: "\(formatted) W coming out of the battery.")
+    }
+}
+
+/// Reads the battery's temperature, voltage and current every five seconds while `isActive` (they change slowly), and
+/// not at all otherwise: for the readings rows, and for telling why charging is paused.
+struct BatteryReadingsRefresh: ViewModifier {
+    let battery: BatteryMonitor
+    let isActive: Bool
+
+    func body(content: Content) -> some View {
+        content.task(id: isActive) {
+            guard isActive else { return }
+            while !Task.isCancelled {
+                battery.refreshReadings()
+                try? await Task.sleep(for: .seconds(5), tolerance: .seconds(1))
+            }
+        }
     }
 }

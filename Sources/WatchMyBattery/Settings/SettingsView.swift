@@ -187,10 +187,35 @@ private struct MenuBarPane: View {
         @Bindable var settings = model.settings
         Form {
             Section {
-                PercentageStylePicker(snapshot: model.battery.snapshot, settings: settings)
+                MenuBarStylePicker(snapshot: model.battery.snapshot, settings: settings, watts: model.powerDraw.watts)
                     .listRowInsets(EdgeInsets(top: 14, leading: 14, bottom: 14, trailing: 14))
+                Picker(selection: $settings.menuBarLabel) {
+                    ForEach(MenuBarLabel.allCases) { label in
+                        // Text only always shows some text, so "Nothing" isn't a choice there.
+                        if label != .none || settings.menuBarIconStyle != .textOnly {
+                            Text(label.title).tag(label)
+                        }
+                    }
+                } label: {
+                    SettingLabel(settings.menuBarIconStyle == .textOnly ? "Text" : "Beside the Icon", symbol: "textformat", color: .blue) {
+                        Text(labelSubtitle(settings.effectiveMenuBarLabel))
+                    }
+                }
+                if settings.menuBarIconStyle == .battery {
+                    Toggle(isOn: $settings.showsPercentageInside) {
+                        SettingLabel("Percentage Inside the Battery", symbol: SettingIcon.batteryWithNumber, color: .green) {
+                            Text("Printed in the battery, cut out of the charge so it reads on any wallpaper.")
+                        }
+                    }
+                    .transition(.opacity)
+                }
             } header: {
-                Text("Percentage")
+                Text("Style")
+            }
+            .animation(.snappy, value: settings.menuBarIconStyle)
+            .onChange(of: settings.menuBarIconStyle) { _, style in
+                // "Nothing" isn't offered with text only; keep the picker on what it shows.
+                if style == .textOnly, settings.menuBarLabel == .none { settings.menuBarLabel = .percentage }
             }
             Section {
                 Toggle(isOn: $settings.usesColor) {
@@ -222,6 +247,15 @@ private struct MenuBarPane: View {
             } header: {
                 Text("Panel")
             }
+        }
+    }
+
+    private func labelSubtitle(_ label: MenuBarLabel) -> LocalizedStringKey {
+        switch label {
+        case .none: "Just the icon."
+        case .percentage: "How charged the battery is."
+        case .timeRemaining: "Until empty, or until full while charging. The percentage when there's no time to show."
+        case .powerDraw: "What the whole Mac draws right now, read every few seconds while it's shown."
         }
     }
 }
@@ -836,61 +870,68 @@ private struct HistoryRows: View {
     }
 }
 
-// MARK: - Percentage style
+// MARK: - Menu bar style
 
-/// Three menu bars side by side, one per percentage style; click one to choose it.
-private struct PercentageStylePicker: View {
+/// Three menu bars side by side, one per icon style, each with the text you chose; click one to choose it.
+private struct MenuBarStylePicker: View {
     let snapshot: BatterySnapshot
     @Bindable var settings: AppSettings
+    let watts: Double?
     @State private var wallpaper = Wallpaper()
 
     var body: some View {
         HStack(spacing: 12) {
-            ForEach(PercentageStyle.allCases) { style in
+            ForEach(MenuBarIconStyle.allCases) { style in
                 Button {
-                    withAnimation(.snappy) { settings.percentageStyle = style }
+                    withAnimation(.snappy) { settings.menuBarIconStyle = style }
                 } label: {
                     VStack(spacing: 8) {
-                        MenuBarSample(snapshot: snapshot, settings: settings, style: style, wallpaper: wallpaper)
+                        MenuBarSample(snapshot: snapshot, settings: settings, style: style, watts: watts, wallpaper: wallpaper)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 9, style: .continuous)
-                                    .strokeBorder(Color.accentColor, lineWidth: settings.percentageStyle == style ? 2.5 : 0)
+                                    .strokeBorder(Color.accentColor, lineWidth: settings.menuBarIconStyle == style ? 2.5 : 0)
                                     .padding(-3)
                             )
                         Text(style.title)
                             .font(.caption)
-                            .foregroundStyle(settings.percentageStyle == style ? .primary : .secondary)
+                            .foregroundStyle(settings.menuBarIconStyle == style ? .primary : .secondary)
                     }
                     .frame(maxWidth: .infinity)
                     .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
-                .accessibilityAddTraits(settings.percentageStyle == style ? .isSelected : [])
+                .accessibilityAddTraits(settings.menuBarIconStyle == style ? .isSelected : [])
             }
         }
         .task { await wallpaper.load() }
     }
 }
 
-/// A slice of menu bar over your own desktop picture, showing the battery in one style.
+/// A slice of menu bar over your own desktop picture, showing the battery in one style, laid out as the menu bar
+/// lays it out.
 private struct MenuBarSample: View {
     let snapshot: BatterySnapshot
     let settings: AppSettings
-    let style: PercentageStyle
+    let style: MenuBarIconStyle
+    let watts: Double?
     let wallpaper: Wallpaper
 
     var body: some View {
-        let icon = BatteryIcon(
-            snapshot: snapshot, percentageStyle: style, usesColor: settings.usesColor, drawsForDarkBar: wallpaper.isDark
-        ).image()
+        let battery = BatteryIcon(
+            snapshot: snapshot, style: style, showsPercentageInside: settings.showsPercentageInside, usesColor: settings.usesColor,
+            drawsForDarkBar: wallpaper.isDark)
+        let icon = battery.isEmpty ? nil : battery.image()
+        let text = MenuBarReadout(label: style.shownLabel(settings.menuBarLabel), snapshot: snapshot, watts: watts)?.text
         HStack(spacing: 4) {
-            if style == .beside {
-                Text(snapshot.level, format: .percent.precision(.fractionLength(0)))
+            if style == .textOnly, let icon { image(icon) }
+            if let text {
+                Text(text)
                     .font(.system(size: 12))
                     .monospacedDigit()
+                    .foregroundStyle(style == .textOnly && battery.accent == .low ? Color.red : Color.primary)
+                    .contentTransition(.numericText())
             }
-            Image(nsImage: icon)
-                .renderingMode(icon.isTemplate ? .template : .original)
+            if style != .textOnly, let icon { image(icon) }
         }
         .foregroundStyle(wallpaper.isDark ? Color.white : Color.black)
         .frame(maxWidth: .infinity)
@@ -906,5 +947,10 @@ private struct MenuBarSample: View {
         }
         .clipShape(.rect(cornerRadius: 8, style: .continuous))
         .environment(\.colorScheme, wallpaper.isDark ? .dark : .light)
+    }
+
+    private func image(_ icon: NSImage) -> some View {
+        Image(nsImage: icon)
+            .renderingMode(icon.isTemplate ? .template : .original)
     }
 }

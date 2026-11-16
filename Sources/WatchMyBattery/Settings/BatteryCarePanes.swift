@@ -61,6 +61,12 @@ struct ChargingPane: View {
             }
 
             Section {
+                ChargingChimeRows(settings: settings, chime: model.chime)
+            } header: {
+                Text("Sound")
+            }
+
+            Section {
                 Toggle(isOn: $settings.showsChargeLimit) {
                     SettingLabel("Show in the Panel", symbol: "menubar.rectangle", color: .gray) {
                         Text("Change the limit right from the menu bar.")
@@ -81,6 +87,61 @@ struct ChargingPane: View {
 
     static func percent(_ level: Int) -> String {
         (Double(level) / 100).formatted(.percent.precision(.fractionLength(0)))
+    }
+}
+
+/// The charging chime: on or off, when it plays, and which sound, with a button to hear it.
+private struct ChargingChimeRows: View {
+    @Bindable var settings: AppSettings
+    let chime: ChargingChime
+
+    var body: some View {
+        Toggle(isOn: $settings.playsChargingChime) {
+            SettingLabel("Chime When Charging Starts or Stops", symbol: "speaker.wave.2.fill", color: .pink) {
+                Text("A soft sound as you plug in or unplug, so you know without looking.")
+            }
+        }
+        if settings.playsChargingChime {
+            Picker(selection: $settings.chimeMoments) {
+                ForEach(ChimeMoments.allCases) { moments in
+                    Text(moments.title).tag(moments)
+                }
+            } label: {
+                SettingLabel("Play When", symbol: "powerplug.fill", color: .gray) {
+                    Text("Most MacBooks already chime when you plug in.")
+                }
+            }
+            LabeledContent {
+                HStack(spacing: 8) {
+                    Picker("Sound", selection: $settings.chimeSound) {
+                        ForEach(ChimeSound.allCases) { sound in
+                            Text(sound.title).tag(sound)
+                        }
+                    }
+                    .labelsHidden()
+                    .fixedSize()
+                    Button {
+                        preview()
+                    } label: {
+                        Image(systemName: "play.fill")
+                    }
+                    .help("Play the sound")
+                    .accessibilityLabel("Play the sound")
+                }
+            } label: {
+                SettingLabel("Sound", symbol: "music.note", color: .pink) {
+                    if settings.chimeSound == .watchMyBattery {
+                        Text("Two notes, rising as you plug in and falling as you unplug.")
+                    }
+                }
+            }
+            .onChange(of: settings.chimeSound) { preview() }
+        }
+    }
+
+    /// Plays the chime as you'll hear it: plugging in, or unplugging when that's the only time it plays.
+    private func preview() {
+        chime.play(settings.chimeMoments == .unpluggingOnly ? .unplugged : .pluggedIn, sound: settings.chimeSound)
     }
 }
 

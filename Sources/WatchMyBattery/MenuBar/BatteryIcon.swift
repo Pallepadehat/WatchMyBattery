@@ -1,13 +1,15 @@
 import AppKit
 import BatteryKit
 
-/// Draws the battery that sits in the menu bar.
+/// Draws the battery that sits in the menu bar, in one of its styles.
 ///
-/// It looks like the built-in one: a solid rounded pill with a little
+/// The battery looks like the built-in one: a solid rounded pill with a little
 /// terminal, bright as far as the battery is charged and translucent beyond,
 /// with a bolt cut out of it while charging. It can also print the percentage
-/// inside, cut out the same way, so it stays readable on any wallpaper.
+/// inside, cut out the same way, so it stays readable on any wallpaper. The
+/// ring and the text-only style are drawn in `BatteryIcon+Styles.swift`.
 struct BatteryIcon: Hashable {
+    var style: MenuBarIconStyle
     var level: Double
     var percentage: Int
     var chargeState: BatterySnapshot.ChargeState
@@ -23,15 +25,22 @@ struct BatteryIcon: Hashable {
     var drawsForDarkBar: Bool?
 
     init(snapshot: BatterySnapshot, settings: AppSettings) {
-        self.init(snapshot: snapshot, percentageStyle: settings.percentageStyle, usesColor: settings.usesColor)
+        self.init(
+            snapshot: snapshot, style: settings.menuBarIconStyle, showsPercentageInside: settings.showsPercentageInside,
+            usesColor: settings.usesColor)
     }
 
-    init(snapshot: BatterySnapshot, percentageStyle: PercentageStyle, usesColor: Bool, drawsForDarkBar: Bool? = nil) {
+    init(
+        snapshot: BatterySnapshot, style: MenuBarIconStyle = .battery, showsPercentageInside: Bool = false, usesColor: Bool,
+        drawsForDarkBar: Bool? = nil
+    ) {
+        self.style = style
         self.drawsForDarkBar = drawsForDarkBar
         level = snapshot.level
         percentage = snapshot.percentage
         chargeState = snapshot.chargeState
-        showsPercentageInside = percentageStyle == .inside
+        // Only the battery has room for it.
+        self.showsPercentageInside = style == .battery && showsPercentageInside
         self.usesColor = usesColor
         isLowPowerModeOn = snapshot.isLowPowerModeOn
         chargeTarget = Double(snapshot.chargeTarget) / 100
@@ -47,15 +56,30 @@ struct BatteryIcon: Hashable {
     private var bodySize: CGSize { CGSize(width: Self.bodyWidth, height: 12) }
     private static let terminalSize = CGSize(width: 1.5, height: 4)
     private static let terminalGap: CGFloat = 1
-    private static let imageHeight: CGFloat = 16
+    static let imageHeight: CGFloat = 16
+
+    /// How wide the image is, for each style.
+    private var imageWidth: CGFloat {
+        switch style {
+        case .battery: ceil(bodySize.width + Self.terminalGap + Self.terminalSize.width)
+        case .ring: Self.ringSize
+        case .textOnly: hasStateGlyph ? Self.glyphWidth : 0
+        }
+    }
+
+    /// Text only, with nothing to add to the text: no image at all.
+    var isEmpty: Bool { imageWidth == 0 }
+
+    /// Charging shows a bolt, and holding its charge a plug.
+    var hasStateGlyph: Bool { chargeState == .charging || chargeState == .notCharging }
 
     // MARK: Colours
 
-    private enum Accent {
+    enum Accent {
         case none, charging, lowPower, low
     }
 
-    private var accent: Accent {
+    var accent: Accent {
         guard usesColor else { return .none }
         if chargeState == .charging { return .charging }
         if isLowPowerModeOn { return .lowPower }
@@ -63,7 +87,7 @@ struct BatteryIcon: Hashable {
         return .none
     }
 
-    private static func color(for accent: Accent) -> NSColor? {
+    static func color(for accent: Accent) -> NSColor? {
         switch accent {
         case .none: nil
         case .charging: .systemGreen
@@ -78,11 +102,16 @@ struct BatteryIcon: Hashable {
     /// light and dark wallpapers itself. A coloured one draws its own outline
     /// in the label colour, which resolves against the menu bar's appearance.
     func image() -> NSImage {
-        let body = bodySize
-        let size = CGSize(width: ceil(body.width + Self.terminalGap + Self.terminalSize.width), height: Self.imageHeight)
+        let size = CGSize(width: max(imageWidth, 1), height: Self.imageHeight)
         let accentColor = Self.color(for: accent)
         let image = NSImage(size: size, flipped: false) { _ in
-            draw(in: size, accentColor: accentColor)
+            guard let context = NSGraphicsContext.current?.cgContext else { return false }
+            let palette = Palette(accent: accentColor, drawsForDarkBar: drawsForDarkBar)
+            switch style {
+            case .battery: drawBattery(in: size, palette: palette, context: context)
+            case .ring: drawRing(in: size, palette: palette, context: context)
+            case .textOnly: drawStateGlyph(in: size, palette: palette)
+            }
             return true
         }
         image.isTemplate = accentColor == nil
@@ -90,12 +119,32 @@ struct BatteryIcon: Hashable {
         return image
     }
 
-    private func draw(in size: CGSize, accentColor: NSColor?) {
-        guard let context = NSGraphicsContext.current?.cgContext else { return }
-        // A template only needs alpha; a coloured icon picks white or black for the menu bar it's drawn in.
-        let isDarkBar = drawsForDarkBar ?? (NSAppearance.currentDrawing().bestMatch(from: [.aqua, .darkAqua]) == .darkAqua)
-        let foreground: NSColor = accentColor == nil || !isDarkBar ? .black : .white
-        let empty = foreground.withAlphaComponent(Self.emptyOpacity)
+    /// The colours one image is drawn in.
+    struct Palette {
+        /// The state's colour, or `nil` for a monochrome (template) icon.
+        let accent: NSColor?
+        /// The outline and anything not in the accent: black in a template, which the menu bar tints itself; in a
+        /// coloured icon, white or black for the menu bar it's drawn in.
+        let foreground: NSColor
+
+        init(accent: NSColor?, drawsForDarkBar: Bool?) {
+            self.accent = accent
+            let isDarkBar = drawsForDarkBar ?? (NSAppearance.currentDrawing().bestMatch(from: [.aqua, .darkAqua]) == .darkAqua)
+            foreground = accent == nil || !isDarkBar ? .black : .white
+        }
+
+        /// The charge: the accent, or the foreground when there's none.
+        var charge: NSColor { accent ?? foreground }
+        /// The drained part, translucent like the built-in icon's.
+        var empty: NSColor { foreground.withAlphaComponent(BatteryIcon.emptyOpacity) }
+        /// A glyph over the drained part, where it should stand out.
+        var solid: NSColor { accent == nil ? .black : foreground }
+    }
+
+    private func drawBattery(in size: CGSize, palette: Palette, context: CGContext) {
+        let accentColor = palette.accent
+        let foreground = palette.foreground
+        let empty = palette.empty
         let body = CGRect(
             x: 0, y: ((size.height - bodySize.height) / 2).rounded(), width: bodySize.width, height: bodySize.height)
         let bodyPath = NSBezierPath(roundedRect: body, xRadius: bodySize.height * 0.38, yRadius: bodySize.height * 0.38)
@@ -126,7 +175,7 @@ struct BatteryIcon: Hashable {
         // The percentage or a symbol on top: cut out of the charge, so the menu
         // bar shows through, and solid over the empty part. A glyph that sits
         // across the edge of the charge still reads as one clear shape.
-        let solid = accentColor == nil ? NSColor.black : foreground
+        let solid = palette.solid
         if showsPercentageInside {
             let text = percentageText()
             let size = text.size()
@@ -137,13 +186,13 @@ struct BatteryIcon: Hashable {
                 colored.draw(at: origin)
             }
         } else if chargeState == .charging {
-            let bolt = boltPath(in: body)
+            let bolt = Self.boltPath(height: body.height + 3, center: CGPoint(x: body.midX, y: body.midY))
             stamp(body: body, fill: fill, solid: solid, context: context) { color in
                 color.setFill()
                 bolt.fill()
             }
         } else if chargeState == .notCharging {
-            let plug = plugPath(in: body)
+            let plug = Self.plugPath(center: CGPoint(x: body.midX, y: body.midY))
             stamp(body: body, fill: fill, solid: solid, context: context) { color in
                 color.setFill()
                 plug.fill()
@@ -229,7 +278,7 @@ struct BatteryIcon: Hashable {
     }
 
     /// How strongly the drained part of the pill shows, like the built-in icon.
-    private static let emptyOpacity: CGFloat = 0.4
+    static let emptyOpacity: CGFloat = 0.4
 
     private func percentageText() -> NSAttributedString {
         let font = percentage >= 100 ? Self.smallDigits : Self.digits
@@ -250,11 +299,11 @@ struct BatteryIcon: Hashable {
         return path
     }
 
-    private func boltPath(in body: CGRect) -> NSBezierPath {
-        let height = body.height + 3
+    /// A lightning bolt `height` points tall.
+    static func boltPath(height: CGFloat, center: CGPoint) -> NSBezierPath {
         let width = height * 0.6
-        let x = body.midX - width / 2
-        let y = body.midY - height / 2
+        let x = center.x - width / 2
+        let y = center.y - height / 2
         let points: [(CGFloat, CGFloat)] = [
             (0.62, 1), (0.08, 0.42), (0.47, 0.42), (0.38, 0), (0.92, 0.58), (0.53, 0.58),
         ]
@@ -267,8 +316,8 @@ struct BatteryIcon: Hashable {
         return path
     }
 
-    private func plugPath(in body: CGRect) -> NSBezierPath {
-        let center = CGPoint(x: body.midX, y: body.midY)
+    /// A plug: plugged in, but holding its charge.
+    static func plugPath(center: CGPoint) -> NSBezierPath {
         let path = NSBezierPath(
             roundedRect: CGRect(x: center.x - 3, y: center.y - 2.5, width: 6, height: 4.5), xRadius: 1.5, yRadius: 1.5)
         path.append(NSBezierPath(rect: CGRect(x: center.x - 2, y: center.y + 2, width: 1, height: 2.5)))

@@ -1,13 +1,15 @@
 import Foundation
 
 /// The text the menu bar can show next to the icon.
-public enum MenuBarLabel: String, CaseIterable, Sendable {
+public enum MenuBarLabel: String, CaseIterable, Identifiable, Sendable {
     case none
     case percentage
     /// Time until empty on battery, or until full while charging.
     case timeRemaining
     /// The whole Mac's power draw, in watts.
     case powerDraw
+
+    public var id: Self { self }
 }
 
 /// What the menu bar's text says right now, for a ``MenuBarLabel``.
