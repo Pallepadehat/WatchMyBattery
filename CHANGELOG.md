@@ -37,6 +37,10 @@ Delight: a menu bar that shows what you want, a charger that explains itself, an
 ### Changed
 
 - Settings › Menu Bar is laid out around the style: pick one of three, then what goes beside it, and whether the battery prints the percentage inside. Your choice from 0.3 comes along: inside stays inside, and beside becomes the percentage beside the icon.
+- 🧘 **A calmer panel.** Insight cards share one quiet background, their colour kept to the icon; the history's time on battery is a soft grey, so time plugged in and running low stand out; and Display & System's cost under the battery is easier to read.
+- The battery's temperature turns orange from 38 °C rather than 35 °C, as about 35 °C is ordinary while charging. Voltage & Current shows 0.00 A when nothing flows.
+- In Low Power Mode, the percentage inside the yellow battery is black, as macOS's own is, so it can be read.
+- A long AirPods model name gets a second line in the AirPods card instead of being cut off.
 - The panel reads the battery's temperature and current while it's open and the Mac is plugged in, even with the readings rows turned off, to tell why charging is paused. As before, nothing is read while it's closed.
 
 ## [0.3.3] - 2026-11-16
