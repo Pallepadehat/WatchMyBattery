@@ -105,47 +105,19 @@ import Testing
 
     // MARK: - Resting
 
-    @Test func theRestingShimmerCrossesTheChargeThenGlowsAtItsEdge() {
-        let fill = 18.0
-        let start = RestingShimmer.frame(at: 0, fillWidth: fill)
-        let middle = RestingShimmer.frame(at: 0.35, fillWidth: fill)
-        let arrived = RestingShimmer.frame(at: 0.7, fillWidth: fill)
-        let end = RestingShimmer.frame(at: 1, fillWidth: fill)
-        // It enters from the left, crosses, and leaves past the edge.
-        #expect(start.center < 0 && start.strength == 0)
-        #expect(abs(middle.center - fill / 2) < 0.001 && middle.strength > 0.99)
-        #expect(arrived.center > fill && arrived.strength < 0.001)
-        // The edge lights up as it arrives, and is dark again at the end.
-        #expect(start.glow == 0 && middle.glow == 0)
-        #expect(RestingShimmer.frame(at: 0.75, fillWidth: fill).glow > 0.99)
-        #expect(end.glow < 0.001)
-        // Moving steadily forward, frame by frame.
-        let centers = RestingShimmer.phases.map { RestingShimmer.frame(at: $0, fillWidth: fill).center }
-        #expect(zip(centers, centers.dropFirst()).allSatisfy { $0 <= $1 })
-        // Lighter than the charging glint.
-        let restingRate = Double(RestingShimmer.phases.count) / (RestingShimmer.duration + RestingShimmer.rest)
-        let chargingRate = Double(ChargingGlint.maximumFrames) / (ChargingGlint.sweepDuration + 1.9)
-        #expect(restingRate < chargingRate)
-    }
-
-    @Test func theTrickleDripGathersThenFallsIn() {
-        let gathering = TrickleDrip.frame(at: 0.25)
-        let full = TrickleDrip.frame(at: 0.5)
-        let fallen = TrickleDrip.frame(at: 1)
-        // Outside the edge while it gathers and swells, inside once it has fallen.
-        #expect(gathering.offset > 0 && full.offset > 0 && fallen.offset < 0)
-        #expect(full.size > gathering.size && full.strength > 0.99)
-        #expect(fallen.strength < 0.001 && fallen.glow < 0.001)
-        #expect(TrickleDrip.frame(at: 0.75).glow > 0.99)
-        #expect(TrickleDrip.frame(at: 0).strength == 0)
-    }
-
-    @Test func chargingTheLastBitIsATrickle() {
-        #expect(!pluggedIn(60, .charging).isTrickleCharging)
-        #expect(pluggedIn(96, .charging).isTrickleCharging)
-        #expect(pluggedIn(77, .charging, target: 80).isTrickleCharging)
-        #expect(!pluggedIn(97, .notCharging).isTrickleCharging)
-        #expect(!onBattery.isTrickleCharging)
+    @Test func aHeldBatteryBreathesSlowlyAndSmoothly() {
+        // Full brightness at the start and end of a breath, deepest where breathing out turns to breathing in.
+        #expect(Breathing.dimming(at: 0) == 0)
+        #expect(Breathing.dimming(at: 1) < 0.0001)
+        let deepest = Breathing.exhale / Breathing.duration
+        #expect(abs(Breathing.dimming(at: deepest) - 1) < 0.0001)
+        // Breathing out is quicker than breathing back in.
+        #expect(Breathing.exhale < Breathing.inhale)
+        // No jumps: neighbouring frames are close, and the first and last barely move from still.
+        let values = Breathing.phases.map(Breathing.dimming(at:))
+        #expect(zip(values, values.dropFirst()).allSatisfy { abs($0 - $1) < 0.12 })
+        #expect(values.first! < 0.05 && values.last! < 0.05)
+        #expect(Breathing.depth > 0.2 && Breathing.depth < 0.6)
     }
 
     // MARK: - An app's processes

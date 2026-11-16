@@ -160,7 +160,7 @@ struct BatteryGauge: View {
         HStack(spacing: 0) {
             ZStack {
                 Rectangle().fill(baseFill)
-                if motion != nil {
+                if motion == .charging {
                     ChargingWave(color: waveColor, brightens: baseFill != .white)
                         .transition(.opacity)
                 }
@@ -226,22 +226,20 @@ struct BatteryGauge: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// Like the menu bar's: a wave while charging, a swelling pulse for the last little bit, a drifting light while
-    /// plugged in and holding the charge, and nothing in Low Power Mode, where every bit of energy counts.
+    /// Like the menu bar's: a wave while charging, a slow breath while plugged in and holding the charge, and nothing
+    /// in Low Power Mode, where every bit of energy counts.
     private var motion: ChargingMotion? {
         guard animatesCharging, !reduceMotion, !snapshot.isLowPowerModeOn else { return nil }
         switch snapshot.chargeState {
-        case .charging: return snapshot.isTrickleCharging ? .trickling : .charging
-        case .notCharging: return .resting
+        case .charging: return .charging
+        case .notCharging: return .breathing
         case .charged, .discharging: return nil
         }
     }
 
-    /// White light on a dark or green battery; a green wave on a white one, where white light wouldn't show. Holding
-    /// the charge with colours on, always green: a held battery looks looked after, not greyed out.
+    /// White light on a dark or green battery; a green wave on a white one, where white light wouldn't show.
     private var waveColor: Color {
-        if motion == .resting && usesColor { return ChargeTrack.green }
-        return baseFill == .white ? ChargeTrack.green : .white
+        baseFill == .white ? ChargeTrack.green : .white
     }
 
     /// Like the menu bar icon: white on dark, near-black on light. Green while
@@ -271,7 +269,7 @@ struct BatteryGauge: View {
             } else if snapshot.chargeState == .notCharging {
                 Image(systemName: "powerplug.fill")
                     .font(.system(size: 17, weight: .semibold))
-                    .modifier(ChargingGlow(color: baseFill == .white ? waveColor : .white))
+                    .modifier(BreathingOpacity())
             }
             Text(centerString)
                 .font(.system(size: 24, weight: .semibold))

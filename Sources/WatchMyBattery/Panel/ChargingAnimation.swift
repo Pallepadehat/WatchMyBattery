@@ -1,41 +1,29 @@
+import BatteryKit
 import SwiftUI
 
 /// What the panel's battery animates: charge flowing in, or a battery plugged in and holding its charge.
 enum ChargingMotion: Equatable {
     /// A wave of light rolls across, lighting the bolt as it passes.
     case charging
-    /// The last little bit: a soft light swells near the end of the battery and fades, again and again, and the bolt
-    /// glows with it. A trickle, not a flow.
-    case trickling
-    /// A wide, soft light drifts slowly back and forth across the battery, and the plug glows as it passes: nothing
-    /// flows in, the charge is just held.
-    case resting
+    /// Nothing flows in: the plug, and the mark where the charge is held, breathe slowly, in time with the menu bar
+    /// (``Breathing``).
+    case breathing
 }
 
 /// Where the panel's charging animation is: the wave of light rolling across
-/// the battery, and the glow it lights the bolt with as it passes.
+/// the battery and the glow it lights the bolt with as it passes, or how deep
+/// into a breath a held battery is.
 nonisolated struct ChargingPhase: Equatable, Sendable {
     /// The wave's position, 0 (off the left edge) to 1 (off the right edge).
     var wave: Double = 0
-    /// How brightly the bolt (or the plug) glows, 0–1. It peaks as the wave reaches the middle.
+    /// How brightly the bolt glows, 0–1. It peaks as the wave reaches the middle.
     var glow: Double = 0
-    /// How strongly the light shows, 0–1: full while charging, softer while resting.
-    var intensity: Double = 1
+    /// How deep into a breath it is, 0 (still) to 1 (the deepest), as ``Breathing/dimming(at:)`` has it.
+    var breath: Double = 0
 
     /// One cycle: a pause, the wave rolling across, the bolt lighting up as it passes.
     static let rest: TimeInterval = 0.6
     static let roll: TimeInterval = 2.0
-
-    /// Resting: the light's drift from one side to the other, and how far towards each edge it goes.
-    static let drift: TimeInterval = 2.8
-    static let driftRange = 0.15...0.85
-    static let restingIntensity = 1.0
-
-    /// Trickling: the light swells and fades where the battery fills up, with a short pause between.
-    static let trickleSwell: TimeInterval = 0.7
-    static let trickleFade: TimeInterval = 0.9
-    static let trickleRest: TimeInterval = 0.5
-    static let tricklePosition = 0.72
 }
 
 private nonisolated struct ChargingPhaseKey: EnvironmentKey {
@@ -81,42 +69,15 @@ private struct ChargingAnimationModifier: ViewModifier {
                     CubicKeyframe(0, duration: ChargingPhase.roll * 0.48)
                 }
             }
-        case .trickling:
-            content.keyframeAnimator(
-                initialValue: ChargingPhase(wave: ChargingPhase.tricklePosition, intensity: 0), repeating: true
-            ) { content, phase in
+        case .breathing:
+            // Breathing out, eased; breathing back in, slower; then still. The menu bar's curve, so they match.
+            content.keyframeAnimator(initialValue: ChargingPhase(), repeating: true) { content, phase in
                 content.environment(\.chargingPhase, phase)
             } keyframes: { _ in
-                KeyframeTrack(\.intensity) {
-                    CubicKeyframe(1, duration: ChargingPhase.trickleSwell)
-                    CubicKeyframe(0, duration: ChargingPhase.trickleFade)
-                    LinearKeyframe(0, duration: ChargingPhase.trickleRest)
-                }
-                KeyframeTrack(\.glow) {
-                    CubicKeyframe(0.5, duration: ChargingPhase.trickleSwell)
-                    CubicKeyframe(0, duration: ChargingPhase.trickleFade)
-                    LinearKeyframe(0, duration: ChargingPhase.trickleRest)
-                }
-            }
-        case .resting:
-            // Eased at each end, like a pendulum; dimmer towards the edges (``ChargingWave`` fades it there), and the
-            // plug glows each time the light passes over it in the middle.
-            let range = ChargingPhase.driftRange
-            content.keyframeAnimator(
-                initialValue: ChargingPhase(wave: range.lowerBound, intensity: ChargingPhase.restingIntensity), repeating: true
-            ) { content, phase in
-                content.environment(\.chargingPhase, phase)
-            } keyframes: { _ in
-                KeyframeTrack(\.wave) {
-                    CubicKeyframe(range.upperBound, duration: ChargingPhase.drift)
-                    CubicKeyframe(range.lowerBound, duration: ChargingPhase.drift)
-                }
-                // Over the plug on the way across, and again on the way back.
-                KeyframeTrack(\.glow) {
-                    CubicKeyframe(0.6, duration: ChargingPhase.drift / 2)
-                    CubicKeyframe(0, duration: ChargingPhase.drift / 2)
-                    CubicKeyframe(0.6, duration: ChargingPhase.drift / 2)
-                    CubicKeyframe(0, duration: ChargingPhase.drift / 2)
+                KeyframeTrack(\.breath) {
+                    LinearKeyframe(1, duration: Breathing.exhale, timingCurve: .easeInOut)
+                    LinearKeyframe(0, duration: Breathing.inhale, timingCurve: .easeInOut)
+                    LinearKeyframe(0, duration: Breathing.rest)
                 }
             }
         case nil:
@@ -144,7 +105,7 @@ struct ChargingWave: View {
             let wave = phase?.wave ?? 0
             // Brightest mid-way, fading in at the left and out at the right. Raised to a power, so it eases in from
             // nothing rather than appearing at the edge.
-            let strength = pow(sin(Double.pi * wave), 1.6) * (phase?.intensity ?? 1)
+            let strength = pow(sin(Double.pi * wave), 1.6)
             // It swells a little as it rolls through the middle, like a breath of charge.
             let glowWidth = size.width * (0.44 + 0.12 * strength)
             Ellipse()
@@ -156,6 +117,15 @@ struct ChargingWave: View {
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+/// Dims a symbol a little as the battery breathes out, and brings it back as it breathes in.
+struct BreathingOpacity: ViewModifier {
+    @Environment(\.chargingPhase) private var phase
+
+    func body(content: Content) -> some View {
+        content.opacity(1 - Breathing.depth * (phase?.breath ?? 0))
     }
 }
 

@@ -180,7 +180,8 @@ private struct ChargeFlow: View {
     }
 }
 
-/// Where charging stops. Held there, it glows, and the glow breathes slowly, in time with the panel's battery.
+/// Where charging stops. Held there, it glows, and the glow breathes with the battery: a little softer as it
+/// breathes out, back as it breathes in.
 private struct TargetNotch: View {
     let height: CGFloat
     let tint: Color
@@ -188,22 +189,26 @@ private struct TargetNotch: View {
     let breathes: Bool
 
     var body: some View {
-        if breathes {
-            notch.keyframeAnimator(initialValue: 0.35, repeating: true) { notch, glow in
-                notch.shadow(color: tint.opacity(glow), radius: 2 + 4 * glow)
-            } keyframes: { _ in
-                CubicKeyframe(0.9, duration: ChargingPhase.drift / 2)
-                CubicKeyframe(0.35, duration: ChargingPhase.drift / 2)
-            }
-        } else {
-            notch.shadow(color: tint.opacity(glows ? 0.6 : 0), radius: 3)
-        }
+        notch
+            .modifier(NotchGlow(tint: tint, glows: glows))
+            .chargingAnimation(breathes ? .breathing : nil)
     }
 
     private var notch: some View {
         Capsule()
             .fill(.primary)
             .frame(width: 2, height: height)
+    }
+}
+
+private struct NotchGlow: ViewModifier {
+    let tint: Color
+    let glows: Bool
+    @Environment(\.chargingPhase) private var phase
+
+    func body(content: Content) -> some View {
+        let strength = glows ? 0.6 * (1 - 0.6 * (phase?.breath ?? 0)) : 0
+        content.shadow(color: tint.opacity(strength), radius: 3)
     }
 }
 

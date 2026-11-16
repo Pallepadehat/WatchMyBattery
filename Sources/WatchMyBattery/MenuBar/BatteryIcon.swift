@@ -13,8 +13,6 @@ struct BatteryIcon: Hashable {
     var level: Double
     var percentage: Int
     var chargeState: BatterySnapshot.ChargeState
-    /// Charging the last little bit: the animation drips rather than sweeps.
-    var isTrickling: Bool
     var showsPercentageInside: Bool
     var usesColor: Bool
     var isLowPowerModeOn: Bool
@@ -42,7 +40,6 @@ struct BatteryIcon: Hashable {
         level = snapshot.level
         percentage = snapshot.percentage
         chargeState = snapshot.chargeState
-        isTrickling = snapshot.isTrickleCharging
         // Only the battery has room for it.
         self.showsPercentageInside = style == .battery && showsPercentageInside
         self.usesColor = usesColor
@@ -108,10 +105,9 @@ struct BatteryIcon: Hashable {
     func image() -> NSImage {
         let size = CGSize(width: max(imageWidth, 1), height: Self.imageHeight)
         let accentColor = Self.color(for: accent)
-        let shine = shineColor
         let image = NSImage(size: size, flipped: false) { _ in
             guard let context = NSGraphicsContext.current?.cgContext else { return false }
-            let palette = Palette(accent: accentColor, shine: shine, drawsForDarkBar: drawsForDarkBar)
+            let palette = Palette(accent: accentColor, drawsForDarkBar: drawsForDarkBar)
             switch style {
             case .battery: drawBattery(in: size, palette: palette, context: context)
             case .ring: drawRing(in: size, palette: palette, context: context)
@@ -119,7 +115,7 @@ struct BatteryIcon: Hashable {
             }
             return true
         }
-        image.isTemplate = accentColor == nil && shine == nil
+        image.isTemplate = accentColor == nil
         image.accessibilityDescription = accessibilityLabel
         return image
     }
@@ -128,18 +124,14 @@ struct BatteryIcon: Hashable {
     struct Palette {
         /// The state's colour, or `nil` for a monochrome (template) icon.
         let accent: NSColor?
-        /// The resting shimmer's colour, for its frames, when colours are on; `nil` otherwise.
-        let shine: NSColor?
         /// The outline and anything not in the accent: black in a template, which the menu bar tints itself; in a
         /// coloured icon, white or black for the menu bar it's drawn in.
         let foreground: NSColor
 
-        init(accent: NSColor?, shine: NSColor? = nil, drawsForDarkBar: Bool?) {
+        init(accent: NSColor?, drawsForDarkBar: Bool?) {
             self.accent = accent
-            self.shine = shine
-            let isTemplate = accent == nil && shine == nil
             let isDarkBar = drawsForDarkBar ?? (NSAppearance.currentDrawing().bestMatch(from: [.aqua, .darkAqua]) == .darkAqua)
-            foreground = isTemplate || !isDarkBar ? .black : .white
+            foreground = accent == nil || !isDarkBar ? .black : .white
         }
 
         /// The charge: the accent, or the foreground when there's none.
@@ -173,21 +165,14 @@ struct BatteryIcon: Hashable {
         bodyPath.addClip()
         empty.setFill()
         body.fill()
-        (accentColor ?? foreground).setFill()
+        // Copied rather than laid over the empty part, so the charge's own brightness shows: it breathes while it's held.
+        (accentColor ?? foreground).withAlphaComponent(chargeOpacity).setFill()
+        context.setBlendMode(.copy)
         fill.fill()
         context.restoreGState()
 
-        if let animationPhase {
-            switch chargeState {
-            case .charging where isTrickling:
-                drawDrip(at: animationPhase, bodyPath: bodyPath, fill: fill, color: palette.charge, context: context)
-            case .charging:
-                drawGlint(at: animationPhase, body: body, bodyPath: bodyPath, fill: fill, terminal: terminal, color: palette.charge, context: context)
-            case .notCharging:
-                drawShimmer(at: animationPhase, body: body, bodyPath: bodyPath, fill: fill, palette: palette, context: context)
-            case .charged, .discharging:
-                break
-            }
+        if let animationPhase, chargeState == .charging {
+            drawGlint(at: animationPhase, body: body, bodyPath: bodyPath, fill: fill, terminal: terminal, color: palette.charge, context: context)
         }
 
         // The percentage or a symbol on top: cut out of the charge, so the menu
@@ -295,79 +280,10 @@ struct BatteryIcon: Hashable {
         }
     }
 
-    /// Charging the last little bit: a drop of light gathers just past the edge of the charge, swelling, then falls
-    /// into it, and the edge glows as it lands. Where it is comes from ``TrickleDrip``.
-    private func drawDrip(at phase: Double, bodyPath: NSBezierPath, fill: CGRect, color: NSColor, context: CGContext) {
-        let drop = TrickleDrip.frame(at: phase)
-        let rgb = color.usingColorSpace(.deviceRGB) ?? color
-        let space = CGColorSpaceCreateDeviceRGB()
-        context.saveGState()
-        bodyPath.addClip()
-        if drop.strength > 0.01,
-            let light = CGGradient(
-                colorsSpace: space, colors: [1, 0].map { rgb.withAlphaComponent($0 * 0.95 * drop.strength).cgColor } as CFArray,
-                locations: [0, 1])
-        {
-            let center = CGPoint(x: fill.maxX + CGFloat(drop.offset), y: fill.midY)
-            context.drawRadialGradient(light, startCenter: center, startRadius: 0, endCenter: center, endRadius: CGFloat(drop.size), options: [])
-        }
-        if drop.glow > 0.01,
-            let glow = CGGradient(
-                colorsSpace: space, colors: [0, 1, 0].map { rgb.withAlphaComponent($0 * 0.7 * drop.glow).cgColor } as CFArray,
-                locations: [0, 0.5, 1])
-        {
-            let reach = 2 + 2 * CGFloat(drop.glow)
-            context.drawLinearGradient(glow, start: CGPoint(x: fill.maxX - reach, y: 0), end: CGPoint(x: fill.maxX + reach, y: 0), options: [])
-        }
-        context.restoreGState()
-    }
-
-    /// The shimmer's colour while the charge is held, when colours are on: a green shine, like charging's, so a held
-    /// battery looks cared for rather than greyed out. Only for the shimmer's frames; the still icon stays as macOS's.
-    var shineColor: NSColor? {
-        usesColor && chargeState == .notCharging && animationPhase != nil ? .systemGreen : nil
-    }
-
-    /// Holding its charge: a sheen glides across the charge, then the edge of the charge glows as it arrives, out
-    /// towards where it's held. With colours on, the sheen is a green shine laid over the charge; without, it's cut
-    /// out of the charge (only alpha changes), so it reads in a template icon on any menu bar. Where it is comes from
-    /// ``RestingShimmer``.
-    private func drawShimmer(at phase: Double, body: CGRect, bodyPath: NSBezierPath, fill: CGRect, palette: Palette, context: CGContext) {
-        let frame = RestingShimmer.frame(at: phase, fillWidth: Double(fill.width))
-        let space = CGColorSpaceCreateDeviceRGB()
-        let shine = palette.shine.map { $0.usingColorSpace(.deviceRGB) ?? $0 }
-
-        let strength = CGFloat(frame.strength)
-        let sheenColor = shine ?? .black
-        if strength > 0.01,
-            let sheen = CGGradient(
-                colorsSpace: space,
-                colors: [0, 0.7, 1, 0.7, 0].map { sheenColor.withAlphaComponent($0 * (shine == nil ? 0.6 : 0.95) * strength).cgColor }
-                    as CFArray,
-                locations: [0, 0.25, 0.5, 0.75, 1])
-        {
-            let center = fill.minX + CGFloat(frame.center)
-            let half = CGFloat(frame.width) / 2
-            context.saveGState()
-            bodyPath.addClip()
-            context.clip(to: fill)
-            if shine == nil { context.setBlendMode(.destinationOut) }
-            context.drawLinearGradient(sheen, start: CGPoint(x: center - half, y: 0), end: CGPoint(x: center + half, y: 0), options: [])
-            context.restoreGState()
-        }
-
-        let glow = CGFloat(frame.glow)
-        let color = shine ?? palette.charge
-        let rgb = color.usingColorSpace(.deviceRGB) ?? color
-        guard glow > 0.01,
-            let light = CGGradient(
-                colorsSpace: space, colors: [0, 1, 0].map { rgb.withAlphaComponent($0 * 0.85 * glow).cgColor } as CFArray, locations: [0, 0.5, 1])
-        else { return }
-        let reach = 2.5 + 3 * glow
-        context.saveGState()
-        bodyPath.addClip()
-        context.drawLinearGradient(light, start: CGPoint(x: fill.maxX - reach, y: 0), end: CGPoint(x: fill.maxX + reach, y: 0), options: [])
-        context.restoreGState()
+    /// How bright the charge is: full, or a little dimmed while it breathes (plugged in, holding its charge).
+    var chargeOpacity: CGFloat {
+        guard let animationPhase, chargeState == .notCharging else { return 1 }
+        return CGFloat(1 - Breathing.depth * Breathing.dimming(at: animationPhase))
     }
 
     /// How strongly the drained part of the pill shows, like the built-in icon.

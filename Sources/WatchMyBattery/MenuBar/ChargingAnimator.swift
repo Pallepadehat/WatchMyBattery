@@ -2,27 +2,24 @@ import AppKit
 import BatteryKit
 
 /// Plays the menu bar icon's animation: a short cycle of frames, then a rest, over and over, for as long as it's
-/// running. Charging, a glint sweeps across the battery towards where it's charging to; charging the last little bit,
-/// drops of light drip into the charge; plugged in and holding its charge, a sheen glides across the charge and its
-/// edge glows.
+/// running. Charging, a glint sweeps across the battery towards where it's charging to. Plugged in and holding its
+/// charge, the charge breathes: it dims a little and comes back, slowly (``Breathing``).
 ///
 /// It's built to cost next to nothing. Every frame makes macOS redraw the
 /// status item and re-snapshot it for each menu bar it shows in, so a cycle
 /// has only the frames it needs (``ChargingGlint`` picks the glint's: fewer
 /// on a fuller battery, where it has less far to go, and none where it
-/// wouldn't show; ``RestingShimmer`` has 44). Between cycles nothing runs
-/// at all: no timer fires for most of each one. The owner stops it whenever
-/// nobody could see it (displays asleep, another user logged in) or it isn't
-/// wanted (Reduce Motion, Low Power Mode, the setting turned off).
+/// wouldn't show; a breath, a slow fade, needs only nine a second). Between
+/// cycles nothing runs at all. The owner stops it whenever nobody could see
+/// it (displays asleep, another user logged in) or it isn't wanted (Reduce
+/// Motion, Low Power Mode, the setting turned off).
 final class ChargingAnimator {
     /// What the icon is doing.
     enum Motion: Equatable {
         /// Charging from `level` to `target`, both 0–1.
         case charging(level: Double, target: Double)
-        /// Charging the last little bit to its target.
-        case trickling
         /// Plugged in, holding its charge.
-        case resting
+        case breathing
     }
 
     /// Gets the phase, 0–1, of each frame, and `nil` when it rests or stops.
@@ -32,8 +29,8 @@ final class ChargingAnimator {
     private var timer: Timer?
     private var frame = 0
     /// What's playing; a new motion takes effect from the next cycle.
-    private var motion = Motion.resting
-    private var cycle = Cycle.resting
+    private var motion = Motion.breathing
+    private var cycle = Cycle.breathing
 
     /// The most frames a sweep has, for showing them all (the previews).
     static let framesPerSweep = ChargingGlint.maximumFrames
@@ -100,13 +97,11 @@ final class ChargingAnimator {
             case .charging(let level, let target):
                 let glint = ChargingGlint(bodyWidth: BatteryIcon.bodyWidth, level: level, target: target)
                 (phases, frameInterval, rest) = (glint.phases, glint.frameInterval, Self.sweepRest)
-            case .trickling:
-                (phases, frameInterval, rest) = (TrickleDrip.phases, TrickleDrip.frameInterval, TrickleDrip.rest)
-            case .resting:
-                (phases, frameInterval, rest) = (RestingShimmer.phases, RestingShimmer.frameInterval, RestingShimmer.rest)
+            case .breathing:
+                (phases, frameInterval, rest) = (Breathing.phases, Breathing.frameInterval, Breathing.rest)
             }
         }
 
-        static let resting = Cycle(.resting)
+        static let breathing = Cycle(.breathing)
     }
 }

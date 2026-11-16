@@ -87,13 +87,6 @@ public struct BatterySnapshot: Sendable, Equatable {
     public var level: Double { Double(percentage) / 100 }
 
     public var isCharging: Bool { chargeState == .charging }
-
-    /// Charging the last little bit to its target: the battery takes charge more and more slowly there, a trickle
-    /// rather than a flow.
-    public var isTrickleCharging: Bool { isCharging && percentage >= chargeTarget - Self.trickleMargin }
-
-    /// How close to its target, in percentage points, charging counts as a trickle.
-    public static let trickleMargin = 5
     public var isPluggedIn: Bool { powerSource == .powerAdapter }
 
     /// A Mac with no battery: plugged in, nothing to show.
