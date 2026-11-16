@@ -1266,6 +1266,16 @@
         }
       }
     },
+    "Done" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Færdig"
+          }
+        }
+      }
+    },
     "Drag one out to quit it" : {
       "localizations" : {
         "da" : {
@@ -3182,16 +3192,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Åbn Finder"
-          }
-        }
-      }
-    },
-    "Open the Panel" : {
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Åbn panelet"
           }
         }
       }

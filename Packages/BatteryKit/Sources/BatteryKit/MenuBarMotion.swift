@@ -120,15 +120,16 @@ public enum LiquidSurface {
     /// Holding: a slow tilt one way and back, with the faintest ripple.
     public static let stillPeriod: TimeInterval = 7
 
-    /// Charging, at `y` points from the top of the battery's body, `phase` 0–1 through the loop.
+    /// Charging, at `y` points up the battery's body, `phase` 0–1 through the loop: one long, gentle swell rolling
+    /// along the surface, with a faint second one, so it reads as a liquid's surface rather than a ragged edge.
     public static func charging(y: Double, phase: Double) -> Double {
         let angle = 2 * .pi * phase
-        return 1.0 * sin(y * 0.9 - angle) + 0.45 * sin(y * 1.9 + 2 * angle)
+        return 0.8 * sin(y * 0.5 - angle) + 0.2 * sin(y * 1.1 + 2 * angle)
     }
 
     /// The last few percent: smaller and slower.
     public static func calm(y: Double, phase: Double) -> Double {
-        0.7 * sin(y * 0.8 - 2 * .pi * phase)
+        0.55 * sin(y * 0.45 - 2 * .pi * phase)
     }
 
     /// Holding: the surface tilts by up to 0.9 points at its ends, around its middle (`height` points tall).

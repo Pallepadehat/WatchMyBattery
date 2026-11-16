@@ -168,10 +168,12 @@ struct BatteryIcon: Hashable {
         body.fill()
         // Copied rather than laid over the empty part, so the charge's own brightness shows (it breathes while it's
         // held), and in the shape of the liquid's surface when that's how it moves.
+        let charge = chargePath(fill: fill)
         (accentColor ?? foreground).withAlphaComponent(chargeOpacity).setFill()
         context.setBlendMode(.copy)
-        chargePath(fill: fill).fill()
+        charge.fill()
         context.restoreGState()
+        if let accentColor { drawLiquidRim(fill: fill, bodyPath: bodyPath, color: accentColor, context: context) }
 
         if let motion, let animationPhase {
             switch motion {
@@ -194,7 +196,7 @@ struct BatteryIcon: Hashable {
             let text = percentageText()
             let size = text.size()
             let origin = CGPoint(x: body.midX - size.width / 2, y: body.midY - size.height / 2 + 0.25)
-            stamp(body: body, fill: fill, solid: solid, context: context) { color in
+            stamp(body: body, charge: charge, solid: solid, context: context) { color in
                 let colored = NSMutableAttributedString(attributedString: text)
                 colored.addAttribute(.foregroundColor, value: color, range: NSRange(location: 0, length: colored.length))
                 colored.draw(at: origin)
@@ -202,14 +204,14 @@ struct BatteryIcon: Hashable {
         } else if chargeState == .charging {
             let bolt = Self.boltPath(height: body.height + 3, center: CGPoint(x: body.midX, y: body.midY))
             bolt.transform(using: glyphTransform(around: CGPoint(x: body.midX, y: body.midY)))
-            stamp(body: body, fill: fill, solid: solid, context: context) { color in
+            stamp(body: body, charge: charge, solid: solid, context: context) { color in
                 color.setFill()
                 bolt.fill()
             }
         } else if chargeState == .notCharging {
             let plug = Self.plugPath(center: CGPoint(x: body.midX, y: body.midY))
             plug.transform(using: glyphTransform(around: CGPoint(x: body.midX, y: body.midY)))
-            stamp(body: body, fill: fill, solid: solid, context: context) { color in
+            stamp(body: body, charge: charge, solid: solid, context: context) { color in
                 color.setFill()
                 plug.fill()
             }
@@ -218,22 +220,26 @@ struct BatteryIcon: Hashable {
 
     /// Draws a glyph twice: punched out of the charge, and in `solid` over the
     /// rest of the pill. `draw` paints the glyph in the colour it's given.
-    private func stamp(body: CGRect, fill: CGRect, solid: NSColor, context: CGContext, draw: (NSColor) -> Void) {
+    /// `charge` is the charge's own shape, so a glyph crossing a liquid's rippling edge is cut along that edge,
+    /// not a straight line beside it.
+    private func stamp(body: CGRect, charge: NSBezierPath, solid: NSColor, context: CGContext, draw: (NSColor) -> Void) {
         // Punched out of the charge (and anything outside the pill, where there's nothing to punch).
         context.saveGState()
-        context.clip(to: [
-            CGRect(x: 0, y: 0, width: fill.maxX, height: Self.imageHeight),
-            CGRect(x: 0, y: 0, width: Self.imageHeight * 4, height: body.minY),
-            CGRect(x: 0, y: body.maxY, width: Self.imageHeight * 4, height: Self.imageHeight - body.maxY),
-        ])
+        let punched = charge.copy() as! NSBezierPath
+        punched.appendRect(CGRect(x: 0, y: 0, width: Self.imageHeight * 4, height: body.minY))
+        punched.appendRect(CGRect(x: 0, y: body.maxY, width: Self.imageHeight * 4, height: Self.imageHeight - body.maxY))
+        punched.addClip()
         context.setBlendMode(.destinationOut)
         draw(.black)
         context.restoreGState()
 
-        // Solid over the empty part, so it stands out from the translucent pill.
-        guard fill.maxX < body.maxX else { return }
+        // Solid over the rest of the pill, so it stands out from the translucent part.
         context.saveGState()
-        context.clip(to: CGRect(x: fill.maxX, y: body.minY, width: body.maxX - fill.maxX, height: body.height))
+        NSBezierPath(rect: body).addClip()
+        let rest = NSBezierPath(rect: body)
+        rest.append(charge)
+        rest.windingRule = .evenOdd
+        rest.addClip()
         context.setBlendMode(.copy)
         draw(solid)
         context.restoreGState()
@@ -301,25 +307,44 @@ struct BatteryIcon: Hashable {
 
     /// The charge's shape: a rectangle, or, when it moves like a liquid, one whose edge is the liquid's surface.
     private func chargePath(fill: CGRect) -> NSBezierPath {
-        guard let motion, let phase = animationPhase, fill.width > 0 else { return NSBezierPath(rect: fill) }
+        guard let surface = liquidSurface(fill: fill) else { return NSBezierPath(rect: fill) }
+        let path = NSBezierPath()
+        path.move(to: CGPoint(x: fill.minX, y: fill.minY))
+        surface.forEach { path.line(to: $0) }
+        path.line(to: CGPoint(x: fill.minX, y: fill.maxY))
+        path.close()
+        return path
+    }
+
+    /// The liquid's surface, from the bottom of the charge to the top, a quarter point at a time (smooth at any size
+    /// the menu bar uses); `nil` when the charge isn't moving like a liquid.
+    private func liquidSurface(fill: CGRect) -> [CGPoint]? {
+        guard let motion, let phase = animationPhase, fill.width > 0 else { return nil }
         let lean: (Double) -> Double
         switch motion {
         case .liquid: lean = { LiquidSurface.charging(y: $0, phase: phase) }
         case .calmLiquid: lean = { LiquidSurface.calm(y: $0, phase: phase) }
         case .stillWater: lean = { LiquidSurface.still(y: $0, height: Double(fill.height), phase: phase) }
-        default: return NSBezierPath(rect: fill)
+        default: return nil
         }
-        // Up the surface from the bottom, a quarter point at a time, which is smooth at any size the menu bar uses.
-        let path = NSBezierPath()
-        path.move(to: CGPoint(x: fill.minX, y: fill.minY))
-        var y = 0.0
-        while y <= Double(fill.height) {
-            path.line(to: CGPoint(x: fill.maxX + CGFloat(lean(y)), y: fill.minY + CGFloat(y)))
-            y += 0.25
+        return stride(from: 0.0, through: Double(fill.height), by: 0.25).map { y in
+            CGPoint(x: fill.maxX + CGFloat(lean(y)), y: fill.minY + CGFloat(y))
         }
-        path.line(to: CGPoint(x: fill.minX, y: fill.maxY))
-        path.close()
-        return path
+    }
+
+    /// A soft, bright line along a coloured liquid's surface, as light catches it: what makes it read as liquid
+    /// rather than a ragged edge.
+    private func drawLiquidRim(fill: CGRect, bodyPath: NSBezierPath, color: NSColor, context: CGContext) {
+        guard let surface = liquidSurface(fill: fill), let first = surface.first else { return }
+        let rim = NSBezierPath()
+        rim.move(to: first)
+        surface.dropFirst().forEach { rim.line(to: $0) }
+        rim.lineWidth = 1.1
+        context.saveGState()
+        bodyPath.addClip()
+        NSColor.white.withAlphaComponent(0.5).setStroke()
+        rim.stroke()
+        context.restoreGState()
     }
 
     /// The glyph's size: it swells with each beat of the heartbeat, and is otherwise as drawn.

@@ -10,6 +10,8 @@ struct OnboardingIntro<Logo: View, Content: View>: View {
     var tint: Color
     /// The steps after the welcome need the room: the logo shrinks.
     var compactLogo: Bool
+    /// Start settled, as with Reduce Motion: for the previews.
+    var skipsOpening = false
     @ViewBuilder var logo: (_ isSettled: Bool) -> Logo
     @ViewBuilder var content: (_ isSettled: Bool) -> Content
     var onClose: () -> Void
@@ -57,7 +59,7 @@ struct OnboardingIntro<Logo: View, Content: View>: View {
         }
         .frame(width: Self.size.width, height: Self.size.height, alignment: .top)
         .overlay(alignment: .topLeading) { closeButton }
-        .modifier(OnboardingWindowGlass(cornerRadius: Self.cornerRadius))
+        .modifier(OnboardingWindowBackground(cornerRadius: Self.cornerRadius))
         .animation(.bouncy(duration: 0.45, extraBounce: 0), value: compactLogo)
         .onAppear(perform: play)
     }
@@ -66,7 +68,7 @@ struct OnboardingIntro<Logo: View, Content: View>: View {
 
     private func play() {
         guard !properties.animateMainCircle else { return }
-        guard !reduceMotion else {
+        guard !reduceMotion, !skipsOpening else {
             properties.animateMainCircle = true
             properties.convertToLogo = true
             return
@@ -210,21 +212,16 @@ struct OnboardingIntro<Logo: View, Content: View>: View {
     }
 }
 
-/// The onboarding window's rounded background: Liquid Glass on macOS 26, the window's own background before it.
-struct OnboardingWindowGlass: ViewModifier {
+/// The onboarding window's rounded background: opaque, like macOS's own setup screens, so its text reads clearly
+/// over any desktop picture (glass would let a busy one show through), with a hairline edge.
+struct OnboardingWindowBackground: ViewModifier {
     let cornerRadius: CGFloat
 
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-        if #available(macOS 26.0, *) {
-            content
-                .clipShape(shape)
-                .glassEffect(.regular, in: shape)
-        } else {
-            content
-                .background(Color(nsColor: .windowBackgroundColor), in: shape)
-                .clipShape(shape)
-                .overlay(shape.strokeBorder(.primary.opacity(0.1), lineWidth: 1))
-        }
+        content
+            .background(Color(nsColor: .windowBackgroundColor), in: shape)
+            .clipShape(shape)
+            .overlay(shape.strokeBorder(.primary.opacity(0.1), lineWidth: 1))
     }
 }

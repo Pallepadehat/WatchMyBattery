@@ -46,7 +46,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 return
             }
             if CommandLine.arguments.contains("--show-onboarding") {
-                model.openOnboarding()
+                // `--onboarding-step 3` opens it at that step.
+                let arguments = CommandLine.arguments
+                let step = arguments.firstIndex(of: "--onboarding-step").flatMap { arguments.indices.contains($0 + 1) ? Int(arguments[$0 + 1]) : nil }
+                model.openOnboarding(at: step.flatMap(OnboardingView.Step.init(rawValue:)) ?? .welcome)
                 return
             }
             if CommandLine.arguments.contains("--show-accessory-card") {

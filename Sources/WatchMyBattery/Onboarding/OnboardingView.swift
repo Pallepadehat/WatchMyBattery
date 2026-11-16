@@ -6,7 +6,7 @@ import SwiftUI
 /// It opens with ``OnboardingIntro``'s animation.
 struct OnboardingView: View {
     let model: AppModel
-    /// Done: close the tour and open the panel, to see it all.
+    /// Done: close the tour, and open the panel, so it's clear where WatchMyBattery lives.
     let finish: () -> Void
     /// Closed early, with the ×.
     let close: () -> Void
@@ -15,27 +15,25 @@ struct OnboardingView: View {
         case welcome, menuBar, motion, panel, notifications, finishing
     }
 
-    @State private var step = Self.firstStep
+    @State private var step: Step
+    /// Starts settled, without the opening: for the previews.
+    private let skipsOpening: Bool
 
-    /// The welcome, or, in Debug builds, the step `--onboarding-step <n>` names, for checking each one.
-    private static var firstStep: Step {
-        #if DEBUG
-            let arguments = CommandLine.arguments
-            if let index = arguments.firstIndex(of: "--onboarding-step"), arguments.indices.contains(index + 1),
-                let number = Int(arguments[index + 1]), let step = Step(rawValue: number)
-            {
-                return step
-            }
-        #endif
-        return .welcome
+    init(model: AppModel, startingAt step: Step = .welcome, skipsOpening: Bool = false, finish: @escaping () -> Void, close: @escaping () -> Void) {
+        self.model = model
+        _step = State(initialValue: step)
+        self.skipsOpening = skipsOpening
+        self.finish = finish
+        self.close = close
     }
+
     /// Which way the last step went, so the next one slides in from the right side.
     @State private var isGoingBack = false
 
     static let tint = Color(red: 0.2, green: 0.78, blue: 0.35)
 
     var body: some View {
-        OnboardingIntro(tint: Self.tint, compactLogo: step != .welcome) { isSettled in
+        OnboardingIntro(tint: Self.tint, compactLogo: step != .welcome, skipsOpening: skipsOpening) { isSettled in
             Image(systemName: "battery.100percent.bolt")
                 .font(.system(size: 210, weight: .regular))
                 .foregroundStyle(.white)
@@ -122,7 +120,7 @@ struct OnboardingView: View {
             Button {
                 if let next = Step(rawValue: step.rawValue + 1) { go(to: next) } else { finish() }
             } label: {
-                Text(step == .welcome ? "Get Started" : step == .finishing ? "Open the Panel" : "Continue")
+                Text(step == .welcome ? "Get Started" : step == .finishing ? "Done" : "Continue")
                     .frame(minWidth: 140)
             }
             .buttonStyle(.borderedProminent)
@@ -173,8 +171,8 @@ private struct OnboardingCard<Content: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(.quaternary.opacity(0.5), in: .rect(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(.primary.opacity(0.06), lineWidth: 1))
+        .background(Color.primary.opacity(0.045), in: .rect(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(.primary.opacity(0.08), lineWidth: 1))
         .padding(.horizontal, 32)
     }
 }

@@ -153,8 +153,8 @@ final class AppModel {
     }
 
     /// The welcome tour: on first launch, and from Settings › General.
-    func openOnboarding() {
-        onboardingWindow.show()
+    func openOnboarding(at step: OnboardingView.Step = .welcome) {
+        onboardingWindow.show(at: step)
     }
 
     /// Whether macOS's own battery is in the menu bar too: read when the panel opens, and by the welcome tour.

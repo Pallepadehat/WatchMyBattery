@@ -11,10 +11,10 @@ final class OnboardingWindowController: NSObject, NSWindowDelegate {
         self.model = model
     }
 
-    func show() {
+    func show(at step: OnboardingView.Step = .welcome) {
         // A fresh tour every time, starting with its opening.
         window?.close()
-        let window = makeWindow()
+        let window = makeWindow(at: step)
         self.window = window
         window.center()
         NSApp.setActivationPolicy(.regular)
@@ -38,8 +38,9 @@ final class OnboardingWindowController: NSObject, NSWindowDelegate {
         window = nil
     }
 
-    private func makeWindow() -> NSWindow {
-        let view = OnboardingView(model: model, finish: { [weak self] in self?.finish() }, close: { [weak self] in self?.close() })
+    private func makeWindow(at step: OnboardingView.Step) -> NSWindow {
+        let view = OnboardingView(
+            model: model, startingAt: step, finish: { [weak self] in self?.finish() }, close: { [weak self] in self?.close() })
         let controller = NSHostingController(rootView: view)
         controller.sizingOptions = []
         let window = OnboardingWindow(contentViewController: controller)

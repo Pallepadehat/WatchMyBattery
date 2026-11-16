@@ -44,6 +44,7 @@
         }
 
         private static func render(to folder: URL) {
+            renderOnboarding(to: folder)
             let apps = sampleApps.enumerated().map { index, sample in
                 let icon = NSWorkspace.shared.icon(forFile: sample.path)
                 return AppUsage(
@@ -302,6 +303,24 @@
             save(
                 VStack(spacing: 0) { ForEach(glintRows.indices, id: \.self) { glintRows[$0] } }.frame(width: 340),
                 to: folder.appending(path: "glint.png"))
+        }
+
+        /// Every step of the welcome tour, settled, in light and dark.
+        private static func renderOnboarding(to folder: URL) {
+            for scheme in [ColorScheme.dark, .light] {
+                for step in OnboardingView.Step.allCases {
+                    let model = AppModel(settings: previewSettings(), history: HistoryRecorder(storeURL: nil, legacyFileURL: nil))
+                    model.battery.preview(
+                        BatterySnapshot(
+                            percentage: 80, powerSource: .powerAdapter, chargeState: .notCharging, timeRemaining: nil, chargeTarget: 80,
+                            targetReason: .chargeLimit))
+                    let view = OnboardingView(model: model, startingAt: step, skipsOpening: true, finish: {}, close: {})
+                        .environment(\.colorScheme, scheme)
+                    saveInWindow(
+                        view, scheme: scheme, scrolledBy: 0, to: folder.appending(path: "onboarding-\(step.rawValue)-\(scheme == .dark ? "dark" : "light").png")
+                    )
+                }
+            }
         }
 
         /// A day that ends in `snapshot`: on battery overnight, charged in the morning, and unplugged two hours ago.
