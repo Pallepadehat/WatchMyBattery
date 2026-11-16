@@ -20,7 +20,14 @@ Delight: a menu bar that shows what you want, a charger that explains itself, an
   - **Paused while the battery cools**, above about 40 °C, or charging slowly while it's that warm.
   - **Nearly full**: macOS lets a charged battery drift down a little before topping it up, so "Not Charging" at 97% is nothing to worry about. The same just under a charge limit.
   - Held by your charge limit or by Optimized Battery Charging, the charge bar says so, as before. When there's no visible reason, it says nothing rather than guess.
+- 🌬️ **A resting breath while plugged in.** When the Mac is plugged in but holding its charge (at your charge limit, for Optimized Battery Charging, or resting near full), a soft light breathes at the edge of the charge in the menu bar every few seconds, and around the plug in the panel's battery. Calmer than the charging glow, and lighter: a dozen frames every five seconds. It follows the Charging Animation setting, and rests in Low Power Mode and with Reduce Motion.
 - 🔔 **A chime when you plug in or unplug** ([#34](https://github.com/Pallepadehat/WatchMyBattery/issues/34)): WatchMyBattery's own two soft notes, rising as you plug in and falling as you unplug, or Glass, Pop, Purr, Tink or Bottle. Most MacBooks already chime when you plug in, so it can play for unplugging only. It doesn't chime when the app opens, for what happened while the Mac slept, or for every flicker of a loose cable. Off to start with; turn it on in Settings › Charging, with a button to hear it first.
+
+### Fixed
+
+- ✨ **The panel no longer jumps.** Changing the charge limit, folding the history away, a note appearing, or the apps arriving as the panel opens made everything jolt up and slide back: the window snapped to its new size while its content was still animating. Now the glass card is drawn with its content, so its edge glides along with whatever comes or goes. Battery health, the sleep section and the update banner slide in too, instead of popping in.
+- 🔍 **An app's card stays open** when other apps overtake its slice. It closes when you close it, or when the app quits.
+- **Process names aren't cut off** in an app's card: the app's name, already at the top, is left out ("Helper (Renderer)" rather than "T3 Code (Ni…er (Renderer)"), and a long name wraps onto a second line. The Force Quit confirmation gets a line of its own when it doesn't fit.
 
 ### Changed
 
