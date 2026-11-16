@@ -27,7 +27,8 @@
 
 **A better battery icon**
 - Drains as your battery drains, just like the built-in one, and sits where it does.
-- The percentage inside the battery, beside it, or not at all.
+- Three styles: the **battery**, a **ring** that fills as it charges, or **text only**.
+- Beside it, the percentage, the **time left**, or the Mac's **power draw** in watts. Or nothing, with the percentage inside the battery if you like.
 - A bolt while charging, a plug while plugged in but not charging.
 - Red when low and green when charging, or monochrome so it blends in with the rest of the menu bar.
 
@@ -76,6 +77,8 @@
 **Charging, your way**
 - 🔋 **A charge limit**: hold the battery at 80% to 95% while plugged in, so it lasts longer. It's macOS's own (Apple silicon, macOS 26.4 or later), so it holds even when WatchMyBattery isn't running. Change it from the panel or Settings.
 - **Charge to Full Once** for a long day away from a charger. The limit comes back when you unplug.
+- 🔌 **The charger's wattage**, and **why charging is paused or slow**: a charger that can't keep up with the Mac, a battery too warm to charge, or one that's simply resting just short of full.
+- 🔔 An optional **chime** when you plug in or unplug: two soft notes of its own, or a system sound.
 - A notification when the battery reaches a level you choose, if you'd rather unplug by hand.
 
 **Sleep, explained**
@@ -94,7 +97,7 @@
 - In English and Danish.
 
 **Light on your battery** (it would be a bit silly otherwise)
-- No polling: battery changes arrive as notifications from macOS.
+- No polling: battery changes arrive as notifications from macOS. (The one exception is the power draw in the menu bar, which macOS doesn't announce: read every few seconds, only while it's shown and the displays are on.)
 - Apps are sampled every two seconds while the panel is open. For the history, every five minutes on battery, and never on the adapter.
 - The menu bar icon is redrawn only when something you can see changes. The charging animation is a short sweep every few seconds, only while charging, and it stops while the displays sleep.
 
@@ -178,7 +181,9 @@ The numbers in the panel are **estimates**. They're good at answering "what's ea
 
 **Runaway apps.** An app counts as running away when it averages 4 W or more over 15 minutes on battery. You hear about each one once, until it calms down or you plug in, and never about the app you're using.
 
-**How much power the whole Mac is using.** The battery's own controller reports its voltage and current (the `AppleSmartBattery` entry in the IORegistry). Voltage × current is the power flowing out of the battery right now, for everything: apps, the display, the radios, the system itself.
+**How much power the whole Mac is using.** The battery's own controller reports its voltage and current (the `AppleSmartBattery` entry in the IORegistry). Voltage × current is the power flowing out of the battery right now, for everything: apps, the display, the radios, the system itself. Where the controller reports the whole system's load (its power telemetry), that's used instead, so it's right on the adapter too.
+
+**The charger and why charging pauses.** The charger's wattage is what it agreed with the Mac when it was plugged in, from `IOPSCopyExternalPowerAdapterDetails`. When the Mac is plugged in but not charging, the panel names a reason only when the readings show one: the battery at 40 °C or more (where macOS holds charging back), the Mac drawing 90% or more of the charger's watts or current flowing out of the battery, or a battery within 5% of where it charges to, which macOS lets drift before topping up. While charging, a Mac drawing three quarters of the charger's watts is charging slowly.
 
 **How much time an app costs you.** If the Mac draws power *P*<sub>system</sub> and the time left is *T*, the battery holds about *T* × *P*<sub>system</sub> of energy. Without an app drawing *P*<sub>app</sub>, the same energy would last *T* × *P*<sub>system</sub> / (*P*<sub>system</sub> − *P*<sub>app</sub>). The difference is the time you'd gain by quitting it:
 
@@ -214,9 +219,9 @@ Settings is laid out like System Settings, with a pane for each part:
 | Pane | Settings |
 | --- | --- |
 | General | Open at login, language (System, English or Dansk), shortcuts to hide the built-in battery and to System Settings › Battery |
-| Menu Bar | Percentage hidden, inside the battery or beside it; coloured states (red when low, green when charging) or monochrome; the charging animation |
+| Menu Bar | The battery, a ring or text only; beside it, the percentage, the time left, the power draw or nothing; the percentage inside the battery; coloured states (red when low, green when charging) or monochrome; the charging animation |
 | Panel | Time remaining or percentage in the centre of the battery, how many apps get a slice, asking before quitting, hidden apps that never get a slice, a Display & System slice, temperature, voltage and current, the battery history (on, off, how long to keep it, export or clear it), and insights in the panel |
-| Charging | The charge limit (a slider from 80% to 100%), Charge to Full Once, the "when it's charged" notification, and the charge limit in the panel |
+| Charging | The charge limit (a slider from 80% to 100%), Charge to Full Once, the "when it's charged" notification, a chime when you plug in or unplug (when, and which sound), and the charge limit in the panel |
 | Sleep | Recent sleeps and how much each used, what's keeping the Mac awake now, Wake for Network Access, sleep in the panel, and a notification for heavy drain while asleep |
 | Accessories | The accessories connected now, the AirPods card (on or off, below the menu bar icon, top center or top right, and how long it stays, with a button to try it), accessories in the panel, and your iPhone and iPad (with how to set them up) |
 | Notifications | A low battery notification and the levels it's sent at, a notification for apps using a lot of energy, a notification for accessories running low and its level, a notification when it's charged, a notification for heavy drain while asleep, and insights: charge before meetings (and how far ahead), more than usual, and new apps using a lot |

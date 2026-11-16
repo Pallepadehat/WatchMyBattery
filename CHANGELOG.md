@@ -4,6 +4,29 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-16
+
+Delight: a menu bar that shows what you want, a charger that explains itself, and a chime when you plug in.
+
+### Added
+
+- ⭕️ **More menu bar styles** ([#38](https://github.com/Pallepadehat/WatchMyBattery/issues/38)). Besides the battery, there's a **ring** that fills clockwise as it charges, with a bolt in the middle while charging, and **text only**: just the number, with a little bolt or plug in front while plugged in, and in red when the battery is low. The charging glow rolls round the ring too. Choose in Settings › Menu Bar, where each style is previewed over your own desktop picture.
+- ⏱️ **The time left instead of the percentage**: beside the icon, show nothing, the percentage, the **time left** (until empty, or until full while charging) or the **power draw**. When there's no time to show, because the battery's full or macOS is still working it out, it shows the percentage rather than a gap.
+- ⚡️ **The Mac's power draw in the menu bar**, in watts: "7.4 W", "23 W" ([#37](https://github.com/Pallepadehat/WatchMyBattery/issues/37)). It's read every few seconds only while it's shown, and not at all while the displays sleep.
+- 🔌 **The charger's wattage** in the panel while plugged in: "Charger 96 W", with its name when you point at it ([#36](https://github.com/Pallepadehat/WatchMyBattery/issues/36)).
+- 🧐 **Why charging is paused, or slow** ([#35](https://github.com/Pallepadehat/WatchMyBattery/issues/35)). When the Mac is plugged in but not charging, a note in the panel says why, from what it can see:
+  - **The charger can't keep up**: "Your Mac is using about 34 W, more than the 30 W charger gives, so the battery isn't charging." Also when the battery is running down on the adapter.
+  - **Charging slowly**: the Mac takes most of what the charger gives, leaving little for the battery.
+  - **Paused while the battery cools**, above about 40 °C, or charging slowly while it's that warm.
+  - **Nearly full**: macOS lets a charged battery drift down a little before topping it up, so "Not Charging" at 97% is nothing to worry about. The same just under a charge limit.
+  - Held by your charge limit or by Optimized Battery Charging, the charge bar says so, as before. When there's no visible reason, it says nothing rather than guess.
+- 🔔 **A chime when you plug in or unplug** ([#34](https://github.com/Pallepadehat/WatchMyBattery/issues/34)): WatchMyBattery's own two soft notes, rising as you plug in and falling as you unplug, or Glass, Pop, Purr, Tink or Bottle. Most MacBooks already chime when you plug in, so it can play for unplugging only. It doesn't chime when the app opens, for what happened while the Mac slept, or for every flicker of a loose cable. Off to start with; turn it on in Settings › Charging, with a button to hear it first.
+
+### Changed
+
+- Settings › Menu Bar is laid out around the style: pick one of three, then what goes beside it, and whether the battery prints the percentage inside. Your choice from 0.3 comes along: inside stays inside, and beside becomes the percentage beside the icon.
+- The panel reads the battery's temperature and current while it's open and the Mac is plugged in, even with the readings rows turned off, to tell why charging is paused. As before, nothing is read while it's closed.
+
 ## [0.3.3] - 2026-11-16
 
 A panel that fits every screen, what's new right in the update window, and a tidier, lighter app underneath.
@@ -225,7 +248,8 @@ The first release.
 - Automatic updates with Sparkle, from EdDSA-signed releases.
 - One-command install, and build, packaging and release scripts.
 
-[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.3.3...HEAD
+[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.3.0...v0.3.1

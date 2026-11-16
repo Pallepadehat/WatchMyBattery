@@ -125,22 +125,26 @@ Released. See the [changelog](CHANGELOG.md).
 
 ## 0.3.3: fits every screen ✅
 
+Released. See the [changelog](CHANGELOG.md).
+
 - [x] The panel stops above the Dock on shorter screens, and its middle scrolls, with a chevron that shows there's more
 - [x] What's new in the update window, from the changelog
 - [x] A cleanup across the code: fixes, less duplication, and less work while idle
 
-## 0.4.0: delight
+## 0.4.0: delight ✅
+
+Done. See the [changelog](CHANGELOG.md).
 
 **Charging**
 
-- [ ] An optional chime when you plug in or unplug ([#34](https://github.com/Pallepadehat/WatchMyBattery/issues/34))
-- [ ] Why charging is paused, for example by Optimized Battery Charging ([#35](https://github.com/Pallepadehat/WatchMyBattery/issues/35))
-- [ ] The charger's wattage, and a hint when it's too weak to charge while you work ([#36](https://github.com/Pallepadehat/WatchMyBattery/issues/36))
+- [x] An optional chime when you plug in or unplug ([#34](https://github.com/Pallepadehat/WatchMyBattery/issues/34))
+- [x] Why charging is paused: a hot battery, a charger that can't keep up, or a battery resting just short of full ([#35](https://github.com/Pallepadehat/WatchMyBattery/issues/35))
+- [x] The charger's wattage, and a hint when it's too weak to charge while you work ([#36](https://github.com/Pallepadehat/WatchMyBattery/issues/36))
 
 **The menu bar**
 
-- [ ] The Mac's total power draw in watts, as an extra label or its own menu bar style ([#37](https://github.com/Pallepadehat/WatchMyBattery/issues/37))
-- [ ] More icon styles: a ring, the number alone, or time left instead of the percentage ([#38](https://github.com/Pallepadehat/WatchMyBattery/issues/38))
+- [x] The Mac's total power draw in watts, beside the icon ([#37](https://github.com/Pallepadehat/WatchMyBattery/issues/37))
+- [x] More icon styles: a ring, the number alone, and time left instead of the percentage ([#38](https://github.com/Pallepadehat/WatchMyBattery/issues/38))
 
 ## 0.5.0: everywhere
 
