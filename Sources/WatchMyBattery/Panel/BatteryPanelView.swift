@@ -34,6 +34,11 @@ struct BatteryPanelView: View {
                             .padding(.bottom, 10)
                     }
                     .scrollBounceBehavior(.basedOnSize)
+                    // No system scroller: with a mouse attached (or "Show scroll bars: Always"), it took a strip of the
+                    // panel's width the moment the content outgrew it, an app's card opening, say, so everything
+                    // reflowed and jumped, and jumped back when it fit again. The soft fades and the chevron show
+                    // there's more.
+                    .scrollIndicators(.never)
                     .modifier(ScrollAffordances())
                 } else {
                     // No screen to fit (the preview renderer, which can't draw a scroll view): just the content.
