@@ -85,6 +85,8 @@ struct SettingsView: View {
                 }
             }
             .formStyle(.grouped)
+            // Room under the last section, so it doesn't sit on the window's bottom edge.
+            .contentMargins(.bottom, 24, for: .scrollContent)
             .navigationTitle(pane.title)
             // The title bar names the pane, as in System Settings.
             .background(WindowTitle(title: pane.title))
