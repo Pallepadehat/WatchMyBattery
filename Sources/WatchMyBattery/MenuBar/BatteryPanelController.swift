@@ -239,7 +239,9 @@ private struct PanelGlass: ViewModifier {
         if #available(macOS 26.0, *) {
             content
                 .clipShape(shape)
-                .glassEffect(.regular, in: shape)
+                // Tinted with the window's own background, so a busy window behind the panel doesn't show through
+                // its text, as clear glass let it.
+                .glassEffect(.regular.tint(Color(nsColor: .windowBackgroundColor).opacity(0.55)), in: shape)
         } else {
             content
                 .background(MenuMaterial())
