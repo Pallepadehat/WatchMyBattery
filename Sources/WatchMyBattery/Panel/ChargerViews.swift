@@ -122,7 +122,7 @@ struct ChargingNoteCard: View {
                     "Your Mac is using about \(PowerFormat.watts(systemWatts)) of the \(adapterWatts) W charger's power, leaving little for the battery."
             )
         case .restingNearTarget(let target) where target >= 100:
-            String(localized: "macOS lets the battery drift down a little before topping it up, so it isn't kept at 100% all the time.")
+            String(localized: "macOS lets the battery drift down a little before topping it up, so it isn't kept at \(Self.percent(100)) all the time.")
         case .restingNearTarget:
             String(localized: "macOS charges again once the battery has drifted down a little further.")
         }
