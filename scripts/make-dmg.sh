@@ -5,7 +5,7 @@
 #   --sign         sign the app and the disk image with Developer ID, without notarizing
 #   --notarize     sign with Developer ID, have Apple notarize it and staple the ticket, so macOS opens it without
 #                  "Apple couldn't check it for malware", even when downloaded in a browser. Needs a one-time
-#                  `xcrun notarytool store-credentials watchmybattery-notary` (see CONTRIBUTING.md, "Making a release").
+#                  `xcrun notarytool store-credentials watchmybattery-notary` (see .github/CONTRIBUTING.md, "Making a release").
 #   --skip-build   pack the app already in build/
 #
 # Without --sign or --notarize, the app is signed the way scripts/build.sh signs by default.

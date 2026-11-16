@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 /// The history, kept on disk with SwiftData: the last day of level readings and energy samples (``BatteryHistory``),
-/// and two weeks of hourly summaries (``UsageProfile``).
+/// and the hourly summaries (``UsageProfile``), two weeks of them unless Settings keeps them longer.
 ///
 /// Reading happens in memory, on the value types, as before: the panel reads the history every time it draws, and
 /// they answer in microseconds. The store only writes what changed, a row per level change or sample and the hour it
@@ -140,6 +140,9 @@ public final class HistoryStore {
         profile.removeAll()
         hourRows = [:]
         appRows = [:]
+        // Rows recorded since the last save aren't on disk yet, so deleting by model doesn't reach them: they'd be
+        // written by the next save and come back on the next launch. Dropping them first leaves nothing behind.
+        context.rollback()
         for model in [StoredLevel.self, StoredSample.self, StoredHour.self, StoredApp.self, StoredMarker.self] as [any PersistentModel.Type] {
             try? context.delete(model: model)
         }

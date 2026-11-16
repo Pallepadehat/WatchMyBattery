@@ -15,6 +15,8 @@ import Foundation
 public actor ProcessEnergySampler {
     private struct Reading {
         var energy: UInt64
+        /// When the process started, which tells it apart from a later one given the same ID.
+        var started: UInt64
         var responsiblePID: pid_t
     }
 
@@ -62,13 +64,15 @@ public actor ProcessEnergySampler {
                 stillUnreadable[pid] = since
                 continue
             }
-            guard let energy = Self.energy(of: pid) else {
+            guard let usage = Self.usage(of: pid) else {
                 stillUnreadable[pid] = now
                 continue
             }
-            // A process's responsible app never changes, so look it up once.
-            let responsible = previous[pid]?.responsiblePID ?? Responsibility.responsiblePID(for: pid)
-            current[pid] = Reading(energy: energy, responsiblePID: responsible)
+            // A process's responsible app never changes, so look it up once per process. IDs get reused, though, so
+            // what was found last time only holds for the same process: the same ID and the same start.
+            let before = previous[pid].flatMap { $0.started == usage.started ? $0 : nil }
+            let responsible = before?.responsiblePID ?? Responsibility.responsiblePID(for: pid)
+            current[pid] = Reading(energy: usage.energy, started: usage.started, responsiblePID: responsible)
         }
         unreadable = stillUnreadable
 
@@ -84,7 +88,7 @@ public actor ProcessEnergySampler {
         var processes: [pid_t: (responsible: pid_t, watts: Double)] = [:]
         for (pid, reading) in current {
             // A process we hadn't seen yet (or a reused PID) has no baseline to compare against.
-            guard let before = previous[pid], reading.energy >= before.energy else { continue }
+            guard let before = previous[pid], before.started == reading.started, reading.energy >= before.energy else { continue }
             let used = reading.energy - before.energy
             guard used > 0 else { continue }
             let processJoules = Double(used) / 1_000_000_000
@@ -133,9 +137,9 @@ public actor ProcessEnergySampler {
         }
     }
 
-    /// The process's lifetime energy use in nanojoules, or `nil` when we may
-    /// not read it (processes of other users, for example).
-    private static func energy(of pid: pid_t) -> UInt64? {
+    /// The process's lifetime energy use in nanojoules, and when it started, or
+    /// `nil` when we may not read them (processes of other users, for example).
+    private static func usage(of pid: pid_t) -> (energy: UInt64, started: UInt64)? {
         var info = rusage_info_v6()
         let result = withUnsafeMutablePointer(to: &info) { pointer in
             pointer.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) {
@@ -143,7 +147,7 @@ public actor ProcessEnergySampler {
             }
         }
         guard result == 0 else { return nil }
-        return info.ri_energy_nj
+        return (info.ri_energy_nj, info.ri_proc_start_abstime)
     }
 }
 

@@ -3,7 +3,7 @@
 # app itself finds it (Sparkle) and install.sh does too. The version comes from MARKETING_VERSION in the Xcode project;
 # the notes from its section in CHANGELOG.md.
 #
-# Releases are made from `main` only, which gets nothing but merges from `develop` (see CONTRIBUTING.md, "Making a
+# Releases are made from `main` only, which gets nothing but merges from `develop` (see .github/CONTRIBUTING.md, "Making a
 # release"). The script refuses to run on any other branch, or when main isn't in step with origin/main.
 #
 # The appcast is signed with the "WatchMyBattery" Sparkle key in your keychain (its public half is SUPublicEDKey in
@@ -66,6 +66,8 @@ NOTES=$(awk -v version="$VERSION" '
   found { print }
 ' CHANGELOG.md)
 [[ -n "$NOTES" ]] || { echo "Add a \"## [$VERSION]\" section to CHANGELOG.md (on develop) first."; exit 1; }
+# The notes as the app shows them in its update window: just the changelog, without the install steps added for GitHub.
+APP_NOTES="$NOTES"
 
 # Nothing goes out that fails its tests, got slower than its budgets or baselines, or stopped working end to end.
 if (( CHECKS )); then
@@ -90,10 +92,15 @@ GENERATE_APPCAST=$(find build/DerivedData/SourcePackages/artifacts -name generat
 rm -rf build/appcast
 mkdir -p build/appcast
 cp build/WatchMyBattery.dmg build/appcast/
-"$GENERATE_APPCAST" --account WatchMyBattery \
+# Named like the disk image, so generate_appcast takes it as this version's release notes and embeds them in the
+# appcast: Sparkle's update window then shows what's new, from the same download as the update itself.
+swift scripts/release-notes.swift "$VERSION" <<< "$APP_NOTES" > build/appcast/WatchMyBattery.html \
+  || { echo "Couldn't make the release notes for the update window."; exit 1; }
+"$GENERATE_APPCAST" --account WatchMyBattery --embed-release-notes \
   --download-url-prefix "https://github.com/$REPO/releases/download/$TAG/" \
   --link "https://github.com/$REPO/releases/tag/$TAG" --maximum-versions 1 build/appcast
 [[ -f build/appcast/appcast.xml ]] || { echo "No appcast was made."; exit 1; }
+grep -q "<description>" build/appcast/appcast.xml || { echo "The appcast has no release notes."; exit 1; }
 
 NOTES+=$'\n\n'"### Install"$'\n\n```sh\ncurl -fsSL https://raw.githubusercontent.com/'"$REPO"$'/main/install.sh | bash\n```'
 
