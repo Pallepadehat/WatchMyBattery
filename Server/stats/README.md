@@ -16,6 +16,19 @@ Once a day, the app posts:
 - The Worker stores that, plus the **day** it was first and last seen. No IP address, no headers, no location, and request logs are off.
 - Turning sharing off sends `DELETE /v1/installs/<id>`, which deletes the row, and the app forgets the ID.
 
+## Misuse
+
+The Worker's address is inside every copy of the app, so anyone can call it. What keeps that harmless:
+
+- **Rate limit.** Each IP gets 10 requests a minute; past that, `429`. The limiter is keyed by a hash of the IP and only holds it for its one-minute window. Nothing about the IP reaches the database.
+- **A daily cap on new Macs** (2,000), so a flood of made-up IDs can't fill the database. Macs already counted keep updating.
+- **Strict pings.** A version 4 UUID, an app version like `0.4.2`, a macOS version like `15.1`, as JSON of at most 256 bytes. Anything else is `400`.
+- **Deleting** needs the Mac's random ID, which only that Mac knows. **The stats** need the token, compared in constant time.
+- **`returning`** counts Macs seen on two different days or more. A burst of fake pings doesn't reach it, so it's the number to trust if the total ever looks inflated.
+- **No bill.** On Cloudflare's free plan, going past the daily limits makes requests fail rather than cost money.
+
+Someone determined could still add a few fake Macs a day from many IPs: an open-source app can't prove a ping is real. The cap and `returning` keep that from mattering.
+
 ## Setting it up
 
 You need a free Cloudflare account. Where it's deployed stays out of git: `wrangler.toml` (with the database ID) and Wrangler's `.wrangler/` folder are git-ignored, the Worker's host lives in the git-ignored `Config/Local.xcconfig`, and the stats token in your Keychain. From this folder:
@@ -51,6 +64,7 @@ curl -s -H "Authorization: Bearer $(security find-generic-password -s watchmybat
 ```json
 {
   "installs": 42,
+  "returning": 35,
   "activeToday": 18,
   "activeLast7Days": 31,
   "activeLast30Days": 38,
@@ -60,6 +74,6 @@ curl -s -H "Authorization: Bearer $(security find-generic-password -s watchmybat
 }
 ```
 
-`installs` is every Mac that has opted in and not opted out since. The `active…` counts are Macs that pinged in that window. `versions` and `macOS` cover the last 30 days.
+`installs` is every Mac that has opted in and not opted out since; `returning` is those seen on two different days or more. The `active…` counts are Macs that pinged in that window. `versions` and `macOS` cover the last 30 days.
 
 Or query D1 yourself: `npx wrangler d1 execute watchmybattery-stats --remote --command "SELECT COUNT(*) FROM installs"`.
