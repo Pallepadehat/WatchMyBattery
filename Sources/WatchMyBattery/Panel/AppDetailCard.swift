@@ -48,10 +48,11 @@ struct AppDetailCard: View {
         } else {
             VStack(spacing: 2) {
                 ForEach(processes.prefix(Self.maximumRows)) { process in
-                    HStack(spacing: 8) {
-                        Text(process.name)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        // The header names the app, so each row says only what's particular to it, in full.
+                        Text(process.shortName(inApp: app.name))
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
                             .help(process.name)
                         Spacer(minLength: 6)
                         Text(Self.watts(process.watts))
@@ -78,21 +79,38 @@ struct AppDetailCard: View {
         }
     }
 
+    /// On one line when they fit; otherwise the confirmation, which is long (longer still in Danish), gets a line of
+    /// its own rather than being cut off.
     private var actions: some View {
-        HStack(spacing: 12) {
-            Button("Show") { NSRunningApplication(processIdentifier: app.id)?.activate() }
-            Button("Quit", action: quit)
-            if isConfirmingForceQuit {
-                Button("Force Quit, Losing Unsaved Changes", action: forceQuit)
-                    .foregroundStyle(.red)
-                    .transition(.opacity)
-            } else {
-                Button("Force Quit…") { withAnimation(.snappy(duration: 0.2)) { isConfirmingForceQuit = true } }
-                    .help("For an app that's stopped responding: quits it straight away, without asking about unsaved changes.")
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) {
+                showAndQuit
+                forceQuitButton
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 12) { showAndQuit }
+                forceQuitButton
             }
         }
         .buttonStyle(.link)
         .font(.system(size: 11, weight: .medium))
+        .lineLimit(1)
+    }
+
+    @ViewBuilder private var showAndQuit: some View {
+        Button("Show") { NSRunningApplication(processIdentifier: app.id)?.activate() }
+        Button("Quit", action: quit)
+    }
+
+    @ViewBuilder private var forceQuitButton: some View {
+        if isConfirmingForceQuit {
+            Button("Force Quit, Losing Unsaved Changes", action: forceQuit)
+                .foregroundStyle(.red)
+                .transition(.opacity)
+        } else {
+            Button("Force Quit…") { withAnimation(.snappy(duration: 0.2)) { isConfirmingForceQuit = true } }
+                .help("For an app that's stopped responding: quits it straight away, without asking about unsaved changes.")
+        }
     }
 
     /// "1.4 W", for a process here and an app's slice on the adapter. "0.0 W" would read as nothing at all; it's

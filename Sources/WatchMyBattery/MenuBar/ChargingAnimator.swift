@@ -1,41 +1,42 @@
 import AppKit
 import BatteryKit
 
-/// Plays the charging glint: a short sweep across the battery, then a rest,
-/// over and over, for as long as it's running.
+/// Plays the menu bar icon's motion (``MenuBarMotion``): the frames of one cycle, then its rest, over and over, for as
+/// long as it's running. A loop (liquid, stripes, still water) has no rest and runs straight on from its last frame to
+/// its first; the others rest between cycles, when nothing runs at all.
 ///
-/// It's built to cost next to nothing. Every frame makes macOS redraw the
-/// status item and re-snapshot it for each menu bar it shows in, so a sweep
-/// has only the frames it needs (``ChargingGlint`` picks them: fewer on a
-/// fuller battery, where the glint has less far to go, and none where it
-/// wouldn't show). Between sweeps nothing runs at all: no timer fires for
-/// most of each cycle. The owner stops it whenever nobody could see it
-/// (displays asleep, another user logged in) or it isn't wanted (Reduce
-/// Motion, Low Power Mode, the setting turned off).
+/// It's built to cost as little as it can. Every frame makes macOS redraw the
+/// status item and re-snapshot it for each menu bar it shows in, so each
+/// motion has only the frames it needs: the glint's are picked by
+/// ``ChargingGlint`` (fewer on a fuller battery, none where it wouldn't
+/// show), a slow fade gets nine a second. The owner stops it whenever nobody
+/// could see it (displays asleep, another user logged in) or it isn't wanted
+/// (Reduce Motion, Low Power Mode, the setting turned off).
 final class ChargingAnimator {
-    /// Gets the glint's position, 0–1, for each frame, and `nil` when it rests or stops.
+    /// Gets the phase, 0–1, of each frame, and `nil` when it rests or stops.
     var onFrame: ((Double?) -> Void)?
 
     private(set) var isRunning = false
     private var timer: Timer?
     private var frame = 0
-    /// The charge level and target the sweep is for; new ones take effect from the next sweep.
-    private var level = 0.5
-    private var target = 1.0
-    private var sweepFrames = ChargingGlint(bodyWidth: BatteryIcon.bodyWidth, level: 0.5)
+    /// What's playing; a new motion takes effect from the next cycle.
+    private var motion = MenuBarMotion.breathing
+    private var cycle = MenuBarMotion.breathing.cycle
 
-    /// The most frames a sweep has, for showing them all (the previews).
+    /// The most frames a glint sweep has, for showing them all (the previews).
     static let framesPerSweep = ChargingGlint.maximumFrames
-    /// The pause between sweeps.
-    private static let rest: TimeInterval = 1.9
 
-    /// Starts sweeping over a battery charged to `level` and charging to `target` (both 0–1), or keeps going with new ones.
-    func start(level: Double, target: Double = 1) {
-        self.level = level
-        self.target = target
-        guard !isRunning else { return }
+    /// Starts playing `motion`. A running loop switches at once; anything else from its next cycle.
+    func start(_ motion: MenuBarMotion) {
+        let changed = motion != self.motion
+        self.motion = motion
+        guard !isRunning else {
+            // A loop never rests, so it would never reach a next cycle to switch at: start the new motion now.
+            if changed, cycle.rest == 0 { beginCycle() }
+            return
+        }
         isRunning = true
-        sweep()
+        beginCycle()
     }
 
     func stop() {
@@ -46,24 +47,27 @@ final class ChargingAnimator {
         onFrame?(nil)
     }
 
-    private func sweep() {
-        if level != sweepFrames.level || target != sweepFrames.target {
-            sweepFrames = ChargingGlint(bodyWidth: BatteryIcon.bodyWidth, level: level, target: target)
-        }
+    private func beginCycle() {
+        cycle = motion.cycle
         frame = 0
-        schedule(every: sweepFrames.frameInterval, repeats: true) { [weak self] in self?.advance() }
+        schedule(every: cycle.frameInterval, repeats: true) { [weak self] in self?.advance() }
     }
 
     private func advance() {
         guard isRunning else { return }
-        let phases = sweepFrames.phases
-        if frame >= phases.count {
+        if frame >= cycle.phases.count {
+            guard cycle.rest > 0 else {
+                // A loop: straight back to its first frame.
+                frame = 0
+                advance()
+                return
+            }
             timer?.invalidate()
             onFrame?(nil)
-            schedule(every: Self.rest, repeats: false) { [weak self] in self?.sweep() }
+            schedule(every: cycle.rest, repeats: false) { [weak self] in self?.beginCycle() }
             return
         }
-        onFrame?(phases[frame])
+        onFrame?(cycle.phases[frame])
         frame += 1
     }
 

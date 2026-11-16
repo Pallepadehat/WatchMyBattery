@@ -345,6 +345,16 @@
         }
       }
     },
+    "24 hours and 10 days, and the apps that used the most." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "24 timer og 10 dage, og de apps, der brugte mest."
+          }
+        }
+      }
+    },
     "3 Months" : {
       "localizations" : {
         "da" : {
@@ -455,6 +465,16 @@
         }
       }
     },
+    "A nudge at the right moment. All of them are off until you turn them on." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Et lille skub på det rigtige tidspunkt. De er alle slået fra, til du slår dem til."
+          }
+        }
+      }
+    },
     "A slice for the power no app accounts for: the screen, graphics, Wi‑Fi, Bluetooth and macOS itself." : {
       "localizations" : {
         "da" : {
@@ -465,12 +485,22 @@
         }
       }
     },
-    "A soft glow flows into the battery while it charges, here and in the panel." : {
+    "A soft sound as you plug in or unplug, so you know without looking." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Et blødt lys strømmer ind i batteriet, mens det oplader, her og i panelet."
+            "value" : "En blød lyd, når du sætter strøm til eller tager den fra, så du ved det uden at kigge."
+          }
+        }
+      }
+    },
+    "A soft swell of light rolls into the battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En blød bølge af lys ruller ind i batteriet."
           }
         }
       }
@@ -625,6 +655,16 @@
         }
       }
     },
+    "AirPods, a Magic Mouse or keyboard, at %@." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirPods, en Magic Mouse eller et tastatur, ved %@."
+          }
+        }
+      }
+    },
     "AirPods, Beats and other headphones, the Magic Mouse, Keyboard and Trackpad, and game controllers." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -642,6 +682,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "AirPods, Beats og andre hovedtelefoner, Magic Mouse, Keyboard og Trackpad, spillecontrollere samt din iPhone og iPad."
+          }
+        }
+      }
+    },
+    "AirPods, Magic devices, your iPhone and iPad, all in one place." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirPods, Magic-enheder, din iPhone og iPad, samlet ét sted."
+          }
+        }
+      }
+    },
+    "AirPods, Magic devices, your iPhone and iPad." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirPods, Magic-enheder, din iPhone og iPad."
           }
         }
       }
@@ -726,6 +786,16 @@
         }
       }
     },
+    "Apps Using a Lot" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps, der bruger meget"
+          }
+        }
+      }
+    },
     "Apps Using a Lot of Energy" : {
       "localizations" : {
         "da" : {
@@ -752,6 +822,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gennemsnitlig dag"
+          }
+        }
+      }
+    },
+    "Back" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilbage"
           }
         }
       }
@@ -836,6 +916,16 @@
         }
       }
     },
+    "Battery Readings" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batterimålinger"
+          }
+        }
+      }
+    },
     "Battery Settings" : {
       "localizations" : {
         "da" : {
@@ -876,12 +966,22 @@
         }
       }
     },
-    "Beside" : {
+    "Beside It" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ved siden af"
+          }
+        }
+      }
+    },
+    "Beside the Icon" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ved siden af symbolet"
           }
         }
       }
@@ -892,6 +992,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mellem %1$@ og %2$@, nu %3$@."
+          }
+        }
+      }
+    },
+    "Bottle" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flaske"
+          }
+        }
+      }
+    },
+    "Breathing" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vejrtrækning"
           }
         }
       }
@@ -922,6 +1042,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Adgang til kalendere"
+          }
+        }
+      }
+    },
+    "Calm Liquid" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rolig væske"
           }
         }
       }
@@ -1036,6 +1166,16 @@
         }
       }
     },
+    "Charged" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opladet"
+          }
+        }
+      }
+    },
     "Charged to %@" : {
       "localizations" : {
         "da" : {
@@ -1046,12 +1186,502 @@
         }
       }
     },
+    "Charger" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lader"
+          }
+        }
+      }
+    },
     "Charges all the way. A limit keeps the battery from sitting full, which wears it fastest." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Oplader helt. En grænse forhindrer, at batteriet står fuldt, hvilket slider det mest."
+          }
+        }
+      }
+    },
+    "Charging paused while the battery cools" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opladningen holder pause, mens batteriet køler af"
+          }
+        }
+      }
+    },
+    "Charging slowly" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplader langsomt"
+          }
+        }
+      }
+    },
+    "Charging slowly while the battery is warm" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplader langsomt, mens batteriet er varmt"
+          }
+        }
+      }
+    },
+    "Chime When Charging Starts or Stops" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lyd, når opladningen starter eller stopper"
+          }
+        }
+      }
+    },
+    "Continue" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fortsæt"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Færdig"
+          }
+        }
+      }
+    },
+    "Drag one out to quit it" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Træk en ud for at lukke den"
+          }
+        }
+      }
+    },
+    "Each app draining it gets a slice, with the time it costs you." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hver app, der dræner det, får et stykke, med den tid, den koster dig."
+          }
+        }
+      }
+    },
+    "Finishing Touches" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sidste detaljer"
+          }
+        }
+      }
+    },
+    "Flow" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bølge"
+          }
+        }
+      }
+    },
+    "Get Started" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kom i gang"
+          }
+        }
+      }
+    },
+    "Glass" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glas"
+          }
+        }
+      }
+    },
+    "Green charging, yellow in Low Power Mode, red when low." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grøn under opladning, gul i strømsparetilstand, rød når det er lavt."
+          }
+        }
+      }
+    },
+    "Heartbeat" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hjerteslag"
+          }
+        }
+      }
+    },
+    "Hide macOS's Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skjul macOS’ batteri"
+          }
+        }
+      }
+    },
+    "History and insights" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historik og indsigter"
+          }
+        }
+      }
+    },
+    "Hold the battery short of full, from the panel, so it lasts longer." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold batteriet under fuldt fra panelet, så det holder længere."
+          }
+        }
+      }
+    },
+    "Holding near %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holder omkring %@"
+          }
+        }
+      }
+    },
+    "Holding the Charge" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når opladningen holdes"
+          }
+        }
+      }
+    },
+    "How charged the battery is." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hvor opladet batteriet er."
+          }
+        }
+      }
+    },
+    "How It Moves" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sådan bevæger det sig"
+          }
+        }
+      }
+    },
+    "In the menu bar and the panel." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I menulinjen og i panelet."
+          }
+        }
+      }
+    },
+    "It's %@, so macOS charges more gently until it cools down." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Det er %@, så macOS oplader mere skånsomt, til det er kølet af."
+          }
+        }
+      }
+    },
+    "It's %@. macOS holds charging back while the battery is this warm, and carries on by itself once it cools." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Det er %@. macOS holder opladningen tilbage, mens batteriet er så varmt, og fortsætter af sig selv, når det er kølet af."
+          }
+        }
+      }
+    },
+    "Its temperature, voltage and current." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dets temperatur, spænding og strøm."
+          }
+        }
+      }
+    },
+    "Just the icon." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kun symbolet."
+          }
+        }
+      }
+    },
+    "Keep the battery in your menu bar." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behold batteriet i din menulinje."
+          }
+        }
+      }
+    },
+    "Last Few Percent" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De sidste procent"
+          }
+        }
+      }
+    },
+    "Liquid" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Væske"
+          }
+        }
+      }
+    },
+    "macOS charges again once the battery has drifted down a little further." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS oplader igen, når batteriet er faldet lidt mere."
+          }
+        }
+      }
+    },
+    "macOS lets the battery drift down a little before topping it up, so it isn't kept at %@ all the time." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS lader batteriet falde lidt, før det fylder op igen, så det ikke holdes på %@ hele tiden."
+          }
+        }
+      }
+    },
+    "Most MacBooks already chime when you plug in." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De fleste MacBooks spiller allerede en lyd, når du sætter strøm til."
+          }
+        }
+      }
+    },
+    "Nearly full" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Næsten fuldt"
+          }
+        }
+      }
+    },
+    "Nothing" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intet"
+          }
+        }
+      }
+    },
+    "Notifications are off for WatchMyBattery in System Settings." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifikationer er slået fra for WatchMyBattery i Systemindstillinger."
+          }
+        }
+      }
+    },
+    "Open the Panel" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbn panelet"
+          }
+        }
+      }
+    },
+    "Open the panel from anywhere, and keep WatchMyBattery running." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbn panelet hvor som helst fra, og hold WatchMyBattery kørende."
+          }
+        }
+      }
+    },
+    "Or nothing, for just the icon." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eller ingenting, så det kun er symbolet."
+          }
+        }
+      }
+    },
+    "Percentage Inside the Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Procent inde i batteriet"
+          }
+        }
+      }
+    },
+    "Play the sound" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afspil lyden"
+          }
+        }
+      }
+    },
+    "Play When" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afspil"
+          }
+        }
+      }
+    },
+    "Plugging In and Unplugging" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ved tilslutning og frakobling"
+          }
+        }
+      }
+    },
+    "Pop" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pop"
+          }
+        }
+      }
+    },
+    "Power Draw" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømforbrug"
+          }
+        }
+      }
+    },
+    "Printed in the battery, cut out of the charge so it reads on any wallpaper." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skrevet i batteriet og skåret ud af opladningen, så det kan læses på enhver baggrund."
+          }
+        }
+      }
+    },
+    "Pull a slice out of the panel and it's gone, like an icon from the Dock." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Træk et stykke ud af panelet, så er den væk, som et symbol fra Dock."
+          }
+        }
+      }
+    },
+    "Purr" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spind"
+          }
+        }
+      }
+    },
+    "Ring" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ring"
           }
         }
       }
@@ -1833,16 +2463,6 @@
         }
       }
     },
-    "Inside" : {
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Indeni"
-          }
-        }
-      }
-    },
     "Inside the Battery" : {
       "localizations" : {
         "da" : {
@@ -2546,16 +3166,6 @@
         }
       }
     },
-    "Open the Panel" : {
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Åbn panelet"
-          }
-        }
-      }
-    },
     "Open…" : {
       "localizations" : {
         "da" : {
@@ -2997,6 +3607,16 @@
         }
       }
     },
+    "See what's draining your battery, right from the menu bar." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se, hvad der dræner dit batteri, direkte fra menulinjen."
+          }
+        }
+      }
+    },
     "Select it in Finder's sidebar. On the General tab, turn on “Show this iPhone when on Wi‑Fi” and click Apply." : {
       "localizations" : {
         "da" : {
@@ -3117,6 +3737,16 @@
         }
       }
     },
+    "Show…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis…"
+          }
+        }
+      }
+    },
     "Since %@, when the Mac was unplugged. The average includes time asleep." : {
       "localizations" : {
         "da" : {
@@ -3153,6 +3783,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Glider ind under menulinjen, når AirPods eller andre hovedtelefoner forbindes, med batteriet i hver øretelefon og etuiet."
+          }
+        }
+      }
+    },
+    "Slow Pulse" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langsom puls"
+          }
+        }
+      }
+    },
+    "So there's one battery up there. Control Center › Battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Så der kun er ét batteri deroppe. Kontrolcenter › Batteri."
           }
         }
       }
@@ -3247,12 +3897,68 @@
         }
       }
     },
+    "Step %lld of %lld" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trin %1$lld af %2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Step %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "Still Water" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stille vand"
+          }
+        }
+      }
+    },
     "Stops charging at %@ while plugged in, so the battery lasts longer." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stopper opladningen ved %@, mens strømmen er tilsluttet, så batteriet holder længere."
+          }
+        }
+      }
+    },
+    "Stripes" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Striber"
+          }
+        }
+      }
+    },
+    "Stripes glide through the part still to charge." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Striber glider gennem den del, der mangler at blive opladet."
+          }
+        }
+      }
+    },
+    "Style" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stil"
           }
         }
       }
@@ -3287,12 +3993,72 @@
         }
       }
     },
+    "Ten days of battery, and a heads-up when something's unusual." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ti dages batteri, og besked, når noget er usædvanligt."
+          }
+        }
+      }
+    },
+    "Text" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekst"
+          }
+        }
+      }
+    },
+    "Text Only" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kun tekst"
+          }
+        }
+      }
+    },
+    "The %lld W charger isn't giving enough for your Mac and its battery right now. A more powerful charger helps." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opladeren på %lld W giver ikke nok til både din Mac og batteriet lige nu. En kraftigere oplader hjælper."
+          }
+        }
+      }
+    },
     "The apps using the most energy each get a slice." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "De apps, der bruger mest energi, får hver en bid."
+          }
+        }
+      }
+    },
+    "The apps, in the battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps, i batteriet"
+          }
+        }
+      }
+    },
+    "The battery can move while it charges, and while it's held at your limit." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriet kan bevæge sig, mens det oplader, og mens det holdes ved din grænse."
           }
         }
       }
@@ -3337,6 +4103,16 @@
         }
       }
     },
+    "The battery is running down even though your Mac is plugged in. A more powerful charger helps." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriet aflades, selvom din Mac er sluttet til strøm. En kraftigere oplader hjælper."
+          }
+        }
+      }
+    },
     "The battery is warm. Time spent warm wears it a little faster." : {
       "localizations" : {
         "da" : {
@@ -3363,6 +4139,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Batteriniveauet vises her, efterhånden som det ændrer sig."
+          }
+        }
+      }
+    },
+    "The battery moves while it charges and while it's held, here and in the panel." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriet bevæger sig, mens det oplader, og mens opladningen holdes, her og i panelet."
           }
         }
       }
@@ -3397,12 +4183,62 @@
         }
       }
     },
+    "The charge dims a little and comes back, slowly." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opladningen dæmpes lidt og kommer langsomt tilbage."
+          }
+        }
+      }
+    },
+    "The charge ripples like a liquid as it rises. Moves all the time." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opladningen bølger som en væske, mens den stiger. Bevæger sig hele tiden."
+          }
+        }
+      }
+    },
+    "The charger can't keep up" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opladeren kan ikke følge med"
+          }
+        }
+      }
+    },
+    "The charger the Mac is plugged into." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opladeren, som Mac’en er sluttet til."
+          }
+        }
+      }
+    },
     "The charts, the apps that used the most battery and what's usual for this Mac start again from now." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diagrammerne, de apps, der brugte mest batteri, og hvad der er normalt for denne Mac, starter forfra fra nu."
+          }
+        }
+      }
+    },
+    "The edge of the charge pulses softly." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kanten af opladningen pulserer blødt."
           }
         }
       }
@@ -3417,12 +4253,52 @@
         }
       }
     },
+    "The liquid at rest, tilting very slowly. Moves all the time." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Væsken i ro, der hælder meget langsomt. Bevæger sig hele tiden."
+          }
+        }
+      }
+    },
+    "The liquid slows to a gentle sway. Moves all the time." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Væsken falder til ro i en blid bølgen. Bevæger sig hele tiden."
+          }
+        }
+      }
+    },
     "The Mac is plugged in, and the battery isn't charging." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mac'en er tilsluttet strøm, og batteriet oplades ikke."
+          }
+        }
+      }
+    },
+    "The menu bar, how it moves, the panel and notifications, one step at a time." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menulinjen, bevægelserne, panelet og notifikationerne, ét trin ad gangen."
+          }
+        }
+      }
+    },
+    "The plug gives a soft double beat every few seconds." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stikket slår et blødt dobbeltslag med få sekunders mellemrum."
           }
         }
       }
@@ -3498,6 +4374,16 @@
         }
       }
     },
+    "Tink" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tink"
+          }
+        }
+      }
+    },
     "Tip: press Tab to move between slices with the keyboard, and Delete to quit one." : {
       "localizations" : {
         "da" : {
@@ -3564,6 +4450,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "To batterier på menulinjen?"
+          }
+        }
+      }
+    },
+    "Two notes, rising as you plug in and falling as you unplug." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To toner, der stiger, når du sætter strøm til, og falder, når du tager den fra."
           }
         }
       }
@@ -3639,12 +4535,32 @@
         }
       }
     },
+    "Unplugging Only" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kun ved frakobling"
+          }
+        }
+      }
+    },
     "Until %@" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Indtil %@"
+          }
+        }
+      }
+    },
+    "Until empty, or until full while charging. The percentage when there's no time to show." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indtil tomt, eller indtil fuldt under opladning. Procenten, når der ikke er nogen tid at vise."
           }
         }
       }
@@ -3875,6 +4791,26 @@
         }
       }
     },
+    "Welcome to WatchMyBattery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Velkommen til WatchMyBattery"
+          }
+        }
+      }
+    },
+    "Welcome Tour" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Velkomstrundtur"
+          }
+        }
+      }
+    },
     "What the battery controller measures right now." : {
       "localizations" : {
         "da" : {
@@ -3891,6 +4827,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hvad batteriets controller måler, under batteriet."
+          }
+        }
+      }
+    },
+    "What the last sleep used, and what's keeping the Mac awake." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hvad seneste dvale brugte, og hvad der holder Mac’en vågen."
+          }
+        }
+      }
+    },
+    "What the Panel Shows" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hvad panelet viser"
+          }
+        }
+      }
+    },
+    "What the whole Mac draws right now, read every few seconds while it's shown." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hvad hele Mac’en bruger lige nu, aflæst med få sekunders mellemrum, mens det vises."
           }
         }
       }
@@ -3925,12 +4891,32 @@
         }
       }
     },
+    "When it runs low, naming the app using the most." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når det er ved at løbe tørt, med den app, der bruger mest."
+          }
+        }
+      }
+    },
     "When It's Charged" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Når det er opladet"
+          }
+        }
+      }
+    },
+    "When one keeps draining it, with a button to quit it." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når en bliver ved med at dræne det, med en knap til at lukke den."
           }
         }
       }
@@ -3961,6 +4947,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Når du trækker en app ud af batteriet. Slet på en valgt bid spørger altid."
+          }
+        }
+      }
+    },
+    "While Charging" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Under opladning"
           }
         }
       }
@@ -4005,6 +5001,16 @@
         }
       }
     },
+    "Your accessories too" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Også dit tilbehør"
+          }
+        }
+      }
+    },
     "Your battery, and who's draining it." : {
       "localizations" : {
         "da" : {
@@ -4035,12 +5041,114 @@
         }
       }
     },
+    "Your Mac is using about %@ of the %lld W charger's power, leaving little for the battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Din Mac bruger omkring %1$@ af opladerens %2$lld W, så der er ikke meget tilbage til batteriet."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your Mac is using about %1$@ of the %2$lld W charger's power, leaving little for the battery."
+          }
+        }
+      }
+    },
+    "Your Mac is using about %@, more than the %lld W charger gives, so the battery isn't charging. A more powerful charger, or quitting busy apps, helps." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Din Mac bruger omkring %1$@, mere end opladeren på %2$lld W giver, så batteriet oplader ikke. En kraftigere oplader hjælper, eller at lukke travle apps."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your Mac is using about %1$@, more than the %2$lld W charger gives, so the battery isn't charging. A more powerful charger, or quitting busy apps, helps."
+          }
+        }
+      }
+    },
     "Your Mac used %@ while asleep" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Din Mac brugte %@ i dvale"
+          }
+        }
+      }
+    },
+    "Your Menu Bar" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Din menulinje"
+          }
+        }
+      }
+    },
+    "Choose what the panel shows when you click the battery. The apps draining it are always there." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vælg, hvad panelet viser, når du klikker på batteriet. De apps, der dræner det, er der altid."
+          }
+        }
+      }
+    },
+    "At %@, so you can unplug." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ved %@, så du kan tage stikket ud."
+          }
+        }
+      }
+    },
+    "Reduce Motion is on, so the battery stays still." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reducer bevægelse er slået til, så batteriet står stille."
+          }
+        }
+      }
+    },
+    "Dismiss %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afvis %@"
+          }
+        }
+      }
+    },
+    "When it drains faster than usual, or a new app uses a lot." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når det drænes hurtigere end normalt, eller en ny app bruger meget."
+          }
+        }
+      }
+    },
+    "Choose what goes beside the battery, and whether it shows its state in colour." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vælg, hvad der står ved siden af batteriet, og om det viser sin tilstand i farver."
           }
         }
       }

@@ -11,7 +11,7 @@ final class StatusItemController: NSObject {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private lazy var panel = BatteryPanelController(model: model, statusItem: statusItem)
     private var drawnIcon: BatteryIcon?
-    private var drawnTitle: String?
+    private var drawnTitle: NSAttributedString?
     /// The icon as the battery and settings would have it, before any animation.
     private var currentIcon: BatteryIcon?
     private let chargingAnimator = ChargingAnimator()
@@ -33,7 +33,7 @@ final class StatusItemController: NSObject {
             button.imagePosition = .imageRight
             button.imageHugsTitle = true
         }
-        chargingAnimator.onFrame = { [weak self] glint in self?.drawIcon(glint: glint) }
+        chargingAnimator.onFrame = { [weak self] phase in self?.drawIcon(phase: phase) }
         watchVisibility()
         observeChanges()
     }
@@ -69,6 +69,11 @@ final class StatusItemController: NSObject {
             menu.addItem(withTitle: String(localized: "Check for Updates…"), action: #selector(checkForUpdates), keyEquivalent: "")
                 .target = self
         }
+        #if DEBUG
+            // For working on the tour: Debug builds only, and not translated, as nobody else sees it.
+            menu.addItem(.separator())
+            menu.addItem(withTitle: "Reset Welcome Tour", action: #selector(resetOnboarding), keyEquivalent: "").target = self
+        #endif
         menu.addItem(.separator())
         menu.addItem(withTitle: String(localized: "Quit WatchMyBattery"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         statusItem.menu = menu
@@ -78,6 +83,9 @@ final class StatusItemController: NSObject {
     }
 
     @objc private func openSettings() { model.openSettings() }
+    #if DEBUG
+        @objc private func resetOnboarding() { model.resetOnboarding() }
+    #endif
     @objc private func checkForUpdates() {
         model.openSettings(.updates)
         model.updater.checkNow()
@@ -99,33 +107,50 @@ final class StatusItemController: NSObject {
 
     private func updateButton() {
         guard let button = statusItem.button else { return }
+        let settings = model.settings
         let snapshot = model.battery.snapshot
-        let icon = BatteryIcon(snapshot: snapshot, settings: model.settings)
-        currentIcon = icon
-        let animates = model.settings.showsChargingAnimation && snapshot.chargeState == .charging && !snapshot.isLowPowerModeOn
-        updateAnimation(wanted: animates, level: snapshot.level, target: Double(snapshot.chargeTarget) / 100)
-        if !chargingAnimator.isRunning { drawIcon(glint: nil) }
+        let label = settings.effectiveMenuBarLabel
+        // The power draw is the one thing read on a timer: only while it's shown, and someone could see it.
+        model.powerDraw.setActive(label == .powerDraw && !isOutOfSight)
 
-        let title = model.settings.percentageStyle == .beside ? snapshot.percentage.formatted(.percent) : ""
+        let item = MenuBarItem(snapshot: snapshot, settings: settings, watts: model.powerDraw.watts)
+        let motion = Self.motion(for: snapshot, icon: item.icon, settings: settings)
+        var icon = item.icon
+        icon.motion = motion
+        currentIcon = icon
+        updateAnimation(motion)
+        if !chargingAnimator.isRunning { drawIcon(phase: nil) }
+
+        let title = Self.title(for: item)
         if title != drawnTitle {
-            button.attributedTitle = NSAttributedString(
-                string: title.isEmpty ? "" : title + " ",
-                attributes: [.font: NSFont.menuBarFont(ofSize: 0).monospacedDigits])
+            button.attributedTitle = title
+            button.imagePosition = item.leadsWithIcon ? .imageLeft : .imageRight
             drawnTitle = title
         }
+    }
+
+    /// The text beside the icon, spaced from it.
+    private static func title(for item: MenuBarItem) -> NSAttributedString {
+        guard let text = item.text else { return NSAttributedString() }
+        var attributes: [NSAttributedString.Key: Any] = [.font: NSFont.menuBarFont(ofSize: 0).monospacedDigits]
+        if item.showsTextAsLow { attributes[.foregroundColor] = NSColor.systemRed }
+        let spaced = item.icon.isEmpty ? text : item.leadsWithIcon ? " " + text : text + " "
+        return NSAttributedString(string: spaced, attributes: attributes)
     }
 }
 
 // MARK: - Charging animation
 
 extension StatusItemController {
-    /// Draws the current icon, with the glint where the animation has it. The
-    /// icon is compared with the one on screen, so nothing is redrawn for nothing.
-    fileprivate func drawIcon(glint: Double?) {
+    /// Draws the current icon, at the animation's phase. The icon is compared
+    /// with the one on screen, so nothing is redrawn for nothing.
+    fileprivate func drawIcon(phase: Double?) {
         guard let button = statusItem.button, var icon = currentIcon else { return }
-        icon.chargeGlint = glint
+        icon.animationPhase = phase
+        // Resting between cycles, it's the still icon, whatever the motion: drawn and cached once.
+        if phase == nil { icon.motion = nil }
         guard icon != drawnIcon else { return }
-        button.image = image(for: icon)
+        button.image = icon.isEmpty ? nil : image(for: icon)
         if icon.percentage != drawnIcon?.percentage || icon.chargeState != drawnIcon?.chargeState {
             button.setAccessibilityLabel(icon.accessibilityLabel)
         }
@@ -152,11 +177,19 @@ extension StatusItemController {
 
     private static let cachedImages = 64
 
+    /// How the icon should move, in the styles chosen in Settings, or `nil` when the animation is off, in Low Power
+    /// Mode, or for text only, which has no battery to animate.
+    fileprivate static func motion(for snapshot: BatterySnapshot, icon: BatteryIcon, settings: AppSettings) -> MenuBarMotion? {
+        guard settings.showsChargingAnimation, icon.style != .textOnly, !snapshot.isLowPowerModeOn else { return nil }
+        return MenuBarMotion(
+            snapshot: snapshot, charging: settings.chargingMotion, trickle: settings.trickleMotion, holding: settings.holdingMotion)
+    }
+
     /// Runs the animation only when it's wanted and someone could see it.
-    fileprivate func updateAnimation(wanted: Bool, level: Double, target: Double) {
+    fileprivate func updateAnimation(_ motion: MenuBarMotion?) {
         let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
-        if wanted && !reduceMotion && !isOutOfSight {
-            chargingAnimator.start(level: level, target: target)
+        if let motion, !reduceMotion, !isOutOfSight {
+            chargingAnimator.start(motion)
         } else {
             chargingAnimator.stop()
         }

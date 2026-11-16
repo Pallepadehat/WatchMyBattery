@@ -34,6 +34,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         model.showAccessoryCard = { [weak accessoryCard] in accessoryCard?.show($0) }
         model.start()
         #if DEBUG
+            // `--reset-onboarding`: as on a first launch, so the tour opens below, as it would for someone new.
+            if CommandLine.arguments.contains("--reset-onboarding") { model.settings.hasCompletedOnboarding = false }
             if CommandLine.arguments.contains("--show-settings") {
                 // `--settings-pane updates` (say) opens that pane.
                 let arguments = CommandLine.arguments
@@ -43,6 +45,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 if arguments.contains("--check-now") {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { self.model.updater.checkNow() }
                 }
+                return
+            }
+            if CommandLine.arguments.contains("--show-onboarding") {
+                // `--onboarding-step 3` opens it at that step.
+                let arguments = CommandLine.arguments
+                let step = arguments.firstIndex(of: "--onboarding-step").flatMap { arguments.indices.contains($0 + 1) ? Int(arguments[$0 + 1]) : nil }
+                model.openOnboarding(at: step.flatMap(OnboardingView.Step.init(rawValue:)) ?? .welcome)
                 return
             }
             if CommandLine.arguments.contains("--show-accessory-card") {
@@ -60,9 +69,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.statusItem?.showPanel() }
             return
         }
-        if !model.settings.hasSeenWelcome {
-            model.settings.hasSeenWelcome = true
-            statusItem?.showPanel()
+        if !model.settings.hasCompletedOnboarding {
+            // Once the menu bar has placed the icon, so the panel it opens at the end lines up under it.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.model.openOnboarding() }
         }
     }
 

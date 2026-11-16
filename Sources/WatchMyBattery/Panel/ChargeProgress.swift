@@ -53,7 +53,7 @@ struct ChargeProgressRow: View {
 
             ChargeTrack(
                 level: snapshot.level, target: Double(snapshot.chargeTarget) / 100, isCharging: snapshot.isCharging,
-                tint: tint, animates: animates && snapshot.isCharging
+                tint: tint, animates: animates
             )
             .frame(height: 8)
         }
@@ -98,6 +98,7 @@ struct ChargeTrack: View {
     let target: Double
     let isCharging: Bool
     let tint: Color
+    /// Play its animation: light flowing to the target while charging, the target's glow breathing while holding.
     let animates: Bool
 
     /// The panel's green: this bar, the battery while it charges, and the hours plugged in on the history chart.
@@ -140,13 +141,10 @@ struct ChargeTrack: View {
             }
             .clipShape(.capsule)
             .overlay(alignment: .leading) {
-                // The target: a notch standing just proud of the bar.
+                // The target: a notch standing just proud of the bar, glowing while the charge is held there.
                 if target < 1 {
-                    Capsule()
-                        .fill(.primary)
-                        .frame(width: 2, height: height + 6)
+                    TargetNotch(height: height + 6, tint: tint, glows: !isCharging, breathes: animates && !isCharging)
                         .offset(x: targetX - 1)
-                        .shadow(color: tint.opacity(isCharging ? 0 : 0.6), radius: 3)
                 }
             }
         }
@@ -179,6 +177,38 @@ private struct ChargeFlow: View {
             }
         }
         .allowsHitTesting(false)
+    }
+}
+
+/// Where charging stops. Held there, it glows, and the glow breathes with the battery: a little softer as it
+/// breathes out, back as it breathes in.
+private struct TargetNotch: View {
+    let height: CGFloat
+    let tint: Color
+    let glows: Bool
+    let breathes: Bool
+
+    var body: some View {
+        notch
+            .modifier(NotchGlow(tint: tint, glows: glows))
+            .chargingAnimation(breathes ? .breathing : nil)
+    }
+
+    private var notch: some View {
+        Capsule()
+            .fill(.primary)
+            .frame(width: 2, height: height)
+    }
+}
+
+private struct NotchGlow: ViewModifier {
+    let tint: Color
+    let glows: Bool
+    @Environment(\.chargingPhase) private var phase
+
+    func body(content: Content) -> some View {
+        let strength = glows ? 0.6 * (1 - 0.6 * (phase?.breath ?? 0)) : 0
+        content.shadow(color: tint.opacity(strength), radius: 3)
     }
 }
 

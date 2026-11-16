@@ -47,6 +47,17 @@ struct SystemReadersTests {
         }
     }
 
+    /// The charger is there exactly when `pmset` says the Mac runs on AC power, with a wattage a charger could have.
+    @Test(.enabled(if: Machine.hasBattery)) func readsTheChargerWhenPluggedIn() throws {
+        let output = try #require(Machine.run("/usr/bin/pmset", ["-g", "batt"]))
+        let adapter = PowerAdapterReader.read()
+        guard output.contains("'AC Power'") else {
+            #expect(adapter == nil)
+            return
+        }
+        if let watts = adapter?.watts { #expect(watts > 0 && watts <= 240) }
+    }
+
     @Test(.enabled(if: Machine.hasBattery), .timeLimit(.minutes(1))) func readsBatteryHealth() async throws {
         let health = try #require(await BatteryHealthReader.read())
         #expect(!health.isEmpty)

@@ -2,19 +2,116 @@ import BatteryKit
 import Foundation
 import Observation
 
-/// Where the menu bar shows the charge percentage.
-enum PercentageStyle: String, CaseIterable, Identifiable {
-    case hidden
-    case inside
-    case beside
+/// How the battery looks in the menu bar.
+enum MenuBarIconStyle: String, CaseIterable, Identifiable {
+    /// A battery, like macOS's own.
+    case battery
+    /// A ring that fills as it charges.
+    case ring
+    /// No icon: only the text beside it.
+    case textOnly
+
+    var id: Self { self }
+
+    /// The text shown with this style: text only always has some, the percentage unless something else was chosen.
+    func shownLabel(_ chosen: MenuBarLabel) -> MenuBarLabel {
+        self == .textOnly && chosen == .none ? .percentage : chosen
+    }
+
+    var title: LocalizedStringResource {
+        switch self {
+        case .battery: "Battery"
+        case .ring: "Ring"
+        case .textOnly: "Text Only"
+        }
+    }
+}
+
+extension MenuBarLabel {
+    var title: LocalizedStringResource {
+        switch self {
+        case .none: "Nothing"
+        case .percentage: "Percentage"
+        case .timeRemaining: "Time Left"
+        case .powerDraw: "Power Draw"
+        }
+    }
+}
+
+/// A style of one of the menu bar's motions, as Settings lists it.
+protocol MotionStyle: Hashable, Identifiable, CaseIterable where AllCases: RandomAccessCollection {
+    var title: LocalizedStringResource { get }
+}
+
+extension ChargingMotionStyle: MotionStyle {
+    var title: LocalizedStringResource {
+        switch self {
+        case .flow: "Flow"
+        case .liquid: "Liquid"
+        case .stripes: "Stripes"
+        }
+    }
+}
+
+extension TrickleMotionStyle: MotionStyle {
+    var title: LocalizedStringResource {
+        switch self {
+        case .calmLiquid: "Calm Liquid"
+        case .slowPulse: "Slow Pulse"
+        }
+    }
+}
+
+extension HoldingMotionStyle: MotionStyle {
+    var title: LocalizedStringResource {
+        switch self {
+        case .stillWater: "Still Water"
+        case .heartbeat: "Heartbeat"
+        case .breathing: "Breathing"
+        }
+    }
+}
+
+/// When the charging chime plays.
+enum ChimeMoments: String, CaseIterable, Identifiable {
+    case pluggingInAndUnplugging
+    /// Most MacBooks already chime when you plug in.
+    case unpluggingOnly
 
     var id: Self { self }
 
     var title: LocalizedStringResource {
         switch self {
-        case .hidden: "Hidden"
-        case .inside: "Inside"
-        case .beside: "Beside"
+        case .pluggingInAndUnplugging: "Plugging In and Unplugging"
+        case .unpluggingOnly: "Unplugging Only"
+        }
+    }
+
+    func includes(_ change: PowerChange) -> Bool {
+        self == .pluggingInAndUnplugging || change == .unplugged
+    }
+}
+
+/// The sound the charging chime makes.
+enum ChimeSound: String, CaseIterable, Identifiable {
+    /// WatchMyBattery's own: two notes, rising as you plug in and falling as you unplug (see ``ChimeSynth``).
+    case watchMyBattery
+    case glass = "Glass"
+    case pop = "Pop"
+    case purr = "Purr"
+    case tink = "Tink"
+    case bottle = "Bottle"
+
+    var id: Self { self }
+
+    var title: LocalizedStringResource {
+        switch self {
+        case .watchMyBattery: "WatchMyBattery"
+        case .glass: "Glass"
+        case .pop: "Pop"
+        case .purr: "Purr"
+        case .tink: "Tink"
+        case .bottle: "Bottle"
         }
     }
 }
@@ -91,8 +188,18 @@ enum HistoryRetention: Int, CaseIterable, Identifiable {
 /// The user's preferences, saved in `UserDefaults` as they change.
 @Observable
 final class AppSettings {
-    var percentageStyle: PercentageStyle {
-        didSet { defaults.set(percentageStyle.rawValue, forKey: Key.percentageStyle) }
+    var menuBarIconStyle: MenuBarIconStyle {
+        didSet { defaults.set(menuBarIconStyle.rawValue, forKey: Key.menuBarIconStyle) }
+    }
+
+    /// The text beside the menu bar icon (or on its own, with ``MenuBarIconStyle/textOnly``).
+    var menuBarLabel: MenuBarLabel {
+        didSet { defaults.set(menuBarLabel.rawValue, forKey: Key.menuBarLabel) }
+    }
+
+    /// The battery style prints the percentage inside the battery.
+    var showsPercentageInside: Bool {
+        didSet { defaults.set(showsPercentageInside, forKey: Key.showsPercentageInside) }
     }
 
     /// Green while charging, yellow in Low Power Mode, red when low, instead of a monochrome icon.
@@ -117,6 +224,19 @@ final class AppSettings {
     /// A gentle animation in the menu bar icon and the panel's battery while charging.
     var showsChargingAnimation: Bool {
         didSet { defaults.set(showsChargingAnimation, forKey: Key.showsChargingAnimation) }
+    }
+
+    /// How the menu bar's battery moves while charging, for the last few percent, and while holding its charge.
+    var chargingMotion: ChargingMotionStyle {
+        didSet { defaults.set(chargingMotion.rawValue, forKey: Key.chargingMotion) }
+    }
+
+    var trickleMotion: TrickleMotionStyle {
+        didSet { defaults.set(trickleMotion.rawValue, forKey: Key.trickleMotion) }
+    }
+
+    var holdingMotion: HoldingMotionStyle {
+        didSet { defaults.set(holdingMotion.rawValue, forKey: Key.holdingMotion) }
     }
 
     /// Bundle identifiers of apps that never get a slice, so they can't be dragged out by accident.
@@ -237,6 +357,19 @@ final class AppSettings {
         didSet { defaults.set(chargedLevel, forKey: Key.chargedLevel) }
     }
 
+    /// A chime when the charger is connected or disconnected.
+    var playsChargingChime: Bool {
+        didSet { defaults.set(playsChargingChime, forKey: Key.playsChargingChime) }
+    }
+
+    var chimeMoments: ChimeMoments {
+        didSet { defaults.set(chimeMoments.rawValue, forKey: Key.chimeMoments) }
+    }
+
+    var chimeSound: ChimeSound {
+        didSet { defaults.set(chimeSound.rawValue, forKey: Key.chimeSound) }
+    }
+
     /// The panel shows the last sleep and what's keeping the Mac awake.
     var showsSleep: Bool {
         didSet { defaults.set(showsSleep, forKey: Key.showsSleep) }
@@ -261,8 +394,10 @@ final class AppSettings {
         didSet { defaults.set(showsReplaceTip, forKey: Key.showsReplaceTip) }
     }
 
-    var hasSeenWelcome: Bool {
-        didSet { defaults.set(hasSeenWelcome, forKey: Key.hasSeenWelcome) }
+    /// The welcome tour has been through (or closed). It's shown once, to everyone, from 0.4.0 on: updating from 0.3
+    /// too, as the menu bar's settings changed.
+    var hasCompletedOnboarding: Bool {
+        didSet { defaults.set(hasCompletedOnboarding, forKey: Key.hasCompletedOnboarding) }
     }
 
     /// A key combination that opens and closes the panel from any app; `nil` for none.
@@ -295,20 +430,23 @@ final class AppSettings {
         }
         defaults.removePersistentDomain(forName: LaunchOptions.isolatedDefaultsDomain)
         let settings = AppSettings(defaults: defaults)
-        // The welcome panel would open on every isolated run; `--show-panel` opens it when it's wanted.
-        settings.hasSeenWelcome = true
+        // The welcome tour would open on every isolated run; `--show-onboarding` opens it when it's wanted.
+        settings.hasCompletedOnboarding = true
         return settings
     }
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
-            Key.percentageStyle: PercentageStyle.hidden.rawValue,
+            Key.menuBarIconStyle: MenuBarIconStyle.battery.rawValue,
             Key.usesColor: true,
             Key.centerLabel: CenterLabel.timeRemaining.rawValue,
             Key.maximumApps: 3,
             Key.confirmsQuit: false,
             Key.showsChargingAnimation: true,
+            Key.chargingMotion: ChargingMotionStyle.flow.rawValue,
+            Key.trickleMotion: TrickleMotionStyle.slowPulse.rawValue,
+            Key.holdingMotion: HoldingMotionStyle.breathing.rawValue,
             Key.excludedApps: [String](),
             Key.notifiesWhenLow: false,
             Key.lowBatteryLevels: [20, 10],
@@ -328,24 +466,34 @@ final class AppSettings {
             Key.notifiesWhenAccessoryLow: false,
             Key.accessoryLowBatteryLevel: 20,
             Key.showsReplaceTip: true,
-            Key.hasSeenWelcome: false,
+            Key.hasCompletedOnboarding: false,
             Key.showsSystemSlice: true,
             Key.showsBatteryReadings: true,
             Key.showsChargeLimit: true,
             Key.chargeLimitAfterTopUp: 0,
             Key.notifiesWhenCharged: false,
             Key.chargedLevel: 80,
+            Key.playsChargingChime: false,
+            Key.chimeMoments: ChimeMoments.pluggingInAndUnplugging.rawValue,
+            Key.chimeSound: ChimeSound.watchMyBattery.rawValue,
             Key.showsSleep: true,
             Key.notifiesAboutSleepDrain: false,
             Key.historyRetention: HistoryRetention.twoWeeks.rawValue,
             Key.showsDevices: true,
         ])
-        percentageStyle = PercentageStyle(rawValue: defaults.string(forKey: Key.percentageStyle) ?? "") ?? .hidden
+        menuBarIconStyle = MenuBarIconStyle(rawValue: defaults.string(forKey: Key.menuBarIconStyle) ?? "") ?? .battery
+        // Up to 0.3.3, one "percentage style" said whether the percentage was hidden, inside the battery or beside it.
+        let legacyStyle = defaults.string(forKey: Key.legacyPercentageStyle)
+        menuBarLabel = MenuBarLabel(rawValue: defaults.string(forKey: Key.menuBarLabel) ?? "") ?? (legacyStyle == "beside" ? .percentage : .none)
+        showsPercentageInside = defaults.object(forKey: Key.showsPercentageInside) as? Bool ?? (legacyStyle == "inside")
         usesColor = defaults.bool(forKey: Key.usesColor)
         centerLabel = CenterLabel(rawValue: defaults.string(forKey: Key.centerLabel) ?? "") ?? .timeRemaining
         maximumApps = min(max(defaults.integer(forKey: Key.maximumApps), Self.appCountRange.lowerBound), Self.appCountRange.upperBound)
         confirmsQuit = defaults.bool(forKey: Key.confirmsQuit)
         showsChargingAnimation = defaults.bool(forKey: Key.showsChargingAnimation)
+        chargingMotion = ChargingMotionStyle(rawValue: defaults.string(forKey: Key.chargingMotion) ?? "") ?? .flow
+        trickleMotion = TrickleMotionStyle(rawValue: defaults.string(forKey: Key.trickleMotion) ?? "") ?? .slowPulse
+        holdingMotion = HoldingMotionStyle(rawValue: defaults.string(forKey: Key.holdingMotion) ?? "") ?? .breathing
         excludedApps = defaults.stringArray(forKey: Key.excludedApps) ?? []
         notifiesWhenLow = defaults.bool(forKey: Key.notifiesWhenLow)
         lowBatteryLevels = ((defaults.array(forKey: Key.lowBatteryLevels) as? [Int]) ?? [20, 10])
@@ -375,14 +523,26 @@ final class AppSettings {
         notifiesWhenCharged = defaults.bool(forKey: Key.notifiesWhenCharged)
         let charged = defaults.integer(forKey: Key.chargedLevel)
         chargedLevel = Self.chargedLevelChoices.contains(charged) ? charged : 80
+        playsChargingChime = defaults.bool(forKey: Key.playsChargingChime)
+        chimeMoments = ChimeMoments(rawValue: defaults.string(forKey: Key.chimeMoments) ?? "") ?? .pluggingInAndUnplugging
+        chimeSound = ChimeSound(rawValue: defaults.string(forKey: Key.chimeSound) ?? "") ?? .watchMyBattery
         showsSleep = defaults.bool(forKey: Key.showsSleep)
         notifiesAboutSleepDrain = defaults.bool(forKey: Key.notifiesAboutSleepDrain)
         historyRetention = HistoryRetention(rawValue: defaults.integer(forKey: Key.historyRetention)) ?? .twoWeeks
         showsDevices = defaults.bool(forKey: Key.showsDevices)
         showsReplaceTip = defaults.bool(forKey: Key.showsReplaceTip)
-        hasSeenWelcome = defaults.bool(forKey: Key.hasSeenWelcome)
+        hasCompletedOnboarding = defaults.bool(forKey: Key.hasCompletedOnboarding)
         panelShortcut = defaults.data(forKey: Key.panelShortcut).flatMap { try? JSONDecoder().decode(Hotkey.self, from: $0) }
+
+        if legacyStyle != nil {
+            defaults.set(menuBarLabel.rawValue, forKey: Key.menuBarLabel)
+            defaults.set(showsPercentageInside, forKey: Key.showsPercentageInside)
+            defaults.removeObject(forKey: Key.legacyPercentageStyle)
+        }
     }
+
+    /// The text the menu bar shows, for the chosen style.
+    var effectiveMenuBarLabel: MenuBarLabel { menuBarIconStyle.shownLabel(menuBarLabel) }
 
     /// Whether an app never gets a slice.
     func isExcluded(bundleIdentifier: String?) -> Bool {
@@ -396,12 +556,18 @@ final class AppSettings {
     }
 
     private enum Key {
-        static let percentageStyle = "percentageStyle"
+        static let menuBarIconStyle = "menuBarIconStyle"
+        static let menuBarLabel = "menuBarLabel"
+        static let showsPercentageInside = "showsPercentageInside"
+        static let legacyPercentageStyle = "percentageStyle"
         static let usesColor = "usesColor"
         static let centerLabel = "centerLabel"
         static let maximumApps = "maximumApps"
         static let confirmsQuit = "confirmsQuit"
         static let showsChargingAnimation = "showsChargingAnimation"
+        static let chargingMotion = "chargingMotion"
+        static let trickleMotion = "trickleMotion"
+        static let holdingMotion = "holdingMotion"
         static let excludedApps = "excludedApps"
         static let notifiesWhenLow = "notifiesWhenLow"
         static let lowBatteryLevels = "lowBatteryLevels"
@@ -421,7 +587,7 @@ final class AppSettings {
         static let notifiesWhenAccessoryLow = "notifiesWhenAccessoryLow"
         static let accessoryLowBatteryLevel = "accessoryLowBatteryLevel"
         static let showsReplaceTip = "showsReplaceTip"
-        static let hasSeenWelcome = "hasSeenWelcome"
+        static let hasCompletedOnboarding = "hasCompletedOnboarding"
         static let panelShortcut = "panelShortcut"
         static let showsSystemSlice = "showsSystemSlice"
         static let showsBatteryReadings = "showsBatteryReadings"
@@ -429,6 +595,9 @@ final class AppSettings {
         static let chargeLimitAfterTopUp = "chargeLimitAfterTopUp"
         static let notifiesWhenCharged = "notifiesWhenCharged"
         static let chargedLevel = "chargedLevel"
+        static let playsChargingChime = "playsChargingChime"
+        static let chimeMoments = "chimeMoments"
+        static let chimeSound = "chimeSound"
         static let showsSleep = "showsSleep"
         static let notifiesAboutSleepDrain = "notifiesAboutSleepDrain"
         static let historyRetention = "historyRetention"

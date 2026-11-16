@@ -40,7 +40,8 @@ public struct BatteryReadings: Sendable, Equatable {
         /// macOS will hold back charging.
         case hot
 
-        public static let warmFrom = 35.0
+        /// A battery being charged sits around 35 °C as a matter of course, so warm starts a little above that.
+        public static let warmFrom = 38.0
         public static let hotFrom = 40.0
     }
 

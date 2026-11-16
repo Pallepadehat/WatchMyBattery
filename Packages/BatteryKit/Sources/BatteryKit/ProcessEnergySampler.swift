@@ -162,6 +162,19 @@ public struct ProcessEnergy: Sendable, Equatable, Identifiable {
 
     public var id: pid_t { pid }
 
+    /// Its name under its app's, without repeating the app: "Helper (Renderer)" for "Google Chrome Helper (Renderer)"
+    /// under Google Chrome, which keeps the part that tells the helpers apart. The app's own process, and one named
+    /// for something else (`cloudflared`), keep their names.
+    public func shortName(inApp appName: String) -> String {
+        guard !appName.isEmpty, name.hasPrefix(appName) else { return name }
+        let rest = name.dropFirst(appName.count).trimmingCharacters(in: Self.separators)
+        // "Safari" in "SafariBookmarksSyncAgent" is the start of a word, not the app's name.
+        guard let first = name.dropFirst(appName.count).first, !first.isLetter, !rest.isEmpty else { return name }
+        return rest
+    }
+
+    private static let separators = CharacterSet.whitespaces.union(CharacterSet(charactersIn: "-–_."))
+
     public init(pid: pid_t, name: String, watts: Double, isApp: Bool) {
         self.pid = pid
         self.name = name

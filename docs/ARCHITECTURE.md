@@ -36,14 +36,15 @@ Everything is in `Sources/WatchMyBattery`. The Xcode project uses synchronized f
 | Folder | What's in it |
 | --- | --- |
 | `App` | The entry point and app delegate (`WatchMyBatteryApp`), `AppModel`, and `Updater` (Sparkle). |
-| `Battery` | The Mac's own battery: `BatteryMonitor` (level, state, health and readings), `ChargeLimit`, and `LowPowerMode`, which switches it through the helper. |
+| `Battery` | The Mac's own battery: `BatteryMonitor` (level, state, health, readings and the charger), `ChargeLimit`, `LowPowerMode` (which switches it through the helper), `PowerDrawMonitor` for the menu bar's watts, and `ChargingChime`. |
 | `Energy` | The apps using power: `AppUsageMonitor` measures them while the panel is open, quits the one you drag out, and notices when it doesn't quit. `IconTint` picks each app's colour from its icon. |
 | `History` | `HistoryRecorder`: the battery level and the apps' energy over time, stored on disk, for the chart and "Used the most battery". |
 | `Insights` | `InsightsMonitor` and the words it uses (`InsightText`): more drain than usual, a new app, and charging before a meeting (`CalendarWatcher`). |
 | `Sleep` | `SleepMonitor`: how much each sleep used, and what's keeping the Mac awake. |
 | `Notifications` | `LowBatteryNotifier`: every notification the app sends, and their buttons. |
 | `Accessories` | AirPods, Magic accessories, iPhone and iPad: `AccessoryMonitor`, their rows in the panel, and the AirPods card that slides in when they connect. |
-| `MenuBar` | The status item, the battery icon and its charging animation, the keyboard shortcut, and the panel's window (`BatteryPanelController`). |
+| `MenuBar` | The status item, `MenuBarItem` (the icon and text it shows, shared with Settings), the icon in its three styles (`BatteryIcon`, `BatteryIcon+Styles`) and its charging animation, the keyboard shortcut, and the panel's window (`BatteryPanelController`). |
+| `Onboarding` | The welcome tour: its opening animation (`OnboardingIntro`), the steps (`OnboardingView`), and its window. Shown once, and from Settings › General. |
 | `Panel` | What the panel shows: `BatteryPanelView` lays it out, with the gauge, the rows and the sections around it. `DragToQuit` is pulling an app out of the battery to quit it. |
 | `Settings` | `AppSettings` (every preference, in `UserDefaults`), the Settings window, and its panes. |
 | `Intents` | The Shortcuts actions. |
@@ -55,7 +56,7 @@ Everything is in `Sources/WatchMyBattery`. The Xcode project uses synchronized f
 
 `Packages/BatteryKit` is a Swift package with three targets:
 
-- **`BatteryKit`**, the library. Roughly: *readers* that talk to the system (`PowerSourceReader`, `SystemPowerReader`, `BatteryReadings`, `ProcessEnergySampler`, `AccessoryReader`, `AppleDeviceReader`, `ChargeLimitClient`, `PowerAssertions`), *models* of what they read (`BatterySnapshot`, `BatteryHealth`, `Accessory`, `SleepLog`), and the *logic* on top (`Estimates`, `TimeEstimate`, `BatteryHistory` with `HistoryStore`, `UsageProfile`, `Insights`, `RunawayDetector`, `LowBatteryAlert`, `ChargingGlint`, `GaugeLayout`).
+- **`BatteryKit`**, the library. Roughly: *readers* that talk to the system (`PowerSourceReader`, `SystemPowerReader`, `BatteryReadings`, `PowerAdapter`, `ProcessEnergySampler`, `AccessoryReader`, `AppleDeviceReader`, `ChargeLimitClient`, `PowerAssertions`), *models* of what they read (`BatterySnapshot`, `BatteryHealth`, `Accessory`, `SleepLog`), and the *logic* on top (`Estimates`, `TimeEstimate`, `BatteryHistory` with `HistoryStore`, `UsageProfile`, `Insights`, `RunawayDetector`, `LowBatteryAlert`, `ChargingGlint`, `ChargingNote`, `PowerChime`, `MenuBarReadout`, `GaugeLayout`).
 - **`BatteryKitBenchmarks`**, which times the hot paths against a budget each and a recorded baseline.
 - The tests: **`BatteryKitTests`** run on made-up data, and **`BatteryKitIntegrationTests`** against the Mac they run on.
 

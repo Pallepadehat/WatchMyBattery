@@ -44,6 +44,7 @@
         }
 
         private static func render(to folder: URL) {
+            renderOnboarding(to: folder)
             let apps = sampleApps.enumerated().map { index, sample in
                 let icon = NSWorkspace.shared.icon(forFile: sample.path)
                 return AppUsage(
@@ -72,6 +73,19 @@
                 ("care", BatterySnapshot(percentage: 58, powerSource: .battery, chargeState: .discharging, timeRemaining: 3 * 3600 + 40 * 60)),
                 // A screen too short for all of it, so the middle scrolls (scrolled a little, to show the fades).
                 ("short", BatterySnapshot(percentage: 9, powerSource: .battery, chargeState: .discharging, timeRemaining: 11 * 3600 + 31 * 60)),
+                // 0.4.0: why charging is paused or slow, with the charger.
+                ("weakcharger", BatterySnapshot(percentage: 47, powerSource: .powerAdapter, chargeState: .notCharging, timeRemaining: nil)),
+                ("slowcharger", BatterySnapshot(percentage: 47, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 3 * 3600)),
+                ("hot", BatterySnapshot(percentage: 62, powerSource: .powerAdapter, chargeState: .notCharging, timeRemaining: nil)),
+                ("nearlyfull", BatterySnapshot(percentage: 97, powerSource: .powerAdapter, chargeState: .notCharging, timeRemaining: nil)),
+            ]
+            /// The charger in each 0.4.0 state, and what the Mac draws from it.
+            let chargers: [String: (adapter: PowerAdapter, systemWatts: Double)] = [
+                "weakcharger": (PowerAdapter(watts: 30, name: "30W USB-C Power Adapter"), 34),
+                "slowcharger": (PowerAdapter(watts: 30, name: "30W USB-C Power Adapter"), 24),
+                "hot": (PowerAdapter(watts: 96, name: "96W USB-C Power Adapter"), 14),
+                "nearlyfull": (PowerAdapter(watts: 96, name: "96W USB-C Power Adapter"), 9),
+                "charging": (PowerAdapter(watts: 70, name: "70W USB-C Power Adapter"), 14),
             ]
 
             let health = BatteryHealth(condition: .normal, maximumCapacity: 0.88, cycleCount: 564)
@@ -81,14 +95,16 @@
                     let model = AppModel(settings: previewSettings(), history: HistoryRecorder(storeURL: nil, legacyFileURL: nil))
                     model.settings.showsReplaceTip = false
                     model.lowPowerMode.preview(isSupported: true)
+                    let charger = chargers[name]
                     model.battery.preview(
                         snapshot, health: name == "low" ? BatteryHealth(condition: .serviceRecommended, maximumCapacity: 0.74, cycleCount: 1012) : health,
                         readings: BatteryReadings(
-                            temperature: name == "charging" ? 36.4 : 29.6, voltage: 12.41,
-                            current: snapshot.isCharging ? 2.35 : snapshot.isPluggedIn ? 0 : -1.12))
+                            temperature: name == "hot" ? 42.3 : name == "charging" ? 36.4 : 29.6, voltage: 12.41,
+                            current: snapshot.isCharging ? 2.35 : name == "weakcharger" ? -0.4 : snapshot.isPluggedIn ? 0 : -1.12),
+                        adapter: charger?.adapter)
                     model.chargeLimit.preview(limit: name == "limit" ? 85 : name == "charging" ? 100 : 80)
                     model.usage.preview(
-                        apps: Array(apps.prefix(model.settings.maximumApps)), systemWatts: 14,
+                        apps: Array(apps.prefix(model.settings.maximumApps)), systemWatts: charger?.systemWatts ?? 14,
                         refusal: name == "half" ? QuitRefusal(id: apps[1].id, name: apps[1].name, icon: apps[1].icon) : nil)
                     let history = sampleHistory(apps: sampleApps.map(\.path), now: snapshot)
                     model.history.preview(history, profile: sampleProfile(history: history))
@@ -210,10 +226,14 @@
             }
 
             // Menu bar icons, every state and style, on a dark and a light bar.
+            let iconStyles: [(MenuBarIconStyle, insidePercentage: Bool)] = [(.battery, false), (.battery, true), (.ring, false), (.textOnly, false)]
             let settings = AppSettings(defaults: UserDefaults(suiteName: "preview")!)
+            // Text only shows the percentage; the others just the icon, to see it on its own.
+            settings.menuBarLabel = .none
             var rows: [AnyView] = []
-            for style in PercentageStyle.allCases {
-                settings.percentageStyle = style
+            for (style, inside) in iconStyles {
+                settings.menuBarIconStyle = style
+                settings.showsPercentageInside = inside
                 for usesColor in [true, false] {
                     settings.usesColor = usesColor
                     let snapshots = [
@@ -226,16 +246,12 @@
                             percentage: 50, powerSource: .battery, chargeState: .discharging, timeRemaining: 600, isLowPowerModeOn: true),
                     ]
                     for dark in [true, false] {
-                        let icons = snapshots.map { snapshot in
-                            var icon = BatteryIcon(snapshot: snapshot, settings: settings)
-                            icon.drawsForDarkBar = dark
-                            return icon.image()
-                        }
+                        let items = snapshots.map { MenuBarItem(snapshot: $0, settings: settings, watts: nil, drawsForDarkBar: dark) }
                         rows.append(
                             AnyView(
                                 HStack(spacing: 18) {
-                                    ForEach(icons.indices, id: \.self) { index in
-                                        Image(nsImage: icons[index]).renderingMode(icons[index].isTemplate ? .template : .original)
+                                    ForEach(items.indices, id: \.self) { index in
+                                        MenuBarItemView(item: items[index])
                                     }
                                 }
                                 .foregroundStyle(dark ? .white : .black)
@@ -247,22 +263,26 @@
                     }
                 }
             }
-            save(VStack(spacing: 0) { ForEach(rows.indices, id: \.self) { rows[$0] } }.frame(width: 340), to: folder.appending(path: "icons.png"))
+            save(VStack(spacing: 0) { ForEach(rows.indices, id: \.self) { rows[$0] } }.frame(width: 400), to: folder.appending(path: "icons.png"))
 
-            // The charging glint, frame by frame, in every style.
+            // Every motion, frame by frame: in the battery (coloured and not) and the ring, on a dark and a light bar.
             var glintRows: [AnyView] = []
-            let toFull = BatterySnapshot(percentage: 45, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 3600)
+            let charging = BatterySnapshot(percentage: 45, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 3600)
             // Charging to 80%: the glint settles at the target instead of running on to the terminal.
             let toTarget = BatterySnapshot(percentage: 45, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 3600, chargeTarget: 80)
-            for (style, usesColor, charging) in [
-                (PercentageStyle.hidden, true, toFull), (.hidden, false, toFull), (.inside, true, toFull), (.inside, false, toFull),
-                (.hidden, true, toTarget),
-            ] {
-                for dark in [true, false] {
-                    let frames = stride(from: 0, to: ChargingAnimator.framesPerSweep, by: 3).map { frame in
-                        var icon = BatteryIcon(snapshot: charging, percentageStyle: style, usesColor: usesColor)
-                        icon.chargeGlint = Double(frame) / Double(ChargingAnimator.framesPerSweep - 1)
-                        icon.drawsForDarkBar = dark
+            let trickling = BatterySnapshot(percentage: 77, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 600, chargeTarget: 80)
+            let holding = BatterySnapshot(percentage: 80, powerSource: .powerAdapter, chargeState: .notCharging, timeRemaining: nil, chargeTarget: 80)
+            let motions: [(BatterySnapshot, MenuBarMotion)] = [
+                (charging, .flow(level: 0.45, target: 1)), (toTarget, .flow(level: 0.45, target: 0.8)), (charging, .liquid), (charging, .stripes),
+                (trickling, .calmLiquid), (trickling, .slowPulse), (holding, .stillWater), (holding, .heartbeat), (holding, .breathing),
+            ]
+            for (snapshot, motion) in motions {
+                for (style, usesColor, dark) in [(MenuBarIconStyle.battery, true, true), (.battery, false, false), (.ring, true, true)] {
+                    let phases = stride(from: 0, to: 1, by: 1.0 / 9).map { $0 }
+                    let frames = phases.map { phase in
+                        var icon = BatteryIcon(snapshot: snapshot, style: style, usesColor: usesColor, drawsForDarkBar: dark)
+                        icon.motion = motion
+                        icon.animationPhase = phase
                         return icon.image()
                     }
                     glintRows.append(
@@ -283,6 +303,24 @@
             save(
                 VStack(spacing: 0) { ForEach(glintRows.indices, id: \.self) { glintRows[$0] } }.frame(width: 340),
                 to: folder.appending(path: "glint.png"))
+        }
+
+        /// Every step of the welcome tour, settled, in light and dark.
+        private static func renderOnboarding(to folder: URL) {
+            for scheme in [ColorScheme.dark, .light] {
+                for step in OnboardingView.Step.allCases {
+                    let model = AppModel(settings: previewSettings(), history: HistoryRecorder(storeURL: nil, legacyFileURL: nil))
+                    model.battery.preview(
+                        BatterySnapshot(
+                            percentage: 80, powerSource: .powerAdapter, chargeState: .notCharging, timeRemaining: nil, chargeTarget: 80,
+                            targetReason: .chargeLimit))
+                    let view = OnboardingView(model: model, startingAt: step, skipsOpening: true, finish: {}, close: {})
+                        .environment(\.colorScheme, scheme)
+                    saveInWindow(
+                        view, scheme: scheme, scrolledBy: 0, to: folder.appending(path: "onboarding-\(step.rawValue)-\(scheme == .dark ? "dark" : "light").png")
+                    )
+                }
+            }
         }
 
         /// A day that ends in `snapshot`: on battery overnight, charged in the morning, and unplugged two hours ago.

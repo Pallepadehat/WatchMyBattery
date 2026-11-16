@@ -215,7 +215,9 @@ import Testing
     }
 
     @Test func warmthFollowsTheTemperature() {
-        #expect(BatteryReadings(temperature: 36).warmth == .warm)
+        #expect(BatteryReadings(temperature: 39).warmth == .warm)
+        // Ordinary while charging.
+        #expect(BatteryReadings(temperature: 36).warmth == .normal)
         #expect(BatteryReadings(temperature: 42).warmth == .hot)
         #expect(BatteryReadings().warmth == nil)
     }
