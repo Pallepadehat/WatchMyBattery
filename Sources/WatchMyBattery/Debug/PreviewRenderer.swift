@@ -226,9 +226,15 @@
 
             // Menu bar icons, every state and style, on a dark and a light bar.
             let iconStyles: [(MenuBarIconStyle, insidePercentage: Bool)] = [(.battery, false), (.battery, true), (.ring, false), (.textOnly, false)]
+            let settings = AppSettings(defaults: UserDefaults(suiteName: "preview")!)
+            // Text only shows the percentage; the others just the icon, to see it on its own.
+            settings.menuBarLabel = .none
             var rows: [AnyView] = []
             for (style, inside) in iconStyles {
+                settings.menuBarIconStyle = style
+                settings.showsPercentageInside = inside
                 for usesColor in [true, false] {
+                    settings.usesColor = usesColor
                     let snapshots = [
                         BatterySnapshot(percentage: 100, powerSource: .powerAdapter, chargeState: .charged, timeRemaining: nil),
                         BatterySnapshot(percentage: 64, powerSource: .battery, chargeState: .discharging, timeRemaining: 3600),
@@ -239,15 +245,12 @@
                             percentage: 50, powerSource: .battery, chargeState: .discharging, timeRemaining: 600, isLowPowerModeOn: true),
                     ]
                     for dark in [true, false] {
-                        let icons = snapshots.map { snapshot in
-                            BatteryIcon(
-                                snapshot: snapshot, style: style, showsPercentageInside: inside, usesColor: usesColor, drawsForDarkBar: dark)
-                        }
+                        let items = snapshots.map { MenuBarItem(snapshot: $0, settings: settings, watts: nil, drawsForDarkBar: dark) }
                         rows.append(
                             AnyView(
                                 HStack(spacing: 18) {
-                                    ForEach(icons.indices, id: \.self) { index in
-                                        menuBarItem(icons[index], text: style == .textOnly ? "\(snapshots[index].percentage)%" : nil)
+                                    ForEach(items.indices, id: \.self) { index in
+                                        MenuBarItemView(item: items[index])
                                     }
                                 }
                                 .foregroundStyle(dark ? .white : .black)
@@ -296,22 +299,6 @@
             save(
                 VStack(spacing: 0) { ForEach(glintRows.indices, id: \.self) { glintRows[$0] } }.frame(width: 340),
                 to: folder.appending(path: "glint.png"))
-        }
-
-        /// An icon as the menu bar shows it: text only puts its glyph in front of the text.
-        private static func menuBarItem(_ icon: BatteryIcon, text: String?) -> some View {
-            let image = icon.isEmpty ? nil : icon.image()
-            return HStack(spacing: 3) {
-                if let image {
-                    Image(nsImage: image).renderingMode(image.isTemplate ? .template : .original)
-                }
-                if let text {
-                    Text(text)
-                        .font(.system(size: 12))
-                        .monospacedDigit()
-                        .foregroundStyle(icon.accent == .low ? Color.red : Color.primary)
-                }
-            }
         }
 
         /// A day that ends in `snapshot`: on battery overnight, charged in the morning, and unplugged two hours ago.

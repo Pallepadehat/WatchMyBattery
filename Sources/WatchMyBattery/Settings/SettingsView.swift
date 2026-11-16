@@ -189,7 +189,8 @@ private struct MenuBarPane: View {
             Section {
                 MenuBarStylePicker(snapshot: model.battery.snapshot, settings: settings, watts: model.powerDraw.watts)
                     .listRowInsets(EdgeInsets(top: 14, leading: 14, bottom: 14, trailing: 14))
-                Picker(selection: $settings.menuBarLabel) {
+                // Shows what the menu bar shows (text only turns "Nothing" into the percentage), and saves what you pick.
+                Picker(selection: Binding(get: { settings.effectiveMenuBarLabel }, set: { settings.menuBarLabel = $0 })) {
                     ForEach(MenuBarLabel.allCases) { label in
                         // Text only always shows some text, so "Nothing" isn't a choice there.
                         if label != .none || settings.menuBarIconStyle != .textOnly {
@@ -213,10 +214,6 @@ private struct MenuBarPane: View {
                 Text("Style")
             }
             .animation(.snappy, value: settings.menuBarIconStyle)
-            .onChange(of: settings.menuBarIconStyle) { _, style in
-                // "Nothing" isn't offered with text only; keep the picker on what it shows.
-                if style == .textOnly, settings.menuBarLabel == .none { settings.menuBarLabel = .percentage }
-            }
             Section {
                 Toggle(isOn: $settings.usesColor) {
                     SettingLabel("Colorful States", symbol: "paintpalette.fill", color: .orange) {
@@ -917,19 +914,9 @@ private struct MenuBarSample: View {
     let wallpaper: Wallpaper
 
     var body: some View {
-        let item = MenuBarItem(snapshot: snapshot, settings: settings, style: style, watts: watts, drawsForDarkBar: wallpaper.isDark)
-        let icon = item.icon.isEmpty ? nil : item.icon.image()
-        HStack(spacing: 4) {
-            if item.leadsWithIcon, let icon { image(icon) }
-            if let text = item.text {
-                Text(text)
-                    .font(.system(size: 12))
-                    .monospacedDigit()
-                    .foregroundStyle(item.showsTextAsLow ? Color.red : Color.primary)
-                    .contentTransition(.numericText())
-            }
-            if !item.leadsWithIcon, let icon { image(icon) }
-        }
+        MenuBarItemView(
+            item: MenuBarItem(snapshot: snapshot, settings: settings, style: style, watts: watts, drawsForDarkBar: wallpaper.isDark)
+        )
         .foregroundStyle(wallpaper.isDark ? Color.white : Color.black)
         .frame(maxWidth: .infinity)
         .frame(height: 38)
@@ -944,10 +931,5 @@ private struct MenuBarSample: View {
         }
         .clipShape(.rect(cornerRadius: 8, style: .continuous))
         .environment(\.colorScheme, wallpaper.isDark ? .dark : .light)
-    }
-
-    private func image(_ icon: NSImage) -> some View {
-        Image(nsImage: icon)
-            .renderingMode(icon.isTemplate ? .template : .original)
     }
 }

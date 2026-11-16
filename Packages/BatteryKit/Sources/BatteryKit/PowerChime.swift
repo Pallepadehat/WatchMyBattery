@@ -17,7 +17,8 @@ public struct PowerChangeDetector: Sendable {
 
     /// The shortest time between two chimes, so a loose cable doesn't chatter.
     public static let minimumInterval: TimeInterval = 2
-    /// How long after waking a change counts as old news.
+    /// How long after waking a change counts as old news. A charger plugged in within these few seconds of opening the
+    /// lid goes unheard too: a fair price for never chiming about one plugged in during the night.
     public static let quietAfterWake: TimeInterval = 4
 
     public init() {}

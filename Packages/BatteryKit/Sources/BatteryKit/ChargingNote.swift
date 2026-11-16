@@ -36,12 +36,17 @@ public enum ChargingNote: Sendable, Equatable {
         case .notCharging:
             // Held there on purpose, and the charge bar says by whom.
             if snapshot.hasChargeLimit && snapshot.isAtTarget { return nil }
-            if isHot, let temperature { return .pausedWhileHot(temperature: temperature) }
-            if isRunningFromBattery(readings) || isOverloaded(adapterWatts: adapterWatts, systemWatts: systemWatts, share: overloadedShare) {
+            // Current flowing out of the battery is proof the charger isn't enough, whatever else is going on.
+            if isRunningFromBattery(readings) {
                 return .adapterTooWeak(adapterWatts: adapterWatts, systemWatts: systemWatts)
             }
+            // Just short of the target, not charging is simply how macOS tops up, however busy or warm the Mac is.
             if snapshot.percentage >= snapshot.chargeTarget - restingMargin {
                 return .restingNearTarget(target: snapshot.chargeTarget)
+            }
+            if isHot, let temperature { return .pausedWhileHot(temperature: temperature) }
+            if isOverloaded(adapterWatts: adapterWatts, systemWatts: systemWatts, share: overloadedShare) {
+                return .adapterTooWeak(adapterWatts: adapterWatts, systemWatts: systemWatts)
             }
             return nil
         case .charging:

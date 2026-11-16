@@ -1,5 +1,6 @@
 import AppKit
 import BatteryKit
+import SwiftUI
 
 /// What the menu bar shows for the battery: the icon in its style, and the text beside it. Shared by the status item
 /// and the samples in Settings, so the two always agree.
@@ -23,6 +24,32 @@ struct MenuBarItem {
 
     /// The text says the battery is low in red, when it's all there is to say so.
     var showsTextAsLow: Bool { icon.style == .textOnly && icon.accent == .low }
+}
+
+/// A ``MenuBarItem`` drawn in SwiftUI, laid out as the status item lays it out: for the samples in Settings and the
+/// previews.
+struct MenuBarItemView: View {
+    let item: MenuBarItem
+
+    var body: some View {
+        let image = item.icon.isEmpty ? nil : item.icon.image()
+        HStack(spacing: 4) {
+            if item.leadsWithIcon, let image { icon(image) }
+            if let text = item.text {
+                Text(text)
+                    .font(.system(size: 12))
+                    .monospacedDigit()
+                    .foregroundStyle(item.showsTextAsLow ? Color.red : Color.primary)
+                    .contentTransition(.numericText())
+            }
+            if !item.leadsWithIcon, let image { icon(image) }
+        }
+    }
+
+    private func icon(_ image: NSImage) -> some View {
+        Image(nsImage: image)
+            .renderingMode(image.isTemplate ? .template : .original)
+    }
 }
 
 extension MenuBarReadout {

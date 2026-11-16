@@ -178,9 +178,11 @@ final class AppModel {
     }
 
     /// Why charging is paused or slow, when the panel can tell. It needs the panel's measurements (the Mac's power
-    /// draw and the battery's readings), so it's only known while the panel is open.
+    /// draw and the battery's readings), so it's only known while the panel is open. On battery there's nothing to
+    /// say, and it returns before reading them, so the panel doesn't redraw each time they change.
     var chargingNote: ChargingNote? {
-        ChargingNote.evaluate(
+        guard battery.snapshot.isPluggedIn else { return nil }
+        return ChargingNote.evaluate(
             snapshot: battery.snapshot, adapter: battery.adapter, systemWatts: usage.systemWatts, readings: battery.readings)
     }
 

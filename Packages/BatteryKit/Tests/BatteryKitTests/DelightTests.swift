@@ -75,6 +75,18 @@ import Testing
         #expect(ChargingNote.evaluate(snapshot: resting, adapter: nil, systemWatts: nil, readings: nil) == .restingNearTarget(target: 80))
     }
 
+    @Test func restingNearFullWinsOverABusyOrWarmMac() {
+        // A small charger and a busy Mac at 97%: macOS isn't topping up yet, and the charger isn't to blame.
+        let busy = ChargingNote.evaluate(
+            snapshot: pluggedIn(97, .notCharging), adapter: PowerAdapter(watts: 30), systemWatts: 28,
+            readings: BatteryReadings(temperature: 41, current: 0))
+        #expect(busy == .restingNearTarget(target: 100))
+        // But a battery running down on the adapter is the charger, even near full.
+        let draining = ChargingNote.evaluate(
+            snapshot: pluggedIn(97, .notCharging), adapter: PowerAdapter(watts: 30), systemWatts: 33, readings: BatteryReadings(current: -0.8))
+        #expect(draining == .adapterTooWeak(adapterWatts: 30, systemWatts: 33))
+    }
+
     @Test func aHoldAtTheTargetIsLeftToTheChargeBar() {
         let held = pluggedIn(80, .charged).limited(to: 80)
         #expect(ChargingNote.evaluate(snapshot: held, adapter: PowerAdapter(watts: 30), systemWatts: 40, readings: nil) == nil)

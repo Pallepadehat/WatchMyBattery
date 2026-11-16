@@ -12,8 +12,6 @@ extension BatteryIcon {
     private static var ringRadius: CGFloat { (ringSize - ringLineWidth) / 2 - 0.5 }
     /// The ring's length, which the charging glint travels along, as it does across the battery's body.
     private static var ringLength: CGFloat { 2 * .pi * ringRadius }
-    /// The shortest arc the charge is drawn with, so an almost empty ring still shows some.
-    private static let minimumChargeDegrees: CGFloat = 10
 
     /// Text only has room for a glyph beside the text, nothing more.
     static let glyphWidth: CGFloat = 9
@@ -32,11 +30,18 @@ extension BatteryIcon {
         track.stroke()
 
         if level > 0 {
-            let sweep = max(CGFloat(level) * 360, Self.minimumChargeDegrees)
-            let charge = arc(around: center, from: 0, to: sweep / 360 * Self.ringLength)
-            charge.lineCapStyle = .round
             palette.charge.setStroke()
-            charge.stroke()
+            if level >= 1 {
+                track.stroke()
+            } else {
+                // As long as the battery's fill would be (so the glint starts where it ends), with the round caps
+                // inside that length, so a nearly full ring still shows its gap.
+                let length = ChargingGlint.fillWidth(bodyWidth: Double(Self.ringLength), level: level)
+                let cap = Double(Self.ringLineWidth) / 2
+                let charge = arc(around: center, from: cap, to: max(length - cap, cap + 0.01))
+                charge.lineCapStyle = .round
+                charge.stroke()
+            }
         }
 
         if let chargeGlint, chargeState == .charging {

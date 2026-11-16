@@ -25,7 +25,8 @@ final class PowerDrawMonitor {
             guard task == nil else { return }
             task = Task { [weak self] in
                 while !Task.isCancelled {
-                    self?.read()
+                    guard let self else { return }
+                    self.read()
                     try? await Task.sleep(for: Self.interval, tolerance: .seconds(1))
                 }
             }
