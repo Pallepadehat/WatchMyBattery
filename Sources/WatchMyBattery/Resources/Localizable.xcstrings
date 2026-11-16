@@ -5143,12 +5143,12 @@
         }
       }
     },
-    "Choose what goes beside the battery, and whether it shows its state in colour." : {
+    "Pick how the battery looks up there, and what goes beside it." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vælg, hvad der står ved siden af batteriet, og om det viser sin tilstand i farver."
+            "value" : "Vælg, hvordan batteriet ser ud deroppe, og hvad der står ved siden af."
           }
         }
       }

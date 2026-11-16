@@ -32,6 +32,14 @@ done
 
 command -v gh >/dev/null || { echo "This needs the GitHub CLI: brew install gh, then gh auth login."; exit 1; }
 
+# xcodebuild needs Xcode, not just the Command Line Tools: with only those selected, reading the version below
+# failed without a word.
+if [[ -z "${DEVELOPER_DIR:-}" && "$(xcode-select -p 2>/dev/null)" != *Xcode*.app* ]]; then
+  XCODE=$(ls -d /Applications/Xcode*.app 2>/dev/null | sort | tail -1)
+  [[ -n "$XCODE" ]] || { echo "This needs Xcode (27 or later)."; exit 1; }
+  export DEVELOPER_DIR="$XCODE/Contents/Developer"
+fi
+
 # Only main is released. Everything else lands on develop first and reaches main through a pull request.
 BRANCH=$(git symbolic-ref --quiet --short HEAD || echo "(detached HEAD)")
 if [[ "$BRANCH" != "main" ]]; then
