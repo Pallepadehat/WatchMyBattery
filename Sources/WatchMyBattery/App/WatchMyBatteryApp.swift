@@ -34,6 +34,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         model.showAccessoryCard = { [weak accessoryCard] in accessoryCard?.show($0) }
         model.start()
         #if DEBUG
+            // `--reset-onboarding`: as on a first launch, so the tour opens below, as it would for someone new.
+            if CommandLine.arguments.contains("--reset-onboarding") { model.settings.hasCompletedOnboarding = false }
             if CommandLine.arguments.contains("--show-settings") {
                 // `--settings-pane updates` (say) opens that pane.
                 let arguments = CommandLine.arguments

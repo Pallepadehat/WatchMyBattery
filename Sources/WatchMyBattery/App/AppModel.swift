@@ -157,6 +157,15 @@ final class AppModel {
         onboardingWindow.show(at: step)
     }
 
+    #if DEBUG
+        /// Forgets the tour was seen, as on a first launch, and opens it from the start: for working on it. Debug
+        /// builds only (the menu bar icon's menu, or `--reset-onboarding`).
+        func resetOnboarding() {
+            settings.hasCompletedOnboarding = false
+            openOnboarding()
+        }
+    #endif
+
     /// Whether macOS's own battery is in the menu bar too: read when the panel opens, and by the welcome tour.
     func refreshBuiltInBatteryShown() {
         let shown = Self.readBuiltInBatteryShown()

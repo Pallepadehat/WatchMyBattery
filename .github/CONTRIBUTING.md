@@ -28,6 +28,7 @@ Debug builds understand a few launch arguments (set them in the scheme, or pass 
 | `--pretend-charging` | Shows the battery charging at 62% from a 70 W charger, to see the charging animation on a full battery (Release builds only with `--isolated`) |
 | `--pretend-accessories` | Shows AirPods Pro, a Magic Keyboard running low, a Magic Mouse and a charging Magic Trackpad instead of what's connected (Release builds only with `--isolated`) |
 | `--show-onboarding` | Opens the welcome tour; add `--onboarding-step 3` (0 to 5) to open it at a step |
+| `--reset-onboarding` | Forgets the welcome tour was seen, so it opens as on a first launch. In Debug builds, the menu bar icon's right-click menu also has **Reset Welcome Tour** |
 | `--show-accessory-card` | Slides in the AirPods card for the headphones that are connected (or, with `--pretend-accessories`, the made-up AirPods) |
 | `--isolated <folder>` | Runs without touching the real app: fresh settings of its own, the history in `<folder>`, no updater, no keyboard shortcut. Works in Release builds, for the end-to-end checks. Its panel says "Test copy" |
 | `--start-updater` | Turns on Sparkle, which debug builds leave off; add `--check-now` to press Check Now in Settings |

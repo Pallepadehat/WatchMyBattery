@@ -69,6 +69,11 @@ final class StatusItemController: NSObject {
             menu.addItem(withTitle: String(localized: "Check for Updates…"), action: #selector(checkForUpdates), keyEquivalent: "")
                 .target = self
         }
+        #if DEBUG
+            // For working on the tour: Debug builds only, and not translated, as nobody else sees it.
+            menu.addItem(.separator())
+            menu.addItem(withTitle: "Reset Welcome Tour", action: #selector(resetOnboarding), keyEquivalent: "").target = self
+        #endif
         menu.addItem(.separator())
         menu.addItem(withTitle: String(localized: "Quit WatchMyBattery"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         statusItem.menu = menu
@@ -78,6 +83,9 @@ final class StatusItemController: NSObject {
     }
 
     @objc private func openSettings() { model.openSettings() }
+    #if DEBUG
+        @objc private func resetOnboarding() { model.resetOnboarding() }
+    #endif
     @objc private func checkForUpdates() {
         model.openSettings(.updates)
         model.updater.checkNow()
