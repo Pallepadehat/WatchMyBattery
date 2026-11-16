@@ -106,8 +106,11 @@ final class StatusItemController: NSObject {
         model.powerDraw.setActive(label == .powerDraw && !isOutOfSight)
 
         let item = MenuBarItem(snapshot: snapshot, settings: settings, watts: model.powerDraw.watts)
-        currentIcon = item.icon
-        updateAnimation(Self.motion(for: snapshot, icon: item.icon, settings: settings))
+        let motion = Self.motion(for: snapshot, icon: item.icon, settings: settings)
+        var icon = item.icon
+        icon.motion = motion
+        currentIcon = icon
+        updateAnimation(motion)
         if !chargingAnimator.isRunning { drawIcon(phase: nil) }
 
         let title = Self.title(for: item)
@@ -136,6 +139,8 @@ extension StatusItemController {
     fileprivate func drawIcon(phase: Double?) {
         guard let button = statusItem.button, var icon = currentIcon else { return }
         icon.animationPhase = phase
+        // Resting between cycles, it's the still icon, whatever the motion: drawn and cached once.
+        if phase == nil { icon.motion = nil }
         guard icon != drawnIcon else { return }
         button.image = icon.isEmpty ? nil : image(for: icon)
         if icon.percentage != drawnIcon?.percentage || icon.chargeState != drawnIcon?.chargeState {
@@ -164,19 +169,16 @@ extension StatusItemController {
 
     private static let cachedImages = 64
 
-    /// What the icon should be doing: the glint while charging, a slow breath while plugged in and holding the charge,
-    /// and nothing when the animation is off, in Low Power Mode, or for text only, which has no battery to animate.
-    fileprivate static func motion(for snapshot: BatterySnapshot, icon: BatteryIcon, settings: AppSettings) -> ChargingAnimator.Motion? {
+    /// How the icon should move, in the styles chosen in Settings, or `nil` when the animation is off, in Low Power
+    /// Mode, or for text only, which has no battery to animate.
+    fileprivate static func motion(for snapshot: BatterySnapshot, icon: BatteryIcon, settings: AppSettings) -> MenuBarMotion? {
         guard settings.showsChargingAnimation, icon.style != .textOnly, !snapshot.isLowPowerModeOn else { return nil }
-        switch snapshot.chargeState {
-        case .charging: return .charging(level: snapshot.level, target: Double(snapshot.chargeTarget) / 100)
-        case .notCharging: return .breathing
-        case .charged, .discharging: return nil
-        }
+        return MenuBarMotion(
+            snapshot: snapshot, charging: settings.chargingMotion, trickle: settings.trickleMotion, holding: settings.holdingMotion)
     }
 
     /// Runs the animation only when it's wanted and someone could see it.
-    fileprivate func updateAnimation(_ motion: ChargingAnimator.Motion?) {
+    fileprivate func updateAnimation(_ motion: MenuBarMotion?) {
         let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         if let motion, !reduceMotion, !isOutOfSight {
             chargingAnimator.start(motion)

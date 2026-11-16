@@ -38,6 +38,40 @@ extension MenuBarLabel {
     }
 }
 
+/// A style of one of the menu bar's motions, as Settings lists it.
+protocol MotionStyle: Hashable, Identifiable, CaseIterable where AllCases: RandomAccessCollection {
+    var title: LocalizedStringResource { get }
+}
+
+extension ChargingMotionStyle: MotionStyle {
+    var title: LocalizedStringResource {
+        switch self {
+        case .flow: "Flow"
+        case .liquid: "Liquid"
+        case .stripes: "Stripes"
+        }
+    }
+}
+
+extension TrickleMotionStyle: MotionStyle {
+    var title: LocalizedStringResource {
+        switch self {
+        case .calmLiquid: "Calm Liquid"
+        case .slowPulse: "Slow Pulse"
+        }
+    }
+}
+
+extension HoldingMotionStyle: MotionStyle {
+    var title: LocalizedStringResource {
+        switch self {
+        case .stillWater: "Still Water"
+        case .heartbeat: "Heartbeat"
+        case .breathing: "Breathing"
+        }
+    }
+}
+
 /// When the charging chime plays.
 enum ChimeMoments: String, CaseIterable, Identifiable {
     case pluggingInAndUnplugging
@@ -190,6 +224,19 @@ final class AppSettings {
     /// A gentle animation in the menu bar icon and the panel's battery while charging.
     var showsChargingAnimation: Bool {
         didSet { defaults.set(showsChargingAnimation, forKey: Key.showsChargingAnimation) }
+    }
+
+    /// How the menu bar's battery moves while charging, for the last few percent, and while holding its charge.
+    var chargingMotion: ChargingMotionStyle {
+        didSet { defaults.set(chargingMotion.rawValue, forKey: Key.chargingMotion) }
+    }
+
+    var trickleMotion: TrickleMotionStyle {
+        didSet { defaults.set(trickleMotion.rawValue, forKey: Key.trickleMotion) }
+    }
+
+    var holdingMotion: HoldingMotionStyle {
+        didSet { defaults.set(holdingMotion.rawValue, forKey: Key.holdingMotion) }
     }
 
     /// Bundle identifiers of apps that never get a slice, so they can't be dragged out by accident.
@@ -395,6 +442,9 @@ final class AppSettings {
             Key.maximumApps: 3,
             Key.confirmsQuit: false,
             Key.showsChargingAnimation: true,
+            Key.chargingMotion: ChargingMotionStyle.flow.rawValue,
+            Key.trickleMotion: TrickleMotionStyle.slowPulse.rawValue,
+            Key.holdingMotion: HoldingMotionStyle.breathing.rawValue,
             Key.excludedApps: [String](),
             Key.notifiesWhenLow: false,
             Key.lowBatteryLevels: [20, 10],
@@ -439,6 +489,9 @@ final class AppSettings {
         maximumApps = min(max(defaults.integer(forKey: Key.maximumApps), Self.appCountRange.lowerBound), Self.appCountRange.upperBound)
         confirmsQuit = defaults.bool(forKey: Key.confirmsQuit)
         showsChargingAnimation = defaults.bool(forKey: Key.showsChargingAnimation)
+        chargingMotion = ChargingMotionStyle(rawValue: defaults.string(forKey: Key.chargingMotion) ?? "") ?? .flow
+        trickleMotion = TrickleMotionStyle(rawValue: defaults.string(forKey: Key.trickleMotion) ?? "") ?? .slowPulse
+        holdingMotion = HoldingMotionStyle(rawValue: defaults.string(forKey: Key.holdingMotion) ?? "") ?? .breathing
         excludedApps = defaults.stringArray(forKey: Key.excludedApps) ?? []
         notifiesWhenLow = defaults.bool(forKey: Key.notifiesWhenLow)
         lowBatteryLevels = ((defaults.array(forKey: Key.lowBatteryLevels) as? [Int]) ?? [20, 10])
@@ -510,6 +563,9 @@ final class AppSettings {
         static let maximumApps = "maximumApps"
         static let confirmsQuit = "confirmsQuit"
         static let showsChargingAnimation = "showsChargingAnimation"
+        static let chargingMotion = "chargingMotion"
+        static let trickleMotion = "trickleMotion"
+        static let holdingMotion = "holdingMotion"
         static let excludedApps = "excludedApps"
         static let notifiesWhenLow = "notifiesWhenLow"
         static let lowBatteryLevels = "lowBatteryLevels"

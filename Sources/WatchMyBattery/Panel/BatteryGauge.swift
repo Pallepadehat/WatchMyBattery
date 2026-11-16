@@ -16,6 +16,8 @@ struct BatteryGauge: View {
     let usesColor: Bool
     /// Play the charging animation (the setting is on, the panel is open, and it's charging).
     let animatesCharging: Bool
+    /// How a held battery moves: with a heartbeat, or breathing (still water breathes here, as the panel has no liquid).
+    var holdingMotion: HoldingMotionStyle = .breathing
     @Binding var focusedApp: AppUsage?
     /// Quits right away (asking first only if the user wants that): a drag out of the panel.
     let quit: (AppUsage) -> Void
@@ -232,7 +234,7 @@ struct BatteryGauge: View {
         guard animatesCharging, !reduceMotion, !snapshot.isLowPowerModeOn else { return nil }
         switch snapshot.chargeState {
         case .charging: return .charging
-        case .notCharging: return .breathing
+        case .notCharging: return holdingMotion == .heartbeat ? .heartbeat : .breathing
         case .charged, .discharging: return nil
         }
     }
@@ -269,7 +271,7 @@ struct BatteryGauge: View {
             } else if snapshot.chargeState == .notCharging {
                 Image(systemName: "powerplug.fill")
                     .font(.system(size: 17, weight: .semibold))
-                    .modifier(BreathingOpacity())
+                    .modifier(HeldGlyph())
             }
             Text(centerString)
                 .font(.system(size: 24, weight: .semibold))

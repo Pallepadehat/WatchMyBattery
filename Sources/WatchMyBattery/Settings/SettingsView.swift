@@ -222,12 +222,35 @@ private struct MenuBarPane: View {
                 }
                 Toggle(isOn: $settings.showsChargingAnimation) {
                     SettingLabel("Charging Animation", symbol: "bolt.fill", color: .green) {
-                        Text("A soft glow flows into the battery while it charges, here and in the panel.")
+                        Text("The battery moves while it charges and while it's held, here and in the panel.")
+                    }
+                }
+                if settings.showsChargingAnimation {
+                    MotionPicker("While Charging", symbol: "bolt.fill", selection: $settings.chargingMotion) {
+                        switch $0 {
+                        case .flow: "A soft swell of light rolls into the battery."
+                        case .liquid: "The charge ripples like a liquid as it rises. Moves all the time."
+                        case .stripes: "Stripes glide through the part still to charge."
+                        }
+                    }
+                    MotionPicker("Last Few Percent", symbol: "battery.100percent.bolt", selection: $settings.trickleMotion) {
+                        switch $0 {
+                        case .calmLiquid: "The liquid slows to a gentle sway. Moves all the time."
+                        case .slowPulse: "The edge of the charge pulses softly."
+                        }
+                    }
+                    MotionPicker("Holding the Charge", symbol: "powerplug.fill", selection: $settings.holdingMotion) {
+                        switch $0 {
+                        case .stillWater: "The liquid at rest, tilting very slowly. Moves all the time."
+                        case .heartbeat: "The plug gives a soft double beat every few seconds."
+                        case .breathing: "The charge dims a little and comes back, slowly."
+                        }
                     }
                 }
             } header: {
                 Text("Look")
             }
+            .animation(.snappy, value: settings.showsChargingAnimation)
             Section {
                 LabeledContent {
                     ShortcutRecorder(model: model)
@@ -254,6 +277,35 @@ private struct MenuBarPane: View {
         case .timeRemaining: "Until empty, or until full while charging. The percentage when there's no time to show."
         case .powerDraw: "What the whole Mac draws right now, read every few seconds while it's shown."
         }
+    }
+}
+
+/// One state's animation: a menu of its styles, with what the chosen one does underneath.
+private struct MotionPicker<Style: MotionStyle>: View {
+    let title: LocalizedStringKey
+    let symbol: String
+    @Binding var selection: Style
+    let describe: (Style) -> LocalizedStringKey
+
+    init(_ title: LocalizedStringKey, symbol: String, selection: Binding<Style>, describe: @escaping (Style) -> LocalizedStringKey) {
+        self.title = title
+        self.symbol = symbol
+        _selection = selection
+        self.describe = describe
+    }
+
+    var body: some View {
+        Picker(selection: $selection) {
+            ForEach(Style.allCases) { style in
+                Text(style.title).tag(style)
+            }
+        } label: {
+            SettingLabel(title, symbol: symbol, color: .green) {
+                Text(describe(selection))
+            }
+        }
+        .padding(.leading, 12)
+        .transition(.opacity)
     }
 }
 

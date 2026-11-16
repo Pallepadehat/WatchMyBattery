@@ -120,6 +120,56 @@ import Testing
         #expect(Breathing.depth > 0.2 && Breathing.depth < 0.6)
     }
 
+    @Test func eachStateMovesTheWayItsStyleSays() {
+        func motion(
+            _ snapshot: BatterySnapshot, _ charging: ChargingMotionStyle = .flow, _ trickle: TrickleMotionStyle = .slowPulse,
+            _ holding: HoldingMotionStyle = .breathing
+        ) -> MenuBarMotion? {
+            MenuBarMotion(snapshot: snapshot, charging: charging, trickle: trickle, holding: holding)
+        }
+        #expect(motion(pluggedIn(45, .charging)) == .flow(level: 0.45, target: 1))
+        #expect(motion(pluggedIn(45, .charging), .liquid) == .liquid)
+        #expect(motion(pluggedIn(45, .charging), .stripes) == .stripes)
+        // The last few percent to the target, whatever the charging style.
+        #expect(motion(pluggedIn(97, .charging), .liquid) == .slowPulse)
+        #expect(motion(pluggedIn(77, .charging, target: 80), .flow, .calmLiquid) == .calmLiquid)
+        #expect(motion(pluggedIn(80, .notCharging, target: 80), .flow, .slowPulse, .stillWater) == .stillWater)
+        #expect(motion(pluggedIn(80, .notCharging), .flow, .slowPulse, .heartbeat) == .heartbeat)
+        #expect(motion(pluggedIn(100, .charged)) == nil)
+        #expect(motion(onBattery) == nil)
+    }
+
+    @Test func loopsAreSeamlessAndBurstsRest() {
+        for loop in [MenuBarMotion.liquid, .stripes, .calmLiquid, .stillWater] {
+            let cycle = loop.cycle
+            #expect(cycle.rest == 0)
+            #expect(cycle.phases.first == 0 && cycle.phases.last! < 1)
+        }
+        for burst in [MenuBarMotion.slowPulse, .heartbeat, .breathing] {
+            let cycle = burst.cycle
+            #expect(cycle.rest > 0)
+            #expect(cycle.phases.first! > 0 && cycle.phases.last! < 1)
+        }
+        // A loop ends where it starts, so there's no jump from its last frame to its first.
+        for y in stride(from: 0.0, through: 12, by: 1.5) {
+            #expect(abs(LiquidSurface.charging(y: y, phase: 0) - LiquidSurface.charging(y: y, phase: 1)) < 1e-9)
+            #expect(abs(LiquidSurface.calm(y: y, phase: 0) - LiquidSurface.calm(y: y, phase: 1)) < 1e-9)
+            #expect(abs(LiquidSurface.still(y: y, height: 12, phase: 0) - LiquidSurface.still(y: y, height: 12, phase: 1)) < 1e-9)
+        }
+        #expect(Stripes.offset(at: 1) == Stripes.spacing)
+    }
+
+    @Test func theShapesStaySubtle() {
+        let surface = stride(from: 0.0, through: 1, by: 0.01).flatMap { phase in
+            stride(from: 0.0, through: 12, by: 0.5).map { LiquidSurface.charging(y: $0, phase: phase) }
+        }
+        #expect(surface.map(abs).max()! <= 1.5)
+        #expect(EdgePulse.strength(at: 0) == 0 && abs(EdgePulse.strength(at: 0.5) - 1) < 1e-9)
+        #expect(Heartbeat.swell(at: 0) == 0)
+        #expect(Heartbeat.swell(at: 0.2) > 0.15)
+        #expect(Heartbeat.swell(at: 1) == 0)
+    }
+
     // MARK: - An app's processes
 
     @Test func helpersDropTheAppsName() {

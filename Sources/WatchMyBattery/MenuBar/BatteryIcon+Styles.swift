@@ -39,7 +39,7 @@ extension BatteryIcon {
             } else {
                 // As long as the battery's fill would be (so the glint starts where it ends), with the round caps
                 // inside that length, so a nearly full ring still shows its gap.
-                let length = ChargingGlint.fillWidth(bodyWidth: Double(Self.ringLength), level: level)
+                let length = ChargingGlint.fillWidth(bodyWidth: Double(Self.ringLength), level: level) + liquidLean
                 let cap = Double(Self.ringLineWidth) / 2
                 let charge = arc(around: center, from: cap, to: max(length - cap, cap + 0.01))
                 charge.lineCapStyle = .round
@@ -48,23 +48,77 @@ extension BatteryIcon {
             context.restoreGState()
         }
 
-        if let animationPhase, chargeState == .charging {
-            drawRingGlint(at: animationPhase, center: center, color: palette.charge, context: context)
+        if let motion, let animationPhase {
+            switch motion {
+            case .flow: drawRingGlint(at: animationPhase, center: center, color: palette.charge, context: context)
+            case .stripes: drawRingStripes(at: animationPhase, center: center, color: palette.charge, context: context)
+            case .slowPulse: drawRingEdgeGlow(strength: EdgePulse.strength(at: animationPhase), center: center, color: palette.charge)
+            case .liquid, .calmLiquid, .stillWater, .heartbeat, .breathing: break  // In the charge's length, brightness or the glyph.
+            }
         }
 
+        let glyph = glyphTransform(around: center)
         switch chargeState {
         case .charging:
             palette.charge.setFill()
-            Self.boltPath(height: 8, center: center).fill()
+            let bolt = Self.boltPath(height: 8, center: center)
+            bolt.transform(using: glyph)
+            bolt.fill()
         case .notCharging:
             palette.charge.withAlphaComponent(chargeOpacity).setFill()
             let plug = Self.plugPath(center: .zero)
             var transform = AffineTransform(translationByX: center.x, byY: center.y)
             transform.scale(0.75)
             plug.transform(using: transform)
+            plug.transform(using: glyph)
             plug.fill()
         case .charged, .discharging:
             break
+        }
+    }
+
+    /// A liquid's surface, round the ring: the end of the charge sways a little forward and back, as the battery's edge
+    /// ripples. In points along the ring.
+    private var liquidLean: Double {
+        guard let motion, let phase = animationPhase else { return 0 }
+        let middle = Double(Self.ringLineWidth) / 2
+        switch motion {
+        case .liquid: return 1.4 * LiquidSurface.charging(y: middle * 3, phase: phase)
+        case .calmLiquid: return 1.4 * LiquidSurface.calm(y: middle * 3, phase: phase)
+        case .stillWater: return 1.6 * sin(2 * .pi * phase)
+        default: return 0
+        }
+    }
+
+    /// The battery's stripes, round the ring: short dashes gliding along the part still to charge.
+    private func drawRingStripes(at phase: Double, center: CGPoint, color: NSColor, context: CGContext) {
+        let length = Double(Self.ringLength)
+        let start = ChargingGlint.fillWidth(bodyWidth: length, level: level)
+        let end = ChargingGlint.targetPosition(bodyWidth: length, target: chargeTarget)
+        guard end > start else { return }
+        color.withAlphaComponent(0.6).setStroke()
+        var from = start - Stripes.spacing + Stripes.offset(at: phase)
+        while from < end {
+            let piece = arc(around: center, from: max(from, start), to: min(from + Stripes.spacing / 2, end))
+            piece.lineCapStyle = .butt
+            if from + Stripes.spacing / 2 > start { piece.stroke() }
+            from += Stripes.spacing
+        }
+    }
+
+    /// A soft glow at the end of the ring's charge, `strength` 0–1.
+    private func drawRingEdgeGlow(strength: Double, center: CGPoint, color: NSColor) {
+        guard strength > 0.01 else { return }
+        let end = ChargingGlint.fillWidth(bodyWidth: Double(Self.ringLength), level: level)
+        let reach = 2.5 + 1.5 * strength
+        let segments = 8
+        for index in 0..<segments {
+            let from = end - reach + 2 * reach * Double(index) / Double(segments)
+            let to = from + 2 * reach / Double(segments)
+            color.withAlphaComponent(0.8 * sin(.pi * (Double(index) + 0.5) / Double(segments)) * strength).setStroke()
+            let piece = arc(around: center, from: from, to: to)
+            piece.lineCapStyle = .butt
+            piece.stroke()
         }
     }
 

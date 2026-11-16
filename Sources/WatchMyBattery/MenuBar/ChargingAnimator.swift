@@ -1,27 +1,18 @@
 import AppKit
 import BatteryKit
 
-/// Plays the menu bar icon's animation: a short cycle of frames, then a rest, over and over, for as long as it's
-/// running. Charging, a glint sweeps across the battery towards where it's charging to. Plugged in and holding its
-/// charge, the charge breathes: it dims a little and comes back, slowly (``Breathing``).
+/// Plays the menu bar icon's motion (``MenuBarMotion``): the frames of one cycle, then its rest, over and over, for as
+/// long as it's running. A loop (liquid, stripes, still water) has no rest and runs straight on from its last frame to
+/// its first; the others rest between cycles, when nothing runs at all.
 ///
-/// It's built to cost next to nothing. Every frame makes macOS redraw the
-/// status item and re-snapshot it for each menu bar it shows in, so a cycle
-/// has only the frames it needs (``ChargingGlint`` picks the glint's: fewer
-/// on a fuller battery, where it has less far to go, and none where it
-/// wouldn't show; a breath, a slow fade, needs only nine a second). Between
-/// cycles nothing runs at all. The owner stops it whenever nobody could see
-/// it (displays asleep, another user logged in) or it isn't wanted (Reduce
-/// Motion, Low Power Mode, the setting turned off).
+/// It's built to cost as little as it can. Every frame makes macOS redraw the
+/// status item and re-snapshot it for each menu bar it shows in, so each
+/// motion has only the frames it needs: the glint's are picked by
+/// ``ChargingGlint`` (fewer on a fuller battery, none where it wouldn't
+/// show), a slow fade gets nine a second. The owner stops it whenever nobody
+/// could see it (displays asleep, another user logged in) or it isn't wanted
+/// (Reduce Motion, Low Power Mode, the setting turned off).
 final class ChargingAnimator {
-    /// What the icon is doing.
-    enum Motion: Equatable {
-        /// Charging from `level` to `target`, both 0–1.
-        case charging(level: Double, target: Double)
-        /// Plugged in, holding its charge.
-        case breathing
-    }
-
     /// Gets the phase, 0–1, of each frame, and `nil` when it rests or stops.
     var onFrame: ((Double?) -> Void)?
 
@@ -29,16 +20,21 @@ final class ChargingAnimator {
     private var timer: Timer?
     private var frame = 0
     /// What's playing; a new motion takes effect from the next cycle.
-    private var motion = Motion.breathing
-    private var cycle = Cycle.breathing
+    private var motion = MenuBarMotion.breathing
+    private var cycle = MenuBarMotion.breathing.cycle
 
-    /// The most frames a sweep has, for showing them all (the previews).
+    /// The most frames a glint sweep has, for showing them all (the previews).
     static let framesPerSweep = ChargingGlint.maximumFrames
 
-    /// Starts playing `motion`, or keeps going with it from the next cycle.
-    func start(_ motion: Motion) {
+    /// Starts playing `motion`. A running loop switches at once; anything else from its next cycle.
+    func start(_ motion: MenuBarMotion) {
+        let changed = motion != self.motion
         self.motion = motion
-        guard !isRunning else { return }
+        guard !isRunning else {
+            // A loop never rests, so it would never reach a next cycle to switch at: start the new motion now.
+            if changed, cycle.rest == 0 { beginCycle() }
+            return
+        }
         isRunning = true
         beginCycle()
     }
@@ -52,7 +48,7 @@ final class ChargingAnimator {
     }
 
     private func beginCycle() {
-        if cycle.motion != motion { cycle = Cycle(motion) }
+        cycle = motion.cycle
         frame = 0
         schedule(every: cycle.frameInterval, repeats: true) { [weak self] in self?.advance() }
     }
@@ -60,6 +56,12 @@ final class ChargingAnimator {
     private func advance() {
         guard isRunning else { return }
         if frame >= cycle.phases.count {
+            guard cycle.rest > 0 else {
+                // A loop: straight back to its first frame.
+                frame = 0
+                advance()
+                return
+            }
             timer?.invalidate()
             onFrame?(nil)
             schedule(every: cycle.rest, repeats: false) { [weak self] in self?.beginCycle() }
@@ -79,29 +81,5 @@ final class ChargingAnimator {
         // `.common`, so it keeps going while a menu is open.
         RunLoop.main.add(timer, forMode: .common)
         self.timer = timer
-    }
-
-    /// One cycle's frames and timing, worked out once per motion.
-    private struct Cycle {
-        let motion: Motion
-        let phases: [Double]
-        let frameInterval: TimeInterval
-        let rest: TimeInterval
-
-        /// The pause between charging sweeps.
-        private static let sweepRest: TimeInterval = 1.9
-
-        init(_ motion: Motion) {
-            self.motion = motion
-            switch motion {
-            case .charging(let level, let target):
-                let glint = ChargingGlint(bodyWidth: BatteryIcon.bodyWidth, level: level, target: target)
-                (phases, frameInterval, rest) = (glint.phases, glint.frameInterval, Self.sweepRest)
-            case .breathing:
-                (phases, frameInterval, rest) = (Breathing.phases, Breathing.frameInterval, Breathing.rest)
-            }
-        }
-
-        static let breathing = Cycle(.breathing)
     }
 }

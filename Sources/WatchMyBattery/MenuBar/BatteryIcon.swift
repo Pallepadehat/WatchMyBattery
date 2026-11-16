@@ -18,8 +18,9 @@ struct BatteryIcon: Hashable {
     var isLowPowerModeOn: Bool
     /// The level macOS charges to, 0–1: where the charging glint comes to rest.
     var chargeTarget: Double
-    /// Where the animation is, 0–1: the charging glint's sweep while charging, the resting shimmer while holding the
-    /// charge (see ``ChargingAnimator``), or `nil` for a still icon.
+    /// How the icon moves (chosen in Settings), and where in its cycle it is, 0–1 (see ``ChargingAnimator``). A still
+    /// icon has neither.
+    var motion: MenuBarMotion?
     var animationPhase: Double?
     /// Draw for a dark (`true`) or light menu bar, instead of the one being drawn into.
     /// For previews, like the samples in Settings, which aren't drawn into a menu bar at all.
@@ -165,14 +166,24 @@ struct BatteryIcon: Hashable {
         bodyPath.addClip()
         empty.setFill()
         body.fill()
-        // Copied rather than laid over the empty part, so the charge's own brightness shows: it breathes while it's held.
+        // Copied rather than laid over the empty part, so the charge's own brightness shows (it breathes while it's
+        // held), and in the shape of the liquid's surface when that's how it moves.
         (accentColor ?? foreground).withAlphaComponent(chargeOpacity).setFill()
         context.setBlendMode(.copy)
-        fill.fill()
+        chargePath(fill: fill).fill()
         context.restoreGState()
 
-        if let animationPhase, chargeState == .charging {
-            drawGlint(at: animationPhase, body: body, bodyPath: bodyPath, fill: fill, terminal: terminal, color: palette.charge, context: context)
+        if let motion, let animationPhase {
+            switch motion {
+            case .flow:
+                drawGlint(at: animationPhase, body: body, bodyPath: bodyPath, fill: fill, terminal: terminal, color: palette.charge, context: context)
+            case .stripes:
+                drawStripes(at: animationPhase, body: body, bodyPath: bodyPath, fill: fill, color: palette.charge, context: context)
+            case .slowPulse:
+                drawEdgeGlow(strength: EdgePulse.strength(at: animationPhase), bodyPath: bodyPath, edge: fill.maxX, color: palette.charge, context: context)
+            case .liquid, .calmLiquid, .stillWater, .heartbeat, .breathing:
+                break  // The charge's shape, the glyph's size or the charge's brightness: drawn above and below.
+            }
         }
 
         // The percentage or a symbol on top: cut out of the charge, so the menu
@@ -190,12 +201,14 @@ struct BatteryIcon: Hashable {
             }
         } else if chargeState == .charging {
             let bolt = Self.boltPath(height: body.height + 3, center: CGPoint(x: body.midX, y: body.midY))
+            bolt.transform(using: glyphTransform(around: CGPoint(x: body.midX, y: body.midY)))
             stamp(body: body, fill: fill, solid: solid, context: context) { color in
                 color.setFill()
                 bolt.fill()
             }
         } else if chargeState == .notCharging {
             let plug = Self.plugPath(center: CGPoint(x: body.midX, y: body.midY))
+            plug.transform(using: glyphTransform(around: CGPoint(x: body.midX, y: body.midY)))
             stamp(body: body, fill: fill, solid: solid, context: context) { color in
                 color.setFill()
                 plug.fill()
@@ -282,8 +295,78 @@ struct BatteryIcon: Hashable {
 
     /// How bright the charge is: full, or a little dimmed while it breathes (plugged in, holding its charge).
     var chargeOpacity: CGFloat {
-        guard let animationPhase, chargeState == .notCharging else { return 1 }
+        guard motion == .breathing, let animationPhase else { return 1 }
         return CGFloat(1 - Breathing.depth * Breathing.dimming(at: animationPhase))
+    }
+
+    /// The charge's shape: a rectangle, or, when it moves like a liquid, one whose edge is the liquid's surface.
+    private func chargePath(fill: CGRect) -> NSBezierPath {
+        guard let motion, let phase = animationPhase, fill.width > 0 else { return NSBezierPath(rect: fill) }
+        let lean: (Double) -> Double
+        switch motion {
+        case .liquid: lean = { LiquidSurface.charging(y: $0, phase: phase) }
+        case .calmLiquid: lean = { LiquidSurface.calm(y: $0, phase: phase) }
+        case .stillWater: lean = { LiquidSurface.still(y: $0, height: Double(fill.height), phase: phase) }
+        default: return NSBezierPath(rect: fill)
+        }
+        // Up the surface from the bottom, a quarter point at a time, which is smooth at any size the menu bar uses.
+        let path = NSBezierPath()
+        path.move(to: CGPoint(x: fill.minX, y: fill.minY))
+        var y = 0.0
+        while y <= Double(fill.height) {
+            path.line(to: CGPoint(x: fill.maxX + CGFloat(lean(y)), y: fill.minY + CGFloat(y)))
+            y += 0.25
+        }
+        path.line(to: CGPoint(x: fill.minX, y: fill.maxY))
+        path.close()
+        return path
+    }
+
+    /// The glyph's size: it swells with each beat of the heartbeat, and is otherwise as drawn.
+    func glyphTransform(around center: CGPoint) -> AffineTransform {
+        guard motion == .heartbeat, let animationPhase else { return AffineTransform() }
+        let scale = 1 + Heartbeat.swell(at: animationPhase)
+        var transform = AffineTransform(translationByX: center.x, byY: center.y)
+        transform.scale(scale)
+        transform.translate(x: -center.x, y: -center.y)
+        return transform
+    }
+
+    /// Fine diagonal stripes gliding through the part still to charge, up to where it's charging to: the classic Mac
+    /// progress bar, in the charge's colour.
+    private func drawStripes(at phase: Double, body: CGRect, bodyPath: NSBezierPath, fill: CGRect, color: NSColor, context: CGContext) {
+        let end = body.minX + CGFloat(ChargingGlint.targetPosition(bodyWidth: body.width, target: chargeTarget))
+        guard end > fill.maxX else { return }
+        context.saveGState()
+        bodyPath.addClip()
+        context.clip(to: CGRect(x: fill.maxX, y: body.minY, width: end - fill.maxX, height: body.height))
+        color.withAlphaComponent(0.55).setStroke()
+        let stripes = NSBezierPath()
+        stripes.lineWidth = 1.6
+        var x = body.minX - body.height - CGFloat(Stripes.spacing) + CGFloat(Stripes.offset(at: phase))
+        while x < body.maxX + body.height {
+            stripes.move(to: CGPoint(x: x, y: body.minY))
+            stripes.line(to: CGPoint(x: x + body.height, y: body.maxY))
+            x += CGFloat(Stripes.spacing)
+        }
+        stripes.stroke()
+        context.restoreGState()
+    }
+
+    /// A soft glow at the edge of the charge, `strength` 0–1.
+    private func drawEdgeGlow(strength: Double, bodyPath: NSBezierPath, edge: CGFloat, color: NSColor, context: CGContext) {
+        let strength = CGFloat(strength)
+        let rgb = color.usingColorSpace(.deviceRGB) ?? color
+        guard strength > 0.01,
+            let glow = CGGradient(
+                colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                colors: [0, 1, 0].map { rgb.withAlphaComponent($0 * 0.85 * strength).cgColor } as CFArray, locations: [0, 0.5, 1])
+        else { return }
+        let reach = 2.5 + 1.5 * strength
+        context.saveGState()
+        bodyPath.addClip()
+        context.drawLinearGradient(glow, start: CGPoint(x: edge - reach, y: 0), end: CGPoint(x: edge + reach, y: 0), options: [])
+        context.restoreGState()
     }
 
     /// How strongly the drained part of the pill shows, like the built-in icon.

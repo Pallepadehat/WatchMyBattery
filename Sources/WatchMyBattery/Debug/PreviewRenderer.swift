@@ -264,23 +264,24 @@
             }
             save(VStack(spacing: 0) { ForEach(rows.indices, id: \.self) { rows[$0] } }.frame(width: 400), to: folder.appending(path: "icons.png"))
 
-            // The charging glint, frame by frame, in every style.
+            // Every motion, frame by frame: in the battery (coloured and not) and the ring, on a dark and a light bar.
             var glintRows: [AnyView] = []
-            let toFull = BatterySnapshot(percentage: 45, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 3600)
+            let charging = BatterySnapshot(percentage: 45, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 3600)
             // Charging to 80%: the glint settles at the target instead of running on to the terminal.
             let toTarget = BatterySnapshot(percentage: 45, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 3600, chargeTarget: 80)
-            // Plugged in and held at 80%: the charge breathes, instead of a sweep.
+            let trickling = BatterySnapshot(percentage: 77, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 600, chargeTarget: 80)
             let holding = BatterySnapshot(percentage: 80, powerSource: .powerAdapter, chargeState: .notCharging, timeRemaining: nil, chargeTarget: 80)
-            for (style, inside, usesColor, charging) in [
-                (MenuBarIconStyle.battery, false, true, toFull), (.battery, false, false, toFull), (.battery, true, true, toFull),
-                (.battery, true, false, toFull), (.battery, false, true, toTarget), (.ring, false, true, toFull), (.ring, false, false, toFull),
-                (.ring, false, true, toTarget), (.battery, false, true, holding), (.battery, false, false, holding), (.ring, false, false, holding),
-            ] {
-                for dark in [true, false] {
-                    let frames = stride(from: 0, to: ChargingAnimator.framesPerSweep, by: 3).map { frame in
-                        var icon = BatteryIcon(snapshot: charging, style: style, showsPercentageInside: inside, usesColor: usesColor)
-                        icon.animationPhase = Double(frame) / Double(ChargingAnimator.framesPerSweep - 1)
-                        icon.drawsForDarkBar = dark
+            let motions: [(BatterySnapshot, MenuBarMotion)] = [
+                (charging, .flow(level: 0.45, target: 1)), (toTarget, .flow(level: 0.45, target: 0.8)), (charging, .liquid), (charging, .stripes),
+                (trickling, .calmLiquid), (trickling, .slowPulse), (holding, .stillWater), (holding, .heartbeat), (holding, .breathing),
+            ]
+            for (snapshot, motion) in motions {
+                for (style, usesColor, dark) in [(MenuBarIconStyle.battery, true, true), (.battery, false, false), (.ring, true, true)] {
+                    let phases = stride(from: 0, to: 1, by: 1.0 / 9).map { $0 }
+                    let frames = phases.map { phase in
+                        var icon = BatteryIcon(snapshot: snapshot, style: style, usesColor: usesColor, drawsForDarkBar: dark)
+                        icon.motion = motion
+                        icon.animationPhase = phase
                         return icon.image()
                     }
                     glintRows.append(

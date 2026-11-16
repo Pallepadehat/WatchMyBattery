@@ -465,22 +465,22 @@
         }
       }
     },
-    "A soft glow flows into the battery while it charges, here and in the panel." : {
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Et blødt lys strømmer ind i batteriet, mens det oplader, her og i panelet."
-          }
-        }
-      }
-    },
     "A soft sound as you plug in or unplug, so you know without looking." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "En blød lyd, når du sætter strøm til eller tager den fra, så du ved det uden at kigge."
+          }
+        }
+      }
+    },
+    "A soft swell of light rolls into the battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En blød bølge af lys ruller ind i batteriet."
           }
         }
       }
@@ -916,6 +916,16 @@
         }
       }
     },
+    "Breathing" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vejrtrækning"
+          }
+        }
+      }
+    },
     "Buy Me a Coffee" : {
       "localizations" : {
         "da" : {
@@ -942,6 +952,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Adgang til kalendere"
+          }
+        }
+      }
+    },
+    "Calm Liquid" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rolig væske"
           }
         }
       }
@@ -1126,6 +1146,16 @@
         }
       }
     },
+    "Flow" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strøm"
+          }
+        }
+      }
+    },
     "Glass" : {
       "localizations" : {
         "da" : {
@@ -1136,12 +1166,32 @@
         }
       }
     },
+    "Heartbeat" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hjerteslag"
+          }
+        }
+      }
+    },
     "Holding near %@" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Holder omkring %@"
+          }
+        }
+      }
+    },
+    "Holding the Charge" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når opladningen holdes"
           }
         }
       }
@@ -1182,6 +1232,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kun symbolet."
+          }
+        }
+      }
+    },
+    "Last Few Percent" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De sidste procent"
+          }
+        }
+      }
+    },
+    "Liquid" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Væske"
           }
         }
       }
@@ -3417,6 +3487,16 @@
         }
       }
     },
+    "Slow Pulse" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langsom puls"
+          }
+        }
+      }
+    },
     "Software Update" : {
       "localizations" : {
         "da" : {
@@ -3507,12 +3587,42 @@
         }
       }
     },
+    "Still Water" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stille vand"
+          }
+        }
+      }
+    },
     "Stops charging at %@ while plugged in, so the battery lasts longer." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stopper opladningen ved %@, mens strømmen er tilsluttet, så batteriet holder længere."
+          }
+        }
+      }
+    },
+    "Stripes" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Striber"
+          }
+        }
+      }
+    },
+    "Stripes glide through the part still to charge." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Striber glider gennem den del, der mangler at blive opladet."
           }
         }
       }
@@ -3677,6 +3787,16 @@
         }
       }
     },
+    "The battery moves while it charges and while it's held, here and in the panel." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriet bevæger sig, mens det oplader, og mens opladningen holdes, her og i panelet."
+          }
+        }
+      }
+    },
     "The battery should last until about %@, and the meeting runs until %@." : {
       "localizations" : {
         "da" : {
@@ -3703,6 +3823,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Batteriets temperatur."
+          }
+        }
+      }
+    },
+    "The charge dims a little and comes back, slowly." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opladningen dæmpes lidt og kommer langsomt tilbage."
+          }
+        }
+      }
+    },
+    "The charge ripples like a liquid as it rises. Moves all the time." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opladningen bølger som en væske, mens den stiger. Bevæger sig hele tiden."
           }
         }
       }
@@ -3737,6 +3877,16 @@
         }
       }
     },
+    "The edge of the charge pulses softly." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kanten af opladningen pulserer blødt."
+          }
+        }
+      }
+    },
     "The last sleep, and what's keeping the Mac awake." : {
       "localizations" : {
         "da" : {
@@ -3747,12 +3897,42 @@
         }
       }
     },
+    "The liquid at rest, tilting very slowly. Moves all the time." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Væsken i ro, der hælder meget langsomt. Bevæger sig hele tiden."
+          }
+        }
+      }
+    },
+    "The liquid slows to a gentle sway. Moves all the time." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Væsken falder til ro i en blid bølgen. Bevæger sig hele tiden."
+          }
+        }
+      }
+    },
     "The Mac is plugged in, and the battery isn't charging." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mac'en er tilsluttet strøm, og batteriet oplades ikke."
+          }
+        }
+      }
+    },
+    "The plug gives a soft double beat every few seconds." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stikket slår et blødt dobbeltslag med få sekunders mellemrum."
           }
         }
       }
@@ -4341,6 +4521,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Når du trækker en app ud af batteriet. Slet på en valgt bid spørger altid."
+          }
+        }
+      }
+    },
+    "While Charging" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Under opladning"
           }
         }
       }

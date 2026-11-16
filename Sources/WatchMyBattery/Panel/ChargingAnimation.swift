@@ -8,6 +8,8 @@ enum ChargingMotion: Equatable {
     /// Nothing flows in: the plug, and the mark where the charge is held, breathe slowly, in time with the menu bar
     /// (``Breathing``).
     case breathing
+    /// The plug gives a soft double beat every few seconds (``Heartbeat``).
+    case heartbeat
 }
 
 /// Where the panel's charging animation is: the wave of light rolling across
@@ -20,6 +22,8 @@ nonisolated struct ChargingPhase: Equatable, Sendable {
     var glow: Double = 0
     /// How deep into a breath it is, 0 (still) to 1 (the deepest), as ``Breathing/dimming(at:)`` has it.
     var breath: Double = 0
+    /// How much the plug swells with a heartbeat, over 1.
+    var beat: Double = 0
 
     /// One cycle: a pause, the wave rolling across, the bolt lighting up as it passes.
     static let rest: TimeInterval = 0.6
@@ -80,6 +84,19 @@ private struct ChargingAnimationModifier: ViewModifier {
                     LinearKeyframe(0, duration: Breathing.rest)
                 }
             }
+        case .heartbeat:
+            // A beat and a smaller one just after, as the menu bar's, then a rest.
+            content.keyframeAnimator(initialValue: ChargingPhase(), repeating: true) { content, phase in
+                content.environment(\.chargingPhase, phase)
+            } keyframes: { _ in
+                KeyframeTrack(\.beat) {
+                    LinearKeyframe(0.18, duration: 0.12, timingCurve: .easeOut)
+                    LinearKeyframe(0, duration: 0.14, timingCurve: .easeIn)
+                    LinearKeyframe(0.11, duration: 0.12, timingCurve: .easeOut)
+                    LinearKeyframe(0, duration: 0.18, timingCurve: .easeIn)
+                    LinearKeyframe(0, duration: Heartbeat.rest)
+                }
+            }
         case nil:
             content
         }
@@ -120,12 +137,15 @@ struct ChargingWave: View {
     }
 }
 
-/// Dims a symbol a little as the battery breathes out, and brings it back as it breathes in.
-struct BreathingOpacity: ViewModifier {
+/// The plug of a held battery: it dims a little as the battery breathes out and comes back, or swells with each
+/// heartbeat.
+struct HeldGlyph: ViewModifier {
     @Environment(\.chargingPhase) private var phase
 
     func body(content: Content) -> some View {
-        content.opacity(1 - Breathing.depth * (phase?.breath ?? 0))
+        content
+            .opacity(1 - Breathing.depth * (phase?.breath ?? 0))
+            .scaleEffect(1 + (phase?.beat ?? 0))
     }
 }
 

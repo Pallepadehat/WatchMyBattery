@@ -75,6 +75,7 @@ struct BatteryPanelView: View {
                     centerLabel: model.settings.centerLabel,
                     usesColor: model.settings.usesColor,
                     animatesCharging: model.settings.showsChargingAnimation && model.isPanelOpen,
+                    holdingMotion: model.settings.holdingMotion,
                     focusedApp: $focusedApp,
                     quit: { quit($0, asking: model.settings.confirmsQuit) },
                     confirmQuit: { quit($0, asking: true) },
