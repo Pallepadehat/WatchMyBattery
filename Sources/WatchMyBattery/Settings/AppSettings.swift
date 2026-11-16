@@ -400,6 +400,22 @@ final class AppSettings {
         didSet { defaults.set(hasCompletedOnboarding, forKey: Key.hasCompletedOnboarding) }
     }
 
+    /// Count this Mac among the ones running WatchMyBattery: a ping a day with a random ID and the versions, nothing else
+    /// (see ``UsageStats``). Off until it's turned on, in the welcome tour or Settings › General.
+    var sharesUsageStats: Bool {
+        didSet { defaults.set(sharesUsageStats, forKey: Key.sharesUsageStats) }
+    }
+
+    /// The random ID the pings are sent with, made when sharing is turned on and forgotten when it's turned off.
+    var usageStatsID: String? {
+        didSet { defaults.set(usageStatsID, forKey: Key.usageStatsID) }
+    }
+
+    /// When the last ping got through, so there's at most one a day.
+    var usageStatsSentAt: Date? {
+        didSet { defaults.set(usageStatsSentAt, forKey: Key.usageStatsSentAt) }
+    }
+
     /// A key combination that opens and closes the panel from any app; `nil` for none.
     var panelShortcut: Hotkey? {
         didSet {
@@ -480,6 +496,7 @@ final class AppSettings {
             Key.notifiesAboutSleepDrain: false,
             Key.historyRetention: HistoryRetention.twoWeeks.rawValue,
             Key.showsDevices: true,
+            Key.sharesUsageStats: false,
         ])
         menuBarIconStyle = MenuBarIconStyle(rawValue: defaults.string(forKey: Key.menuBarIconStyle) ?? "") ?? .battery
         // Up to 0.3.3, one "percentage style" said whether the percentage was hidden, inside the battery or beside it.
@@ -532,6 +549,9 @@ final class AppSettings {
         showsDevices = defaults.bool(forKey: Key.showsDevices)
         showsReplaceTip = defaults.bool(forKey: Key.showsReplaceTip)
         hasCompletedOnboarding = defaults.bool(forKey: Key.hasCompletedOnboarding)
+        sharesUsageStats = defaults.bool(forKey: Key.sharesUsageStats)
+        usageStatsID = defaults.string(forKey: Key.usageStatsID)
+        usageStatsSentAt = defaults.object(forKey: Key.usageStatsSentAt) as? Date
         panelShortcut = defaults.data(forKey: Key.panelShortcut).flatMap { try? JSONDecoder().decode(Hotkey.self, from: $0) }
 
         if legacyStyle != nil {
@@ -602,5 +622,8 @@ final class AppSettings {
         static let notifiesAboutSleepDrain = "notifiesAboutSleepDrain"
         static let historyRetention = "historyRetention"
         static let showsDevices = "showsDevices"
+        static let sharesUsageStats = "sharesUsageStats"
+        static let usageStatsID = "usageStatsID"
+        static let usageStatsSentAt = "usageStatsSentAt"
     }
 }

@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-11-16
+
+Say hi, if you like.
+
+### Added
+
+- 👋 **Count This Mac**, if you'd like to say hi. It's off until you turn it on, in the welcome tour's Finishing Touches or in Settings › General › Privacy, and nothing is sent before then. Once it's on, the app sends once a day a random ID made on your Mac, the app's version and the macOS version, so I can see how many Macs run WatchMyBattery. Nothing about you, your battery or your apps. It goes to WatchMyBattery's own small server (in `Server/stats`), which doesn't keep your IP address. Turn it off and the ID is deleted from the server.
+
+### Fixed
+
+- **Settings breathes at the bottom.** The last section of a long pane no longer sits right on the window's bottom edge.
+
 ## [0.4.1] - 2026-11-16
 
 A steadier, easier-to-read panel.
@@ -273,7 +285,8 @@ The first release.
 - Automatic updates with Sparkle, from EdDSA-signed releases.
 - One-command install, and build, packaging and release scripts.
 
-[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.3.2...v0.3.3

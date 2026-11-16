@@ -110,7 +110,7 @@ struct OnboardingView: View {
         case .motion: "The battery can move while it charges, and while it's held at your limit."
         case .panel: "Choose what the panel shows when you click the battery. The apps draining it are always there."
         case .notifications: "A nudge at the right moment. All of them are off until you turn them on."
-        case .finishing: "Open the panel from anywhere, and keep WatchMyBattery running."
+        case .finishing: "Open the panel from anywhere, keep WatchMyBattery running, and say hi if you like."
         }
     }
 
@@ -455,6 +455,11 @@ private struct FinishingStep: View {
             OnboardingToggle(
                 title: "Open at Login", detail: "Keep the battery in your menu bar.", symbol: "power", color: .gray,
                 isOn: Binding(get: { model.launchAtLogin.isEnabled }, set: { model.launchAtLogin.setEnabled($0) }))
+            // Off until it's turned on here or in Settings: nothing is sent before that.
+            OnboardingToggle(
+                title: "Count This Mac", detail: "Once a day, a random ID and the version, so I know how many use it. Nothing else.",
+                symbol: "hand.raised.fill", color: .blue,
+                isOn: Binding(get: { model.settings.sharesUsageStats }, set: { model.usageStats.setSharing($0) }))
             if model.isBuiltInBatteryShown != false {
                 OnboardingRow(
                     title: "Hide macOS's Battery", detail: "So there's one battery up there. Control Center › Battery.",

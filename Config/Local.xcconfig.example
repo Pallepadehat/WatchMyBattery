@@ -2,3 +2,7 @@
 // Find your team ID at https://developer.apple.com/account under Membership.
 
 DEVELOPMENT_TEAM = ABCDE12345
+
+// The install count's Worker (Server/stats/README.md), host only: "//" would start a comment here.
+// Leave it out and the app never sends the Count This Mac ping.
+// WMB_USAGE_STATS_HOST = watchmybattery-stats.example.workers.dev

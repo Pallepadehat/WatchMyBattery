@@ -203,7 +203,8 @@ So treat **−48m** as "this app is a big reason your battery is draining", not 
 
 ## Privacy & performance
 
-- **Nothing leaves your Mac.** No analytics, no accounts, no telemetry. The only network request is Sparkle's update check against this repository's GitHub releases, and you can turn automatic updates off in Settings.
+- **Nothing leaves your Mac unless you say so.** No analytics SDK, no accounts, no tracking. Sparkle's update check against this repository's GitHub releases is the one request made by default, and you can turn automatic updates off in Settings.
+- **Count This Mac is opt in**, off until you turn it on in the welcome tour or **Settings › General › Privacy**. Then, once a day, the app tells WatchMyBattery's own small server (a Cloudflare Worker, in [`Server/stats`](Server/stats)) a random ID made on your Mac, the app's version and the macOS version: nothing else. The server keeps that and the days it was first and last seen, never your IP address. Turn it off and the ID is deleted from the server and forgotten on your Mac. Debug builds never send it.
 - WatchMyBattery reads process **energy counters and names**, never what those apps contain or do.
 - It isn't sandboxed, because the sandbox doesn't allow reading other processes' energy use or quitting other apps. It only ever quits an app you ask it to: one you drag out of the panel, delete with the keyboard, or quit from a low battery notification.
 - **Calendar access is opt in**, asked for only when you click *Allow…* under *Charge Before Meetings* in Settings › Notifications. Opening the app never brings up the prompt. It reads when events start and end, whether they're all day or marked as free, and whether you declined them: never titles, places, notes or who's invited. Nothing from your calendar is stored or sent anywhere.
@@ -220,7 +221,7 @@ Settings is laid out like System Settings, with a pane for each part:
 
 | Pane | Settings |
 | --- | --- |
-| General | Open at login, language (System, English or Dansk), shortcuts to hide the built-in battery and to System Settings › Battery |
+| General | Open at login, language (System, English or Dansk), shortcuts to hide the built-in battery and to System Settings › Battery, Count This Mac (opt in), and the welcome tour |
 | Menu Bar | The battery, a ring or text only; beside it, the percentage, the time left, the power draw or nothing; the percentage inside the battery; coloured states (red when low, green when charging) or monochrome; the charging animation |
 | Panel | Time remaining or percentage in the centre of the battery, how many apps get a slice, asking before quitting, hidden apps that never get a slice, a Display & System slice, temperature, voltage and current, the battery history (on, off, how long to keep it, export or clear it), and insights in the panel |
 | Charging | The charge limit (a slider from 80% to 100%), Charge to Full Once, the "when it's charged" notification, a chime when you plug in or unplug (when, and which sound), and the charge limit in the panel |

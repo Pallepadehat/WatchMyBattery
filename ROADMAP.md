@@ -153,6 +153,13 @@ Released. See the [changelog](CHANGELOG.md).
 - [x] The panel no longer jumps when it starts to scroll: no scroll bar taking a strip of its width
 - [x] Easier to read over busy windows, with the panel's glass tinted on macOS 26
 
+## 0.4.2: say hi ✅
+
+Released. See the [changelog](CHANGELOG.md).
+
+- [x] Count This Mac: an opt-in, anonymous count of the Macs running WatchMyBattery, in the welcome tour and Settings, sent to a Worker of its own (`Server/stats`) rather than an analytics service
+- [x] Room under the last section in Settings
+
 ## 0.5.0: everywhere
 
 **Widgets and Shortcuts**
