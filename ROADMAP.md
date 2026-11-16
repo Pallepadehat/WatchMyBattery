@@ -146,6 +146,10 @@ Released, with a welcome tour, a choice of animations and a calmer panel besides
 - [x] The Mac's total power draw in watts, beside the icon ([#37](https://github.com/Pallepadehat/WatchMyBattery/issues/37))
 - [x] More icon styles: a ring, the number alone, and time left instead of the percentage ([#38](https://github.com/Pallepadehat/WatchMyBattery/issues/38))
 
+## 0.4.2: say hi
+
+- [ ] Count This Mac: an opt-in, anonymous count of the Macs running WatchMyBattery, in the welcome tour and Settings, sent to a Worker of its own (`Server/stats`) rather than an analytics service
+
 ## 0.5.0: everywhere
 
 **Widgets and Shortcuts**

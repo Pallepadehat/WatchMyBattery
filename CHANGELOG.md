@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- 👋 **Count This Mac**, if you'd like to say hi. It's off until you turn it on, in the welcome tour's Finishing Touches or in Settings › General › Privacy, and nothing is sent before then. Once it's on, the app sends once a day a random ID made on your Mac, the app's version and the macOS version, so I can see how many Macs run WatchMyBattery. Nothing about you, your battery or your apps. It goes to WatchMyBattery's own small server (in `Server/stats`), which doesn't keep your IP address. Turn it off and the ID is deleted from the server.
+
 ## [0.4.0] - 2026-11-16
 
 Delight: a menu bar that shows what you want, a charger that explains itself, and a chime when you plug in.

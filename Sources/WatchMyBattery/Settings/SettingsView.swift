@@ -168,6 +168,22 @@ private struct GeneralPane: View {
             }
 
             Section {
+                Toggle(isOn: Binding(get: { model.settings.sharesUsageStats }, set: { model.usageStats.setSharing($0) })) {
+                    SettingLabel("Count This Mac", symbol: "hand.raised.fill", color: .blue) {
+                        Text("Once a day, so I know how many Macs run WatchMyBattery.")
+                    }
+                }
+            } header: {
+                Text("Privacy")
+            } footer: {
+                Text(
+                    "Sends a random ID made on this Mac, the app's version and the macOS version. Nothing about you, your battery or your apps, and the server doesn't keep your IP address. Off until you turn it on; turning it off deletes the ID from the server."
+                )
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            }
+
+            Section {
                 LabeledContent {
                     Button("Show…") { model.openOnboarding() }
                 } label: {
