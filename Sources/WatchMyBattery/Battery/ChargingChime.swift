@@ -11,7 +11,7 @@ final class ChargingChime {
     private weak var model: AppModel?
     private var detector = PowerChangeDetector()
     private var pending: Task<Void, Never>?
-    private var wakeToken: (any NSObjectProtocol)?
+    private var sleepTokens: [any NSObjectProtocol] = []
     /// Each sound, made or loaded once.
     private var sounds: [String: NSSound] = [:]
     private var playing: NSSound?
@@ -21,11 +21,15 @@ final class ChargingChime {
 
     func start(model: AppModel) {
         self.model = model
-        wakeToken = NSWorkspace.shared.notificationCenter.addObserver(
-            forName: NSWorkspace.didWakeNotification, object: nil, queue: .main
-        ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.detector.didWake(at: Date()) }
-        }
+        let center = NSWorkspace.shared.notificationCenter
+        sleepTokens = [
+            center.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.detector.willSleep() }
+            },
+            center.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.detector.didWake(at: Date()) }
+            },
+        ]
         observe()
     }
 

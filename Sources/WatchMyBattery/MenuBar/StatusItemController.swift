@@ -105,29 +105,28 @@ final class StatusItemController: NSObject {
         // The power draw is the one thing read on a timer: only while it's shown, and someone could see it.
         model.powerDraw.setActive(label == .powerDraw && !isOutOfSight)
 
-        let icon = BatteryIcon(snapshot: snapshot, settings: settings)
-        currentIcon = icon
+        let item = MenuBarItem(snapshot: snapshot, settings: settings, watts: model.powerDraw.watts)
+        currentIcon = item.icon
         let animates =
-            settings.showsChargingAnimation && icon.style != .textOnly && snapshot.chargeState == .charging && !snapshot.isLowPowerModeOn
+            settings.showsChargingAnimation && item.icon.style != .textOnly && snapshot.chargeState == .charging
+            && !snapshot.isLowPowerModeOn
         updateAnimation(wanted: animates, level: snapshot.level, target: Double(snapshot.chargeTarget) / 100)
         if !chargingAnimator.isRunning { drawIcon(glint: nil) }
 
-        let readout = MenuBarReadout(label: label, snapshot: snapshot, watts: model.powerDraw.watts)
-        let title = Self.title(for: readout, icon: icon)
+        let title = Self.title(for: item)
         if title != drawnTitle {
             button.attributedTitle = title
-            // Text only puts its bolt in front of the text; otherwise the text leads, as macOS's own battery has it.
-            button.imagePosition = icon.style == .textOnly ? .imageLeft : .imageRight
+            button.imagePosition = item.leadsWithIcon ? .imageLeft : .imageRight
             drawnTitle = title
         }
     }
 
-    /// The text beside the icon, spaced from it, in red when it's all there is to say the battery is low.
-    private static func title(for readout: MenuBarReadout?, icon: BatteryIcon) -> NSAttributedString {
-        guard let text = readout?.text else { return NSAttributedString() }
+    /// The text beside the icon, spaced from it.
+    private static func title(for item: MenuBarItem) -> NSAttributedString {
+        guard let text = item.text else { return NSAttributedString() }
         var attributes: [NSAttributedString.Key: Any] = [.font: NSFont.menuBarFont(ofSize: 0).monospacedDigits]
-        if icon.style == .textOnly, icon.accent == .low { attributes[.foregroundColor] = NSColor.systemRed }
-        let spaced = icon.isEmpty ? text : icon.style == .textOnly ? " " + text : text + " "
+        if item.showsTextAsLow { attributes[.foregroundColor] = NSColor.systemRed }
+        let spaced = item.icon.isEmpty ? text : item.leadsWithIcon ? " " + text : text + " "
         return NSAttributedString(string: spaced, attributes: attributes)
     }
 }

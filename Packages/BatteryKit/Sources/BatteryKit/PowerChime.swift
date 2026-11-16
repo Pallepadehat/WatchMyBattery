@@ -34,6 +34,12 @@ public struct PowerChangeDetector: Sendable {
         return snapshot.isPluggedIn ? .pluggedIn : .unplugged
     }
 
+    /// The Mac is going to sleep: nothing it hears until it wakes is worth a chime. (macOS can announce a new power
+    /// source a moment before it says the Mac woke.)
+    public mutating func willSleep() {
+        quietUntil = .distantFuture
+    }
+
     /// The Mac just woke: changes for the next few seconds happened while it slept.
     public mutating func didWake(at now: Date) {
         quietUntil = now.addingTimeInterval(Self.quietAfterWake)

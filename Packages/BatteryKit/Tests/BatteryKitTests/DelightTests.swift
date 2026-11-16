@@ -118,6 +118,10 @@ import Testing
     @Test func whatChangedInSleepIsOldNews() {
         var detector = PowerChangeDetector()
         _ = detector.update(onBattery, at: start)
+        detector.willSleep()
+        // macOS can announce the charger before it says the Mac woke.
+        #expect(detector.update(pluggedIn(64, .charging), at: start.addingTimeInterval(3599)) == nil)
+        #expect(detector.update(onBattery, at: start.addingTimeInterval(3599.5)) == nil)
         detector.didWake(at: start.addingTimeInterval(3600))
         #expect(detector.update(pluggedIn(64, .charging), at: start.addingTimeInterval(3601)) == nil)
         #expect(detector.update(onBattery, at: start.addingTimeInterval(3700)) == .unplugged)

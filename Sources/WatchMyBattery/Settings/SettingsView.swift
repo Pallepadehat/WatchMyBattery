@@ -917,21 +917,18 @@ private struct MenuBarSample: View {
     let wallpaper: Wallpaper
 
     var body: some View {
-        let battery = BatteryIcon(
-            snapshot: snapshot, style: style, showsPercentageInside: settings.showsPercentageInside, usesColor: settings.usesColor,
-            drawsForDarkBar: wallpaper.isDark)
-        let icon = battery.isEmpty ? nil : battery.image()
-        let text = MenuBarReadout(label: style.shownLabel(settings.menuBarLabel), snapshot: snapshot, watts: watts)?.text
+        let item = MenuBarItem(snapshot: snapshot, settings: settings, style: style, watts: watts, drawsForDarkBar: wallpaper.isDark)
+        let icon = item.icon.isEmpty ? nil : item.icon.image()
         HStack(spacing: 4) {
-            if style == .textOnly, let icon { image(icon) }
-            if let text {
+            if item.leadsWithIcon, let icon { image(icon) }
+            if let text = item.text {
                 Text(text)
                     .font(.system(size: 12))
                     .monospacedDigit()
-                    .foregroundStyle(style == .textOnly && battery.accent == .low ? Color.red : Color.primary)
+                    .foregroundStyle(item.showsTextAsLow ? Color.red : Color.primary)
                     .contentTransition(.numericText())
             }
-            if style != .textOnly, let icon { image(icon) }
+            if !item.leadsWithIcon, let icon { image(icon) }
         }
         .foregroundStyle(wallpaper.isDark ? Color.white : Color.black)
         .frame(maxWidth: .infinity)
