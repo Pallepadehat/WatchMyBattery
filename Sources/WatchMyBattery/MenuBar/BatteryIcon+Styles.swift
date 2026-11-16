@@ -46,8 +46,9 @@ extension BatteryIcon {
 
         if let animationPhase {
             switch chargeState {
+            case .charging where isTrickling: drawRingDrip(at: animationPhase, center: center, color: palette.charge, context: context)
             case .charging: drawRingGlint(at: animationPhase, center: center, color: palette.charge, context: context)
-            case .notCharging: drawRingShimmer(at: animationPhase, center: center, color: palette.charge, context: context)
+            case .notCharging: drawRingShimmer(at: animationPhase, center: center, palette: palette, context: context)
             case .charged, .discharging: break
             }
         }
@@ -101,13 +102,15 @@ extension BatteryIcon {
 
     /// Holding its charge: the battery's shimmer, bent round the ring. A sheen glides along the charge from the top,
     /// cut out of it, and the end of the charge glows as it arrives.
-    private func drawRingShimmer(at phase: Double, center: CGPoint, color: NSColor, context: CGContext) {
+    private func drawRingShimmer(at phase: Double, center: CGPoint, palette: Palette, context: CGContext) {
         let fill = ChargingGlint.fillWidth(bodyWidth: Double(Self.ringLength), level: level)
         let frame = RestingShimmer.frame(at: phase, fillWidth: fill)
+        let color = palette.shine ?? palette.charge
 
         if frame.strength > 0.01 {
             context.saveGState()
-            context.setBlendMode(.destinationOut)
+            // A green shine over the charge with colours on; cut out of it without.
+            if palette.shine == nil { context.setBlendMode(.destinationOut) }
             let segments = 10
             let start = frame.center - frame.width / 2
             let step = frame.width / Double(segments)
@@ -116,7 +119,7 @@ extension BatteryIcon {
                 let to = min(start + Double(index + 1) * step, fill)
                 guard to > from else { continue }
                 let brightness = sin(.pi * (Double(index) + 0.5) / Double(segments))
-                NSColor.black.withAlphaComponent(0.6 * brightness * frame.strength).setStroke()
+                (palette.shine ?? .black).withAlphaComponent((palette.shine == nil ? 0.6 : 0.95) * brightness * frame.strength).setStroke()
                 let piece = arc(around: center, from: from, to: to)
                 piece.lineCapStyle = .butt
                 piece.stroke()
@@ -136,6 +139,29 @@ extension BatteryIcon {
             piece.lineCapStyle = .butt
             piece.stroke()
         }
+    }
+
+    /// Charging the last little bit: the battery's drop, at the end of the ring's charge, falling into it.
+    private func drawRingDrip(at phase: Double, center: CGPoint, color: NSColor, context: CGContext) {
+        let drop = TrickleDrip.frame(at: phase)
+        let end = ChargingGlint.fillWidth(bodyWidth: Double(Self.ringLength), level: level)
+        let rgb = color.usingColorSpace(.deviceRGB) ?? color
+        if drop.strength > 0.01,
+            let light = CGGradient(
+                colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                colors: [1, 0].map { rgb.withAlphaComponent($0 * 0.95 * drop.strength).cgColor } as CFArray, locations: [0, 1])
+        {
+            // Along the ring: the point that far past the end of the charge, clockwise from the top.
+            let angle = (90 - (end + drop.offset) / Double(Self.ringLength) * 360) * .pi / 180
+            let point = CGPoint(x: center.x + Self.ringRadius * cos(angle), y: center.y + Self.ringRadius * sin(angle))
+            context.drawRadialGradient(light, startCenter: point, startRadius: 0, endCenter: point, endRadius: CGFloat(drop.size), options: [])
+        }
+        guard drop.glow > 0.01 else { return }
+        let reach = 2 + 2 * drop.glow
+        let glow = arc(around: center, from: max(end - reach, 0), to: end + reach)
+        glow.lineCapStyle = .round
+        color.withAlphaComponent(0.6 * drop.glow).setStroke()
+        glow.stroke()
     }
 
     /// An arc of the ring between two distances along it, in points, measured clockwise from the top.

@@ -128,6 +128,26 @@ import Testing
         #expect(restingRate < chargingRate)
     }
 
+    @Test func theTrickleDripGathersThenFallsIn() {
+        let gathering = TrickleDrip.frame(at: 0.25)
+        let full = TrickleDrip.frame(at: 0.5)
+        let fallen = TrickleDrip.frame(at: 1)
+        // Outside the edge while it gathers and swells, inside once it has fallen.
+        #expect(gathering.offset > 0 && full.offset > 0 && fallen.offset < 0)
+        #expect(full.size > gathering.size && full.strength > 0.99)
+        #expect(fallen.strength < 0.001 && fallen.glow < 0.001)
+        #expect(TrickleDrip.frame(at: 0.75).glow > 0.99)
+        #expect(TrickleDrip.frame(at: 0).strength == 0)
+    }
+
+    @Test func chargingTheLastBitIsATrickle() {
+        #expect(!pluggedIn(60, .charging).isTrickleCharging)
+        #expect(pluggedIn(96, .charging).isTrickleCharging)
+        #expect(pluggedIn(77, .charging, target: 80).isTrickleCharging)
+        #expect(!pluggedIn(97, .notCharging).isTrickleCharging)
+        #expect(!onBattery.isTrickleCharging)
+    }
+
     // MARK: - An app's processes
 
     @Test func helpersDropTheAppsName() {

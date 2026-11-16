@@ -4,6 +4,9 @@ import SwiftUI
 enum ChargingMotion: Equatable {
     /// A wave of light rolls across, lighting the bolt as it passes.
     case charging
+    /// The last little bit: a soft light swells near the end of the battery and fades, again and again, and the bolt
+    /// glows with it. A trickle, not a flow.
+    case trickling
     /// A wide, soft light drifts slowly back and forth across the battery, and the plug glows as it passes: nothing
     /// flows in, the charge is just held.
     case resting
@@ -24,9 +27,15 @@ nonisolated struct ChargingPhase: Equatable, Sendable {
     static let roll: TimeInterval = 2.0
 
     /// Resting: the light's drift from one side to the other, and how far towards each edge it goes.
-    static let drift: TimeInterval = 3.4
-    static let driftRange = 0.18...0.82
-    static let restingIntensity = 0.8
+    static let drift: TimeInterval = 2.8
+    static let driftRange = 0.15...0.85
+    static let restingIntensity = 1.0
+
+    /// Trickling: the light swells and fades where the battery fills up, with a short pause between.
+    static let trickleSwell: TimeInterval = 0.7
+    static let trickleFade: TimeInterval = 0.9
+    static let trickleRest: TimeInterval = 0.5
+    static let tricklePosition = 0.72
 }
 
 private nonisolated struct ChargingPhaseKey: EnvironmentKey {
@@ -70,6 +79,23 @@ private struct ChargingAnimationModifier: ViewModifier {
                     LinearKeyframe(0, duration: ChargingPhase.rest + ChargingPhase.roll * 0.3)
                     CubicKeyframe(1, duration: ChargingPhase.roll * 0.22)
                     CubicKeyframe(0, duration: ChargingPhase.roll * 0.48)
+                }
+            }
+        case .trickling:
+            content.keyframeAnimator(
+                initialValue: ChargingPhase(wave: ChargingPhase.tricklePosition, intensity: 0), repeating: true
+            ) { content, phase in
+                content.environment(\.chargingPhase, phase)
+            } keyframes: { _ in
+                KeyframeTrack(\.intensity) {
+                    CubicKeyframe(1, duration: ChargingPhase.trickleSwell)
+                    CubicKeyframe(0, duration: ChargingPhase.trickleFade)
+                    LinearKeyframe(0, duration: ChargingPhase.trickleRest)
+                }
+                KeyframeTrack(\.glow) {
+                    CubicKeyframe(0.5, duration: ChargingPhase.trickleSwell)
+                    CubicKeyframe(0, duration: ChargingPhase.trickleFade)
+                    LinearKeyframe(0, duration: ChargingPhase.trickleRest)
                 }
             }
         case .resting:

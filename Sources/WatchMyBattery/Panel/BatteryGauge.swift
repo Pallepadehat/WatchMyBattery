@@ -226,20 +226,22 @@ struct BatteryGauge: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// Like the menu bar's: a wave while charging, a breath while plugged in and holding the charge, and nothing in
-    /// Low Power Mode, where every bit of energy counts.
+    /// Like the menu bar's: a wave while charging, a swelling pulse for the last little bit, a drifting light while
+    /// plugged in and holding the charge, and nothing in Low Power Mode, where every bit of energy counts.
     private var motion: ChargingMotion? {
         guard animatesCharging, !reduceMotion, !snapshot.isLowPowerModeOn else { return nil }
         switch snapshot.chargeState {
-        case .charging: return .charging
+        case .charging: return snapshot.isTrickleCharging ? .trickling : .charging
         case .notCharging: return .resting
         case .charged, .discharging: return nil
         }
     }
 
-    /// White light on a dark or green battery; a green wave on a white one, where white light wouldn't show.
+    /// White light on a dark or green battery; a green wave on a white one, where white light wouldn't show. Holding
+    /// the charge with colours on, always green: a held battery looks looked after, not greyed out.
     private var waveColor: Color {
-        baseFill == .white ? ChargeTrack.green : .white
+        if motion == .resting && usesColor { return ChargeTrack.green }
+        return baseFill == .white ? ChargeTrack.green : .white
     }
 
     /// Like the menu bar icon: white on dark, near-black on light. Green while

@@ -164,11 +164,13 @@ extension StatusItemController {
 
     private static let cachedImages = 64
 
-    /// What the icon should be doing: the glint while charging, the breath while plugged in and holding the charge,
-    /// and nothing when the animation is off, in Low Power Mode, or for text only, which has no battery to animate.
+    /// What the icon should be doing: the glint while charging, drops of light for the last little bit, the shimmer
+    /// while plugged in and holding the charge, and nothing when the animation is off, in Low Power Mode, or for text
+    /// only, which has no battery to animate.
     fileprivate static func motion(for snapshot: BatterySnapshot, icon: BatteryIcon, settings: AppSettings) -> ChargingAnimator.Motion? {
         guard settings.showsChargingAnimation, icon.style != .textOnly, !snapshot.isLowPowerModeOn else { return nil }
         switch snapshot.chargeState {
+        case .charging where snapshot.isTrickleCharging: return .trickling
         case .charging: return .charging(level: snapshot.level, target: Double(snapshot.chargeTarget) / 100)
         case .notCharging: return .resting
         case .charged, .discharging: return nil

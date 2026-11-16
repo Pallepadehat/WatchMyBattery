@@ -5,8 +5,8 @@ import Foundation
 /// edge glows as it arrives, out towards where the battery is held. Then a rest.
 ///
 /// It's the charging glint's opposite: charging, light flows into the empty part, where charge is going; holding,
-/// it passes over the charge that's there, like light across a full glass. It's lighter, too: a sheen every four and
-/// a half seconds, where the glint sweeps every three.
+/// it passes over the charge that's there, like light across a full glass. Smooth, at about 25 frames a second, and
+/// still a little lighter than the glint over a cycle, with a longer rest between sheens.
 public enum RestingShimmer {
     /// Where the sheen is in one frame.
     public struct Frame: Equatable, Sendable {
@@ -21,11 +21,11 @@ public enum RestingShimmer {
     }
 
     /// How long one sheen lasts, from the left to the glow at the edge fading out.
-    public static let duration: TimeInterval = 1.6
+    public static let duration: TimeInterval = 1.8
     /// The pause between sheens.
-    public static let rest: TimeInterval = 2.9
-    /// Frames in a sheen: enough that it glides rather than ticks across a full battery.
-    static let frameCount = 22
+    public static let rest: TimeInterval = 3.4
+    /// Frames in a sheen: about 25 a second, so it glides rather than ticks, even across a full battery.
+    static let frameCount = 46
 
     /// The time between frames.
     public static var frameInterval: TimeInterval { duration / Double(frameCount - 1) }
