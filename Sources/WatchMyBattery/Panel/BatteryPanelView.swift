@@ -568,6 +568,8 @@ private struct RefusalNotice: View {
 
 /// The small round × that closes a notice.
 struct DismissButton: View {
+    /// What it dismisses, for VoiceOver: "Dismiss Battery is low".
+    var title: String?
     let action: () -> Void
 
     var body: some View {
@@ -579,7 +581,7 @@ struct DismissButton: View {
                 .background(.quaternary, in: .circle)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Dismiss")
+        .accessibilityLabel(title.map { String(localized: "Dismiss \($0)") } ?? String(localized: "Dismiss"))
     }
 }
 
@@ -724,7 +726,7 @@ private struct ScrollAffordancesBody: ViewModifier {
     @State private var latest = Latest()
     @State private var position = ScrollPosition(edge: .top)
 
-    private static let topFade: CGFloat = 14
+    private static let topFade: CGFloat = 28
     private static let bottomFade: CGFloat = 40
 
     func body(content: Content) -> some View {

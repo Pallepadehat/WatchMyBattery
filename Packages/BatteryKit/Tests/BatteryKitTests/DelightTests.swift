@@ -117,7 +117,7 @@ import Testing
         let values = Breathing.phases.map(Breathing.dimming(at:))
         #expect(zip(values, values.dropFirst()).allSatisfy { abs($0 - $1) < 0.12 })
         #expect(values.first! < 0.05 && values.last! < 0.05)
-        #expect(Breathing.depth > 0.2 && Breathing.depth < 0.6)
+        #expect(Breathing.depth >= 0.15 && Breathing.depth <= 0.3)
     }
 
     @Test func eachStateMovesTheWayItsStyleSays() {
@@ -166,7 +166,7 @@ import Testing
         #expect(surface.map(abs).max()! <= 1.5)
         #expect(EdgePulse.strength(at: 0) == 0 && abs(EdgePulse.strength(at: 0.5) - 1) < 1e-9)
         #expect(Heartbeat.swell(at: 0) == 0)
-        #expect(Heartbeat.swell(at: 0.2) > 0.15)
+        #expect(Heartbeat.swell(at: 0.2) > 0.1)
         #expect(Heartbeat.swell(at: 1) == 0)
     }
 

@@ -29,6 +29,7 @@ struct OnboardingView: View {
 
     /// Which way the last step went, so the next one slides in from the right side.
     @State private var isGoingBack = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     static let tint = Color(red: 0.2, green: 0.78, blue: 0.35)
 
@@ -38,7 +39,7 @@ struct OnboardingView: View {
                 .font(.system(size: 210, weight: .regular))
                 .foregroundStyle(.white)
                 .blendMode(.softLight)
-                .scaleEffect(isSettled ? (step == .welcome ? 0.42 : 0.26) : 1)
+                .scaleEffect(isSettled ? (step == .welcome ? 0.42 : 0.19) : 1)
         } content: { _ in
             VStack(spacing: 16) {
                 header
@@ -61,8 +62,10 @@ struct OnboardingView: View {
         }
     }
 
+    /// Steps slide in the way the tour goes, or just cross-fade with Reduce Motion.
     private var slide: AnyTransition {
-        .asymmetric(
+        guard !reduceMotion else { return .opacity }
+        return .asymmetric(
             insertion: .move(edge: isGoingBack ? .leading : .trailing).combined(with: .opacity),
             removal: .move(edge: isGoingBack ? .trailing : .leading).combined(with: .opacity))
     }
@@ -81,7 +84,7 @@ struct OnboardingView: View {
             Text(subtitle)
                 .font(.callout)
                 .foregroundStyle(.secondary)
-                .frame(maxWidth: 360)
+                .frame(maxWidth: 400)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .multilineTextAlignment(.center)
@@ -94,7 +97,7 @@ struct OnboardingView: View {
         case .menuBar: "Your Menu Bar"
         case .motion: "How It Moves"
         case .panel: "What the Panel Shows"
-        case .notifications: "Heads-Ups"
+        case .notifications: "Notifications"
         case .finishing: "Finishing Touches"
         }
     }
@@ -104,7 +107,7 @@ struct OnboardingView: View {
         case .welcome: "See what's draining your battery, right from the menu bar."
         case .menuBar: "Pick how the battery looks up there, and what goes beside it."
         case .motion: "The battery can move while it charges, and while it's held at your limit."
-        case .panel: "Click the battery for the panel. Choose what it shows; the apps are always there."
+        case .panel: "Choose what the panel shows when you click the battery. The apps draining it are always there."
         case .notifications: "A nudge at the right moment. All of them are off until you turn them on."
         case .finishing: "Open the panel from anywhere, and keep WatchMyBattery running."
         }
@@ -115,6 +118,7 @@ struct OnboardingView: View {
             if step != .welcome {
                 Button("Back") { go(to: Step(rawValue: step.rawValue - 1) ?? .welcome) }
                     .controlSize(.large)
+                    .keyboardShortcut("[", modifiers: .command)
                     .transition(.opacity)
             }
             Button {
@@ -192,7 +196,7 @@ private struct OnboardingRow<Control: View>: View {
                 Text(title)
                     .font(.system(size: 13, weight: .medium))
                 Text(detail)
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -251,7 +255,7 @@ private struct WelcomeStep: View {
                 Image(systemName: symbol)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(OnboardingView.tint)
-                    .frame(width: 22)
+                    .frame(width: 26)
                     .padding(.top, 2)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
@@ -312,6 +316,7 @@ private struct MenuBarStep: View {
 
 private struct MotionStep: View {
     @Bindable var settings: AppSettings
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         OnboardingCard {
@@ -320,6 +325,11 @@ private struct MotionStep: View {
                 isOn: $settings.showsChargingAnimation.animation(.snappy))
             if settings.showsChargingAnimation {
                 Divider()
+                if reduceMotion {
+                    Label("Reduce Motion is on, so the battery stays still.", systemImage: "figure.walk.motion")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
                 MotionChoice(
                     title: "While Charging", snapshot: MotionPreview.Sample.charging, selection: $settings.chargingMotion, usesColor: settings.usesColor
                 ) {
@@ -382,7 +392,7 @@ private struct PanelStep: View {
                 title: "Battery History", detail: "24 hours and 10 days, and the apps that used the most.", symbol: "chart.bar.fill",
                 color: .blue, isOn: $settings.recordsHistory)
             OnboardingToggle(
-                title: "Insights", detail: "More than usual, a new app using a lot, and more.", symbol: "lightbulb.fill", color: .yellow,
+                title: "Insights", detail: "When it drains faster than usual, or a new app uses a lot.", symbol: "lightbulb.fill", color: .yellow,
                 isOn: $settings.showsInsights)
             OnboardingToggle(
                 title: "Accessories", detail: "AirPods, Magic devices, your iPhone and iPad.", symbol: "airpodspro", color: .cyan,
@@ -416,7 +426,7 @@ private struct NotificationsStep: View {
             )
             .requestsNotifications(whenOn: settings.notifiesWhenLow, from: model.notifier)
             OnboardingToggle(
-                title: "Charged", detail: "When it reaches \(Self.percent(settings.chargedLevel)), to unplug by hand.", symbol: "powerplug.fill",
+                title: "Charged", detail: "At \(Self.percent(settings.chargedLevel)), so you can unplug.", symbol: "powerplug.fill",
                 isOn: $settings.notifiesWhenCharged
             )
             .requestsNotifications(whenOn: settings.notifiesWhenCharged, from: model.notifier)

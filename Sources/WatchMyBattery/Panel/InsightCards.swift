@@ -14,7 +14,7 @@ struct InsightCards: View {
         VStack(spacing: 8) {
             if let meeting = insights.meeting {
                 InsightCard(
-                    title: InsightText.meetingTitle(meeting), detail: InsightText.meetingDetail(meeting), tint: .orange,
+                    title: InsightText.meetingTitle(meeting), detail: InsightText.meetingDetail(meeting),
                     action: snapshot.isLowPowerModeOn ? nil : turnOnLowPowerMode.map { (String(localized: "Turn On Low Power Mode"), $0) },
                     dismiss: { withAnimation(.snappy) { insights.dismissMeeting() } }
                 ) {
@@ -25,7 +25,7 @@ struct InsightCards: View {
 
             if let drain = insights.unusualDrain, !insights.isUnusualDrainDismissed {
                 InsightCard(
-                    title: InsightText.unusualDrainTitle, detail: InsightText.unusualDrainDetail(drain), tint: .purple,
+                    title: InsightText.unusualDrainTitle, detail: InsightText.unusualDrainDetail(drain),
                     action: drain.cause.flatMap(quitAction),
                     dismiss: { withAnimation(.snappy) { insights.dismissUnusualDrain() } }
                 ) {
@@ -36,13 +36,13 @@ struct InsightCards: View {
 
             ForEach(insights.newApps) { app in
                 InsightCard(
-                    title: InsightText.newAppTitle(app.app), detail: InsightText.newAppDetail, tint: .blue,
+                    title: InsightText.newAppTitle(app.app), detail: InsightText.newAppDetail,
                     action: quitAction(app.app),
                     dismiss: { withAnimation(.snappy) { insights.dismissNewApp(app.id) } }
                 ) {
                     Image(nsImage: AppLook.of(app.app).icon)
                         .resizable()
-                        .frame(width: 26, height: 26)
+                        .frame(width: 22, height: 22)
                 }
                 .transition(Self.transition)
             }
@@ -62,7 +62,7 @@ struct InsightCards: View {
         Image(systemName: name)
             .font(.system(size: 15))
             .foregroundStyle(color)
-            .frame(width: 20)
+            .frame(width: 22)
             .padding(.top, 1)
     }
 
@@ -79,7 +79,6 @@ struct InsightCards: View {
 private struct InsightCard<Icon: View>: View {
     let title: String
     let detail: String
-    let tint: Color
     let action: (String, () -> Void)?
     let dismiss: () -> Void
     @ViewBuilder let icon: Icon
@@ -102,10 +101,11 @@ private struct InsightCard<Icon: View>: View {
                 }
             }
             Spacer(minLength: 0)
-            DismissButton(action: dismiss)
+            DismissButton(title: title, action: dismiss)
         }
         .padding(10)
-        .background(tint.opacity(0.14), in: .rect(cornerRadius: 10, style: .continuous))
+        // One quiet fill for every card, the colour kept to the icon, so a few insights together don't crowd the panel.
+        .background(Color.primary.opacity(0.05), in: .rect(cornerRadius: 10, style: .continuous))
         .accessibilityElement(children: .contain)
     }
 }

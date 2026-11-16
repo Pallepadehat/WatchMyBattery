@@ -196,7 +196,9 @@ struct BatteryIcon: Hashable {
             let text = percentageText()
             let size = text.size()
             let origin = CGPoint(x: body.midX - size.width / 2, y: body.midY - size.height / 2 + 0.25)
-            stamp(body: body, charge: charge, solid: solid, context: context) { color in
+            // On Low Power Mode's yellow, white or a cut-out barely reads: black digits, as macOS's own battery has them.
+            let ink: NSColor? = accent == .lowPower ? .black : nil
+            stamp(body: body, charge: charge, solid: solid, ink: ink, context: context) { color in
                 let colored = NSMutableAttributedString(attributedString: text)
                 colored.addAttribute(.foregroundColor, value: color, range: NSRange(location: 0, length: colored.length))
                 colored.draw(at: origin)
@@ -222,15 +224,22 @@ struct BatteryIcon: Hashable {
     /// rest of the pill. `draw` paints the glyph in the colour it's given.
     /// `charge` is the charge's own shape, so a glyph crossing a liquid's rippling edge is cut along that edge,
     /// not a straight line beside it.
-    private func stamp(body: CGRect, charge: NSBezierPath, solid: NSColor, context: CGContext, draw: (NSColor) -> Void) {
+    /// `ink`, when given, is drawn over the charge instead of punching the glyph out of it.
+    private func stamp(
+        body: CGRect, charge: NSBezierPath, solid: NSColor, ink: NSColor? = nil, context: CGContext, draw: (NSColor) -> Void
+    ) {
         // Punched out of the charge (and anything outside the pill, where there's nothing to punch).
         context.saveGState()
         let punched = charge.copy() as! NSBezierPath
         punched.appendRect(CGRect(x: 0, y: 0, width: Self.imageHeight * 4, height: body.minY))
         punched.appendRect(CGRect(x: 0, y: body.maxY, width: Self.imageHeight * 4, height: Self.imageHeight - body.maxY))
         punched.addClip()
-        context.setBlendMode(.destinationOut)
-        draw(.black)
+        if let ink {
+            draw(ink)
+        } else {
+            context.setBlendMode(.destinationOut)
+            draw(.black)
+        }
         context.restoreGState()
 
         // Solid over the rest of the pill, so it stands out from the translucent part.
@@ -266,7 +275,7 @@ struct BatteryIcon: Hashable {
         if empty.width > 0.5,
             let swell = CGGradient(
                 colorsSpace: space,
-                colors: [0, 0.75, 1, 0.75, 0].map { rgb.withAlphaComponent($0 * 0.75 * strength).cgColor } as CFArray,
+                colors: [0, 0.75, 1, 0.75, 0].map { rgb.withAlphaComponent($0 * motionPeak * strength).cgColor } as CFArray,
                 locations: [0, 0.25, 0.5, 0.75, 1])
         {
             context.saveGState()
@@ -298,6 +307,10 @@ struct BatteryIcon: Hashable {
             }
         }
     }
+
+    /// How strongly light that moves through the empty part shows at its brightest. Softer in a monochrome icon, where
+    /// it's the icon's own black or white, and at full strength would look like charge: 35% would read as 90%.
+    var motionPeak: CGFloat { accent == .none ? 0.45 : 0.75 }
 
     /// How bright the charge is: full, or a little dimmed while it breathes (plugged in, holding its charge).
     var chargeOpacity: CGFloat {
@@ -339,10 +352,10 @@ struct BatteryIcon: Hashable {
         let rim = NSBezierPath()
         rim.move(to: first)
         surface.dropFirst().forEach { rim.line(to: $0) }
-        rim.lineWidth = 1.1
+        rim.lineWidth = 1
         context.saveGState()
         bodyPath.addClip()
-        NSColor.white.withAlphaComponent(0.5).setStroke()
+        (color.blended(withFraction: 0.55, of: .white) ?? color).withAlphaComponent(0.9).setStroke()
         rim.stroke()
         context.restoreGState()
     }
@@ -365,7 +378,7 @@ struct BatteryIcon: Hashable {
         context.saveGState()
         bodyPath.addClip()
         context.clip(to: CGRect(x: fill.maxX, y: body.minY, width: end - fill.maxX, height: body.height))
-        color.withAlphaComponent(0.55).setStroke()
+        color.withAlphaComponent(motionPeak * 0.75).setStroke()
         let stripes = NSBezierPath()
         stripes.lineWidth = 1.6
         var x = body.minX - body.height - CGFloat(Stripes.spacing) + CGFloat(Stripes.offset(at: phase))

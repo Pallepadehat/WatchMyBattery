@@ -79,9 +79,9 @@ public enum MenuBarMotion: Hashable, Sendable {
         case .liquid: return .loop(duration: LiquidSurface.chargingPeriod, framesPerSecond: 12)
         case .stripes: return .loop(duration: Stripes.period, framesPerSecond: 12)
         case .calmLiquid: return .loop(duration: LiquidSurface.calmPeriod, framesPerSecond: 9)
-        case .slowPulse: return .burst(duration: EdgePulse.duration, framesPerSecond: 10, rest: EdgePulse.rest)
+        case .slowPulse: return .burst(duration: EdgePulse.duration, framesPerSecond: 12, rest: EdgePulse.rest)
         case .stillWater: return .loop(duration: LiquidSurface.stillPeriod, framesPerSecond: 8)
-        case .heartbeat: return .burst(duration: Heartbeat.duration, framesPerSecond: 15, rest: Heartbeat.rest)
+        case .heartbeat: return .burst(duration: Heartbeat.duration, framesPerSecond: 30, rest: Heartbeat.rest)
         case .breathing: return MotionCycle(phases: Breathing.phases, frameInterval: Breathing.frameInterval, rest: Breathing.rest)
         }
     }
@@ -151,8 +151,9 @@ public enum Stripes {
 
 /// The slow pulse: how brightly the edge of the charge glows, 0–1.
 public enum EdgePulse {
-    public static let duration: TimeInterval = 1.6
-    public static let rest: TimeInterval = 0.9
+    /// Unhurried, as the last few percent are: slower than charging's glint, never faster.
+    public static let duration: TimeInterval = 2
+    public static let rest: TimeInterval = 2
 
     public static func strength(at phase: Double) -> Double {
         let wave = sin(.pi * min(max(phase, 0), 1))
@@ -171,6 +172,6 @@ public enum Heartbeat {
             let x = (t - start) / length
             return x > 0 && x < 1 ? sin(.pi * x) : 0
         }
-        return 0.18 * beat(at: 0, length: 0.24) + 0.11 * beat(at: 0.3, length: 0.24)
+        return 0.12 * beat(at: 0, length: 0.24) + 0.07 * beat(at: 0.3, length: 0.24)
     }
 }

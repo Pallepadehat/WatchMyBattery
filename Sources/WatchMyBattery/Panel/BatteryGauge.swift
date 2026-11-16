@@ -308,7 +308,7 @@ struct BatteryGauge: View {
                             .opacity(draggedApp == app.id ? 0 : 1)
                     case .system(let watts):
                         Text(costText(forWatts: watts))
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(.secondary)
                     }
                 }
                 .font(.system(size: 11, weight: .medium))

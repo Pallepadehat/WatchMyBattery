@@ -96,7 +96,7 @@ extension BatteryIcon {
         let start = ChargingGlint.fillWidth(bodyWidth: length, level: level)
         let end = ChargingGlint.targetPosition(bodyWidth: length, target: chargeTarget)
         guard end > start else { return }
-        color.withAlphaComponent(0.6).setStroke()
+        color.withAlphaComponent(motionPeak * 0.8).setStroke()
         var from = start - Stripes.spacing + Stripes.offset(at: phase)
         while from < end {
             let piece = arc(around: center, from: max(from, start), to: min(from + Stripes.spacing / 2, end))
@@ -139,7 +139,7 @@ extension BatteryIcon {
             let to = min(start + Double(index + 1) * step, end)
             guard to > from else { continue }
             let brightness = sin(.pi * (Double(index) + 0.5) / Double(segments))
-            color.withAlphaComponent(0.75 * brightness * glint.strength).setStroke()
+            color.withAlphaComponent(motionPeak * brightness * glint.strength).setStroke()
             let piece = arc(around: center, from: from, to: to)
             piece.lineCapStyle = .butt
             piece.stroke()

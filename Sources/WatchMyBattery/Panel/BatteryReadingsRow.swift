@@ -69,11 +69,12 @@ struct BatteryReadingsRows: View {
 
     // MARK: - Voltage and current
 
-    /// "12.41 V · 1.12 A out", "· 2.30 A in" while charging, or just the volts when nothing flows.
+    /// "12.41 V · 1.12 A out", "· 2.30 A in" while charging, or "· 0.00 A" when nothing flows (held at a limit, say).
     private func electrical(_ readings: BatteryReadings) -> String {
         guard let volts = readings.voltage else { return "–" }
         let voltage = volts.formatted(.number.precision(.fractionLength(2))) + " V"
-        guard let amps = readings.current, abs(amps) >= 0.01 else { return voltage }
+        guard let amps = readings.current else { return voltage }
+        guard abs(amps) >= 0.01 else { return voltage + " · " + 0.0.formatted(.number.precision(.fractionLength(2))) + " A" }
         let current = abs(amps).formatted(.number.precision(.fractionLength(2))) + " A"
         return amps > 0 ? String(localized: "\(voltage) · \(current) in") : String(localized: "\(voltage) · \(current) out")
     }

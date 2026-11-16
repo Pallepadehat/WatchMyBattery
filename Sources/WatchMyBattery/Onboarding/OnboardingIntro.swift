@@ -25,7 +25,7 @@ struct OnboardingIntro<Logo: View, Content: View>: View {
     var body: some View {
         let settled = properties.convertToLogo
         let layout = settled ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(ZStackLayout(alignment: .bottom))
-        let logoSize: CGFloat = compactLogo ? 88 : 150
+        let logoSize: CGFloat = compactLogo ? 64 : 150
 
         layout {
             ZStack {

@@ -1191,7 +1191,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Oplader"
+            "value" : "Lader"
           }
         }
       }
@@ -1242,16 +1242,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lyd, når opladningen starter eller stopper"
-          }
-        }
-      }
-    },
-    "Click the battery for the panel. Choose what it shows; the apps are always there." : {
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Klik på batteriet for at åbne panelet. Vælg, hvad det viser; apps er der altid."
           }
         }
       }
@@ -1311,7 +1301,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Strøm"
+            "value" : "Bølge"
           }
         }
       }
@@ -1342,16 +1332,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Grøn under opladning, gul i strømsparetilstand, rød når det er lavt."
-          }
-        }
-      }
-    },
-    "Heads-Ups" : {
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Påmindelser"
           }
         }
       }
@@ -1532,16 +1512,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "macOS lader batteriet falde lidt, før det fylder op igen, så det ikke holdes på %@ hele tiden."
-          }
-        }
-      }
-    },
-    "More than usual, a new app using a lot, and more." : {
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mere end normalt, en ny app, der bruger meget, og mere."
           }
         }
       }
@@ -4931,16 +4901,6 @@
         }
       }
     },
-    "When it reaches %@, to unplug by hand." : {
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Når det når %@, så du kan tage stikket ud selv."
-          }
-        }
-      }
-    },
     "When it runs low, naming the app using the most." : {
       "localizations" : {
         "da" : {
@@ -5139,6 +5099,56 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Din menulinje"
+          }
+        }
+      }
+    },
+    "Choose what the panel shows when you click the battery. The apps draining it are always there." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vælg, hvad panelet viser, når du klikker på batteriet. De apps, der dræner det, er der altid."
+          }
+        }
+      }
+    },
+    "At %@, so you can unplug." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ved %@, så du kan tage stikket ud."
+          }
+        }
+      }
+    },
+    "Reduce Motion is on, so the battery stays still." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reducer bevægelse er slået til, så batteriet står stille."
+          }
+        }
+      }
+    },
+    "Dismiss %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afvis %@"
+          }
+        }
+      }
+    },
+    "When it drains faster than usual, or a new app uses a lot." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når det drænes hurtigere end normalt, eller en ny app bruger meget."
           }
         }
       }

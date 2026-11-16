@@ -16,7 +16,7 @@ public enum Breathing {
     public static var duration: TimeInterval { exhale + inhale }
 
     /// How far the charge dims at the deepest point of a breath, 0–1. Enough to see, never enough to look empty.
-    public static let depth = 0.35
+    public static let depth = 0.2
 
     /// How deep into the breath it is at `phase` (0–1 through `duration`): 0 at full brightness, 1 at the deepest.
     /// Eased at both ends, so it never ticks into motion or stops with a jolt.
