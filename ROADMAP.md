@@ -133,7 +133,7 @@ Released. See the [changelog](CHANGELOG.md).
 
 ## 0.4.0: delight ✅
 
-Done. See the [changelog](CHANGELOG.md).
+Released, with a welcome tour, a choice of animations and a calmer panel besides. See the [changelog](CHANGELOG.md).
 
 **Charging**
 
