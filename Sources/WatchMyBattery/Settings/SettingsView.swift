@@ -852,4 +852,3 @@ private struct HistoryRows: View {
         }
     }
 }
-
