@@ -1596,16 +1596,6 @@
         }
       }
     },
-    "Pick how the battery looks up there, and what goes beside it." : {
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vælg, hvordan batteriet ser ud deroppe, og hvad der står ved siden af."
-          }
-        }
-      }
-    },
     "Play the sound" : {
       "localizations" : {
         "da" : {
@@ -5149,6 +5139,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Når det drænes hurtigere end normalt, eller en ny app bruger meget."
+          }
+        }
+      }
+    },
+    "Choose what goes beside the battery, and whether it shows its state in colour." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vælg, hvad der står ved siden af batteriet, og om det viser sin tilstand i farver."
           }
         }
       }

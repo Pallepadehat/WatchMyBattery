@@ -35,11 +35,12 @@ struct OnboardingView: View {
 
     var body: some View {
         OnboardingIntro(tint: Self.tint, compactLogo: step != .welcome, skipsOpening: skipsOpening) { isSettled in
-            Image(systemName: "battery.100percent.bolt")
-                .font(.system(size: 210, weight: .regular))
-                .foregroundStyle(.white)
-                .blendMode(.softLight)
-                .scaleEffect(isSettled ? (step == .welcome ? 0.42 : 0.19) : 1)
+            // WatchMyBattery's own icon, growing into place as the opening settles.
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
+                .interpolation(.high)
+                .aspectRatio(contentMode: .fit)
+                .scaleEffect(isSettled ? 1 : 1.8)
         } content: { _ in
             VStack(spacing: 16) {
                 header
@@ -105,7 +106,7 @@ struct OnboardingView: View {
     private var subtitle: LocalizedStringKey {
         switch step {
         case .welcome: "See what's draining your battery, right from the menu bar."
-        case .menuBar: "Pick how the battery looks up there, and what goes beside it."
+        case .menuBar: "Choose what goes beside the battery, and whether it shows its state in colour."
         case .motion: "The battery can move while it charges, and while it's held at your limit."
         case .panel: "Choose what the panel shows when you click the battery. The apps draining it are always there."
         case .notifications: "A nudge at the right moment. All of them are off until you turn them on."
@@ -285,14 +286,6 @@ private struct MenuBarStep: View {
                 .frame(height: 54)
                 .background(.background.opacity(0.6), in: .rect(cornerRadius: 12, style: .continuous))
                 .animation(.snappy, value: settings.menuBarIconStyle)
-
-            Picker("Style", selection: $settings.menuBarIconStyle.animation(.snappy)) {
-                ForEach(MenuBarIconStyle.allCases) { style in
-                    Text(style.title).tag(style)
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
 
             OnboardingRow(title: "Beside It", detail: "Or nothing, for just the icon.", symbol: "textformat") {
                 Picker("Beside It", selection: Binding(get: { settings.effectiveMenuBarLabel }, set: { settings.menuBarLabel = $0 })) {

@@ -29,9 +29,11 @@ struct OnboardingIntro<Logo: View, Content: View>: View {
 
         layout {
             ZStack {
+                // The bloom the opening plays on, fading as it settles, so the app's icon shows as itself.
                 Circle()
                     .fill(tint.gradient)
                     .scaleEffect(properties.animateMainCircle ? 2 : 0)
+                    .opacity(properties.convertToLogo ? 0 : 1)
 
                 gridLines
                 circles
@@ -39,6 +41,8 @@ struct OnboardingIntro<Logo: View, Content: View>: View {
                 diagonalLines
 
                 logo(settled)
+                    // Sized to the logo's square, as the rings and lines around it are far larger.
+                    .frame(width: settled ? logoSize : 220, height: settled ? logoSize : 220)
                     .compositingGroup()
                     .blur(radius: settled ? 0 : 50)
                     .opacity(settled ? 1 : 0)
