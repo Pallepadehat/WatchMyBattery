@@ -74,31 +74,35 @@ private struct ChargingAnimationModifier: ViewModifier {
                 }
             }
         case .breathing:
-            // Breathing out, eased; breathing back in, slower; then still. The menu bar's curve, so they match.
-            content.keyframeAnimator(initialValue: ChargingPhase(), repeating: true) { content, phase in
-                content.environment(\.chargingPhase, phase)
-            } keyframes: { _ in
-                KeyframeTrack(\.breath) {
-                    LinearKeyframe(1, duration: Breathing.exhale, timingCurve: .easeInOut)
-                    LinearKeyframe(0, duration: Breathing.inhale, timingCurve: .easeInOut)
-                    LinearKeyframe(0, duration: Breathing.rest)
-                }
-            }
+            content.modifier(HeldMotion(motion: .breathing))
         case .heartbeat:
-            // A beat and a smaller one just after, as the menu bar's, then a rest.
-            content.keyframeAnimator(initialValue: ChargingPhase(), repeating: true) { content, phase in
-                content.environment(\.chargingPhase, phase)
-            } keyframes: { _ in
-                KeyframeTrack(\.beat) {
-                    LinearKeyframe(0.18, duration: 0.12, timingCurve: .easeOut)
-                    LinearKeyframe(0, duration: 0.14, timingCurve: .easeIn)
-                    LinearKeyframe(0.11, duration: 0.12, timingCurve: .easeOut)
-                    LinearKeyframe(0, duration: 0.18, timingCurve: .easeIn)
-                    LinearKeyframe(0, duration: Heartbeat.rest)
-                }
-            }
+            content.modifier(HeldMotion(motion: .heartbeat))
         case nil:
             content
+        }
+    }
+}
+
+/// A held battery's breath or heartbeat, on the menu bar's own frames and timing (``MenuBarMotion/cycle``): nine
+/// updates a second for a breath, fifteen for a beat, and nothing at all to show while it rests. A repeating keyframe
+/// animation would redraw sixty times a second the whole time the panel's open, rests included, for a motion this
+/// slow.
+private struct HeldMotion: ViewModifier {
+    let motion: MenuBarMotion
+
+    func body(content: Content) -> some View {
+        let cycle = motion.cycle
+        TimelineView(.periodic(from: .distantPast, by: cycle.frameInterval)) { timeline in
+            content.environment(\.chargingPhase, phase(at: timeline.date, in: cycle))
+        }
+    }
+
+    private func phase(at date: Date, in cycle: MotionCycle) -> ChargingPhase {
+        guard let phase = MotionPreview.phase(of: cycle, at: date) else { return ChargingPhase() }
+        switch motion {
+        case .breathing: return ChargingPhase(breath: Breathing.dimming(at: phase))
+        case .heartbeat: return ChargingPhase(beat: Heartbeat.swell(at: phase))
+        default: return ChargingPhase()
         }
     }
 }
