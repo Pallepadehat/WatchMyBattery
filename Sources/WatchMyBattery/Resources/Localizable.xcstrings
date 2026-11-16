@@ -1,0 +1,4050 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    ", charging" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", oplader"
+          }
+        }
+      }
+    },
+    "%@ – %@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ – %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "%@ · %@ in" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ ind"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@ in"
+          }
+        }
+      }
+    },
+    "%@ · %@ out" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ ud"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@ out"
+          }
+        }
+      }
+    },
+    "%@ · %@ used" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ brugt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@ used"
+          }
+        }
+      }
+    },
+    "%@ · MIT License" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · MIT-licens"
+          }
+        }
+      }
+    },
+    "%@ · plugged in" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · tilsluttet"
+          }
+        }
+      }
+    },
+    "%@ an hour" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ i timen"
+          }
+        }
+      }
+    },
+    "%@ at %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ på %@"
+          }
+        }
+      }
+    },
+    "%@ before" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ før"
+          }
+        }
+      }
+    },
+    "%@ connected" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ er forbundet"
+          }
+        }
+      }
+    },
+    "%@ connected. %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ er forbundet. %@"
+          }
+        }
+      }
+    },
+    "%@ didn't quit" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ blev ikke afsluttet"
+          }
+        }
+      }
+    },
+    "%@ is new, and using a lot of battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ er ny og bruger meget batteri"
+          }
+        }
+      }
+    },
+    "%@ is using a lot of energy" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ bruger meget energi"
+          }
+        }
+      }
+    },
+    "%@ is using the most energy." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ bruger mest energi."
+          }
+        }
+      }
+    },
+    "%@ is using the most energy. Quitting it would give you about %@ more." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ bruger mest energi. Hvis du afslutter appen, får du ca. %@ mere."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ is using the most energy. Quitting it would give you about %2$@ more."
+          }
+        }
+      }
+    },
+    "%@ on battery · %@ used" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ på batteri · %2$@ brugt"
+          }
+        }
+      }
+    },
+    "%@ Once" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ én gang"
+          }
+        }
+      }
+    },
+    "%@ W coming out of the battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ W kommer ud af batteriet."
+          }
+        }
+      }
+    },
+    "%@ W going into the battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ W går ind i batteriet."
+          }
+        }
+      }
+    },
+    "%@ will close. If it has unsaved changes, it will ask what to do with them." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ lukkes. Hvis der er ændringer, der ikke er arkiveret, spørger appen, hvad der skal ske med dem."
+          }
+        }
+      }
+    },
+    "%@. Put them in their case to charge." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@. Læg dem i etuiet for at oplade dem."
+          }
+        }
+      }
+    },
+    "%@%%/h" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@%%/t"
+          }
+        }
+      }
+    },
+    "%lld cycles" : {
+      "localizations" : {
+        "da" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld cyklus"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld cyklusser"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld cycle"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld cycles"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld more" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld mere"
+          }
+        }
+      }
+    },
+    "1 Month" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 måned"
+          }
+        }
+      }
+    },
+    "1 Year" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 år"
+          }
+        }
+      }
+    },
+    "2 Weeks" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2 uger"
+          }
+        }
+      }
+    },
+    "3 Months" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3 måneder"
+          }
+        }
+      }
+    },
+    "10 Days" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "10 dage"
+          }
+        }
+      }
+    },
+    "24 Hours" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "24 timer"
+          }
+        }
+      }
+    },
+    "A line in the panel when the battery won't last through a meeting, the Mac uses more power than usual, or a new app uses a lot." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En linje i panelet, når batteriet ikke holder et møde igennem, Mac'en bruger mere strøm end normalt, eller en ny app bruger meget."
+          }
+        }
+      }
+    },
+    "A little more than usual. A Mac asleep should use about 1% an hour." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lidt mere end normalt. En Mac i dvale bør bruge ca. 1 % i timen."
+          }
+        }
+      }
+    },
+    "A normal sleep." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En normal dvale."
+          }
+        }
+      }
+    },
+    "A notification naming the app using the most energy, with a button to quit it." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En notifikation, der nævner den app, der bruger mest energi, med en knap til at afslutte den."
+          }
+        }
+      }
+    },
+    "A notification on waking when the Mac used much more battery asleep than it should." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En notifikation, når Mac'en vågner, hvis den har brugt meget mere batteri i dvale, end den burde."
+          }
+        }
+      }
+    },
+    "A notification when AirPods, a Magic Mouse or another accessory needs charging." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En notifikation, når AirPods, en Magic Mouse eller andet tilbehør skal oplades."
+          }
+        }
+      }
+    },
+    "A notification when an app keeps using a lot of power on battery for a while, with a button to quit it. Not for the app you're using." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En notifikation, når en app bliver ved med at bruge meget strøm på batteri, med en knap til at afslutte den. Ikke for den app, du bruger."
+          }
+        }
+      }
+    },
+    "A notification when the battery reaches a level, to unplug." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En notifikation, når batteriet når et niveau, så du kan tage strømmen fra."
+          }
+        }
+      }
+    },
+    "A slice for the power no app accounts for: the screen, graphics, Wi‑Fi, Bluetooth and macOS itself." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En bid for den strøm, ingen app står for: skærmen, grafikken, Wi‑Fi, Bluetooth og macOS selv."
+          }
+        }
+      }
+    },
+    "A soft glow flows into the battery while it charges, here and in the panel." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Et blødt lys strømmer ind i batteriet, mens det oplader, her og i panelet."
+          }
+        }
+      }
+    },
+    "About" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Om"
+          }
+        }
+      }
+    },
+    "About %@ left." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ca. %@ tilbage."
+          }
+        }
+      }
+    },
+    "About %@ more than at this time on most days, mostly because of %@." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ca. %1$@ mere end på dette tidspunkt de fleste dage, mest på grund af %2$@."
+          }
+        }
+      }
+    },
+    "About %@ more than at this time on most days." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ca. %@ mere end på dette tidspunkt de fleste dage."
+          }
+        }
+      }
+    },
+    "About %@ until full." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ca. %@, indtil det er fuldt."
+          }
+        }
+      }
+    },
+    "About %@%% an hour." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ca. %@ %% i timen."
+          }
+        }
+      }
+    },
+    "About %lld times as much as at this time on most days, mostly because of %@." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ca. %1$lld gange så meget som på dette tidspunkt de fleste dage, mest på grund af %2$@."
+          }
+        }
+      }
+    },
+    "About %lld times as much as at this time on most days." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ca. %lld gange så meget som på dette tidspunkt de fleste dage."
+          }
+        }
+      }
+    },
+    "Accessories" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilbehør"
+          }
+        }
+      }
+    },
+    "Accessories in the Panel" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilbehør i panelet"
+          }
+        }
+      }
+    },
+    "Accessories Running Low" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilbehør med lavt batteri"
+          }
+        }
+      }
+    },
+    "Add ⌘, ⌥ or ⌃" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilføj ⌘, ⌥ eller ⌃"
+          }
+        }
+      }
+    },
+    "Add…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilføj…"
+          }
+        }
+      }
+    },
+    "AirDrop & Sharing" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirDrop og deling"
+          }
+        }
+      }
+    },
+    "AirPods Card" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirPods-kort"
+          }
+        }
+      }
+    },
+    "AirPods, Beats and other headphones, the Magic Mouse, Keyboard and Trackpad, and game controllers." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirPods, Beats og andre hovedtelefoner, Magic Mouse, Keyboard og Trackpad samt spillecontrollere."
+          }
+        }
+      }
+    },
+    "AirPods, Beats and other headphones, the Magic Mouse, Keyboard and Trackpad, game controllers, and your iPhone and iPad." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirPods, Beats og andre hovedtelefoner, Magic Mouse, Keyboard og Trackpad, spillecontrollere samt din iPhone og iPad."
+          }
+        }
+      }
+    },
+    "Allow…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tillad…"
+          }
+        }
+      }
+    },
+    "Allowed" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilladt"
+          }
+        }
+      }
+    },
+    "An Apple Watch only talks to its iPhone, so a Mac can't read its battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Et Apple Watch taler kun med sin iPhone, så en Mac kan ikke læse dets batteri."
+          }
+        }
+      }
+    },
+    "Another app uses this shortcut. Choose a different one." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En anden app bruger denne genvej. Vælg en anden."
+          }
+        }
+      }
+    },
+    "Apps" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps"
+          }
+        }
+      }
+    },
+    "Apps are measured every few minutes while on battery, and show up here." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps måles med få minutters mellemrum, mens Mac'en kører på batteri, og vises her."
+          }
+        }
+      }
+    },
+    "Apps ask macOS not to sleep to finish a download, play something, or keep a call going. One that forgets to stop keeps the Mac awake with the lid closed, or long after you've walked away." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps beder macOS om ikke at gå i dvale for at gøre en download færdig, afspille noget eller holde et opkald i gang. En app, der glemmer at stoppe, holder Mac'en vågen med låget lukket, eller længe efter du er gået."
+          }
+        }
+      }
+    },
+    "Apps Shown" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Viste apps"
+          }
+        }
+      }
+    },
+    "Apps Using a Lot of Energy" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps, der bruger meget energi"
+          }
+        }
+      }
+    },
+    "Ask Before Quitting" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spørg før afslutning"
+          }
+        }
+      }
+    },
+    "Average day" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gennemsnitlig dag"
+          }
+        }
+      }
+    },
+    "Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteri"
+          }
+        }
+      }
+    },
+    "Battery %@, %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteri %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "Battery at %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteri på %@"
+          }
+        }
+      }
+    },
+    "Battery Health" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteritilstand"
+          }
+        }
+      }
+    },
+    "Battery History" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batterihistorik"
+          }
+        }
+      }
+    },
+    "Battery is low" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriet er ved at være fladt"
+          }
+        }
+      }
+    },
+    "Battery Level" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriniveau"
+          }
+        }
+      }
+    },
+    "Battery level, last 24 hours" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriniveau, seneste 24 timer"
+          }
+        }
+      }
+    },
+    "Battery Settings" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriindstillinger"
+          }
+        }
+      }
+    },
+    "Battery Settings…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriindstillinger…"
+          }
+        }
+      }
+    },
+    "Battery used each day, last 10 days" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteri brugt hver dag, seneste 10 dage"
+          }
+        }
+      }
+    },
+    "Below the Menu Bar Icon" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Under ikonet på menulinjen"
+          }
+        }
+      }
+    },
+    "Beside" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ved siden af"
+          }
+        }
+      }
+    },
+    "Between %@ and %@, now %@." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mellem %1$@ og %2$@, nu %3$@."
+          }
+        }
+      }
+    },
+    "Buy Me a Coffee" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Giv mig en kop kaffe"
+          }
+        }
+      }
+    },
+    "Calculating…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beregner…"
+          }
+        }
+      }
+    },
+    "Calendar Access" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adgang til kalendere"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuller"
+          }
+        }
+      }
+    },
+    "Case" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etui"
+          }
+        }
+      }
+    },
+    "Case %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etui %@"
+          }
+        }
+      }
+    },
+    "Change the limit right from the menu bar." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skift grænsen direkte fra menulinjen."
+          }
+        }
+      }
+    },
+    "Charge Before Meetings" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplad før møder"
+          }
+        }
+      }
+    },
+    "Charge before your %@ meeting" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplad før dit møde kl. %@"
+          }
+        }
+      }
+    },
+    "Charge it soon." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplad det snart."
+          }
+        }
+      }
+    },
+    "Charge Limit" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opladningsgrænse"
+          }
+        }
+      }
+    },
+    "Charge now to get through your meeting" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplad nu for at komme igennem dit møde"
+          }
+        }
+      }
+    },
+    "Charge to 100%" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplad til 100 %"
+          }
+        }
+      }
+    },
+    "Charge to Full Once" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplad helt én gang"
+          }
+        }
+      }
+    },
+    "Charged to %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opladet til %@"
+          }
+        }
+      }
+    },
+    "Charges all the way. A limit keeps the battery from sitting full, which wears it fastest." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplader helt. En grænse forhindrer, at batteriet står fuldt, hvilket slider det mest."
+          }
+        }
+      }
+    },
+    "Scroll Down" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rul ned"
+          }
+        }
+      }
+    },
+    "charging" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "oplader"
+          }
+        }
+      }
+    },
+    "Charging" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplader"
+          }
+        }
+      }
+    },
+    "Charging and Sleep" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opladning og dvale"
+          }
+        }
+      }
+    },
+    "Charging Animation" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opladningsanimation"
+          }
+        }
+      }
+    },
+    "Charging to 100% Once" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplader til 100 % én gang"
+          }
+        }
+      }
+    },
+    "Charging to 100%." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplader til 100 %."
+          }
+        }
+      }
+    },
+    "Check for Updates Automatically" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Søg automatisk efter opdateringer"
+          }
+        }
+      }
+    },
+    "Check for Updates…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Søg efter opdateringer…"
+          }
+        }
+      }
+    },
+    "Check Now" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Søg nu"
+          }
+        }
+      }
+    },
+    "Checking for updates…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Søger efter opdateringer…"
+          }
+        }
+      }
+    },
+    "Choose apps that should never get a slice of the battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vælg apps, der aldrig skal have en bid af batteriet."
+          }
+        }
+      }
+    },
+    "Clear History" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ryd historik"
+          }
+        }
+      }
+    },
+    "Clear Sleeps" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ryd dvaler"
+          }
+        }
+      }
+    },
+    "Clear the battery history?" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ryd batterihistorikken?"
+          }
+        }
+      }
+    },
+    "Clear the sleeps?" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vil du rydde dvalerne?"
+          }
+        }
+      }
+    },
+    "Clear…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ryd…"
+          }
+        }
+      }
+    },
+    "Click to see its processes. Drag out of the panel, or press Delete, to quit" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klik for at se dens processer. Træk ud af panelet, eller tryk på Slet, for at afslutte"
+          }
+        }
+      }
+    },
+    "Click, then press the keys you want." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klik, og tryk derefter på de taster, du vil bruge."
+          }
+        }
+      }
+    },
+    "Close" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Luk"
+          }
+        }
+      }
+    },
+    "Colorful States" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farver"
+          }
+        }
+      }
+    },
+    "Connect it once" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilslut den én gang"
+          }
+        }
+      }
+    },
+    "Connect its cable to charge it." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilslut kablet for at oplade det."
+          }
+        }
+      }
+    },
+    "Connected" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forbundet"
+          }
+        }
+      }
+    },
+    "Control Center › Battery › Don't Show in Menu Bar" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontrolcenter › Batteri › Vis ikke på menulinjen"
+          }
+        }
+      }
+    },
+    "Cost %@ of battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kostede %@ batteri"
+          }
+        }
+      }
+    },
+    "costs %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "koster %@"
+          }
+        }
+      }
+    },
+    "costs less than a minute" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "koster under et minut"
+          }
+        }
+      }
+    },
+    "Couldn’t reach it" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunne ikke nå den"
+          }
+        }
+      }
+    },
+    "CSV has a row for every hour. JSON has everything, sleeps included." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CSV har en række for hver time. JSON har det hele, også dvaler."
+          }
+        }
+      }
+    },
+    "Day" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dag"
+          }
+        }
+      }
+    },
+    "Dismiss" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Luk"
+          }
+        }
+      }
+    },
+    "Display & System" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skærm og system"
+          }
+        }
+      }
+    },
+    "Display & System: the screen, graphics, Wi‑Fi, Bluetooth and macOS itself. A dimmer screen makes it smaller." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skærm og system: skærmen, grafikken, Wi‑Fi, Bluetooth og macOS selv. En mørkere skærm gør den mindre."
+          }
+        }
+      }
+    },
+    "Display and system" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skærm og system"
+          }
+        }
+      }
+    },
+    "Displays Settings…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indstillinger for skærme…"
+          }
+        }
+      }
+    },
+    "Don't ask again" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spørg ikke igen"
+          }
+        }
+      }
+    },
+    "Don't Show Display & System in the Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis ikke Skærm og system i batteriet"
+          }
+        }
+      }
+    },
+    "Don't Show %@ in the Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis ikke %@ i batteriet"
+          }
+        }
+      }
+    },
+    "Drag out of the panel, or press Delete, to quit" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Træk ud af panelet, eller tryk på Slet, for at afslutte"
+          }
+        }
+      }
+    },
+    "Each day's battery use shows here." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hver dags batteriforbrug vises her."
+          }
+        }
+      }
+    },
+    "Earbuds" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Begge"
+          }
+        }
+      }
+    },
+    "Earbuds %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Begge %@"
+          }
+        }
+      }
+    },
+    "Empty" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tom"
+          }
+        }
+      }
+    },
+    "End" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slut"
+          }
+        }
+      }
+    },
+    "Enjoying WatchMyBattery?" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glad for WatchMyBattery?"
+          }
+        }
+      }
+    },
+    "Export History" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksporter historik"
+          }
+        }
+      }
+    },
+    "Export…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksporter…"
+          }
+        }
+      }
+    },
+    "For %lld minutes now." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I %lld minutter nu."
+          }
+        }
+      }
+    },
+    "For %lld minutes now. Quitting it would give you about %@ more." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I %1$lld minutter nu. Hvis du afslutter appen, får du ca. %2$@ mere."
+          }
+        }
+      }
+    },
+    "For a long day away from a charger. The limit comes back when you unplug." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Til en lang dag væk fra en oplader. Grænsen kommer tilbage, når du tager strømmen fra."
+          }
+        }
+      }
+    },
+    "For an app that's stopped responding: quits it straight away, without asking about unsaved changes." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Til en app, der er holdt op med at svare: afslutter den med det samme uden at spørge om ændringer, der ikke er arkiveret."
+          }
+        }
+      }
+    },
+    "Force Quit, Losing Unsaved Changes" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvangsafslut og mist ændringer, der ikke er arkiveret"
+          }
+        }
+      }
+    },
+    "Force Quit…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvangsafslut…"
+          }
+        }
+      }
+    },
+    "fully charged" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fuldt opladet"
+          }
+        }
+      }
+    },
+    "Fully charged" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fuldt opladet"
+          }
+        }
+      }
+    },
+    "General" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generelt"
+          }
+        }
+      }
+    },
+    "Get App Using the Most Energy" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hent appen, der bruger mest energi"
+          }
+        }
+      }
+    },
+    "Get Battery Level" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hent batteriniveau"
+          }
+        }
+      }
+    },
+    "Get Battery Time Left" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hent batteritid tilbage"
+          }
+        }
+      }
+    },
+    "Gets how long the battery will last, or how long until it's full while charging. Empty while macOS is still calculating, or when the Mac is plugged in and not charging." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Henter, hvor længe batteriet holder, eller hvor længe der er, til det er fuldt, mens det oplades. Tom, mens macOS stadig beregner, eller når Mac'en er tilsluttet strøm og ikke oplader."
+          }
+        }
+      }
+    },
+    "Gets the battery's charge, as a percentage from 0 to 100." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Henter batteriets opladning som en procentdel fra 0 til 100."
+          }
+        }
+      }
+    },
+    "Green while charging, yellow in Low Power Mode, red when low." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grøn under opladning, gul i strømsparetilstand, rød når det er lavt."
+          }
+        }
+      }
+    },
+    "Heavy Drain While Asleep" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stort forbrug i dvale"
+          }
+        }
+      }
+    },
+    "Hidden" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skjult"
+          }
+        }
+      }
+    },
+    "Hidden Apps" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skjulte apps"
+          }
+        }
+      }
+    },
+    "Hide" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skjul"
+          }
+        }
+      }
+    },
+    "Hide the Built-in Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skjul det indbyggede batteri"
+          }
+        }
+      }
+    },
+    "Hide the built-in one: Control Center › Battery › Don't Show in Menu Bar." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skjul det indbyggede: Kontrolcenter › Batteri › Vis ikke på menulinjen."
+          }
+        }
+      }
+    },
+    "History" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historik"
+          }
+        }
+      }
+    },
+    "Holding at %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holder på %@"
+          }
+        }
+      }
+    },
+    "Holds the battery at this level while plugged in, so it lasts longer. macOS keeps it, even when WatchMyBattery isn't running." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holder batteriet på dette niveau, mens strømmen er tilsluttet, så det holder længere. macOS husker det, også når WatchMyBattery ikke kører."
+          }
+        }
+      }
+    },
+    "Hourly summaries, a few kilobytes a day. Insights always look at the last two weeks." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opsummeringer for hver time, nogle få kilobyte om dagen. Indsigter ser altid på de seneste to uger."
+          }
+        }
+      }
+    },
+    "How to Show Your iPhone or iPad" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sådan viser du din iPhone eller iPad"
+          }
+        }
+      }
+    },
+    "Hungriest App" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mest energikrævende app"
+          }
+        }
+      }
+    },
+    "In %@, about %lld times faster than usual. Something may be waking it: open the panel to see what's keeping it awake." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "På %1$@, ca. %2$lld gange hurtigere end normalt. Noget vækker den måske: åbn panelet for at se, hvad der holder den vågen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "In %1$@, about %2$lld times faster than usual. Something may be waking it: open the panel to see what's keeping it awake."
+          }
+        }
+      }
+    },
+    "In %@. A Mac asleep should use about 1%% an hour. Open the panel to see what's keeping it awake." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "På %@. En Mac i dvale bør bruge ca. 1 %% i timen. Åbn panelet for at se, hvad der holder den vågen."
+          }
+        }
+      }
+    },
+    "Inside" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indeni"
+          }
+        }
+      }
+    },
+    "Inside the Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inde i batteriet"
+          }
+        }
+      }
+    },
+    "Insights" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indsigter"
+          }
+        }
+      }
+    },
+    "Insights also show in the panel. They're worked out on this Mac, from what WatchMyBattery already measures." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indsigter vises også i panelet. De udregnes på denne Mac ud fra det, WatchMyBattery allerede måler."
+          }
+        }
+      }
+    },
+    "Install" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer"
+          }
+        }
+      }
+    },
+    "Install Updates Automatically" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer opdateringer automatisk"
+          }
+        }
+      }
+    },
+    "Install…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer…"
+          }
+        }
+      }
+    },
+    "iPhone and iPad" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone og iPad"
+          }
+        }
+      }
+    },
+    "It hadn't used much battery in the last two weeks, and is now among the apps using the most." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den har ikke brugt meget batteri de seneste to uger og er nu blandt de apps, der bruger mest."
+          }
+        }
+      }
+    },
+    "It may be asking what to do with unsaved changes, or have stopped responding." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den spørger måske, hvad der skal ske med ændringer, der ikke er arkiveret, eller er holdt op med at svare."
+          }
+        }
+      }
+    },
+    "It may be asking what to do with unsaved changes." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den spørger måske, hvad der skal ske med ændringer, der ikke er arkiveret."
+          }
+        }
+      }
+    },
+    "It now shows up whenever it's on the same Wi‑Fi as this Mac and awake." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nu vises den, når den er vågen og på samme Wi‑Fi som denne Mac."
+          }
+        }
+      }
+    },
+    "It's free and open source, made in my spare time. If it helps your battery last, a coffee helps me keep making it better." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den er gratis og open source, lavet i min fritid. Hvis den hjælper dit batteri med at holde, hjælper en kop kaffe mig med at gøre den endnu bedre."
+          }
+        }
+      }
+    },
+    "JSON…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON…"
+          }
+        }
+      }
+    },
+    "Keep History For" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gem historik i"
+          }
+        }
+      }
+    },
+    "Keeping Your Mac Awake" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holder din Mac vågen"
+          }
+        }
+      }
+    },
+    "Keeps the display on" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holder skærmen tændt"
+          }
+        }
+      }
+    },
+    "Keeps the Mac awake" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holder Mac'en vågen"
+          }
+        }
+      }
+    },
+    "Kept Awake By" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holdt vågen af"
+          }
+        }
+      }
+    },
+    "Keyboard Shortcut" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastaturgenvej"
+          }
+        }
+      }
+    },
+    "L" : {
+      "comment" : "Short for the left earbud",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "V"
+          }
+        }
+      }
+    },
+    "Language" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprog"
+          }
+        }
+      }
+    },
+    "Last 10 Days" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seneste 10 dage"
+          }
+        }
+      }
+    },
+    "Last 24 Hours" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seneste 24 timer"
+          }
+        }
+      }
+    },
+    "Last Sleep" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seneste dvale"
+          }
+        }
+      }
+    },
+    "Left" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Venstre"
+          }
+        }
+      }
+    },
+    "Left %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Venstre %@"
+          }
+        }
+      }
+    },
+    "Lets the panel switch Low Power Mode right away. macOS asks you to allow it once, in Login Items." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lader panelet slå strømsparetilstand til og fra med det samme. macOS beder dig om at tillade det én gang under Login-emner."
+          }
+        }
+      }
+    },
+    "Level" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niveau"
+          }
+        }
+      }
+    },
+    "Look" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Udseende"
+          }
+        }
+      }
+    },
+    "Low Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lavt batteri"
+          }
+        }
+      }
+    },
+    "Low Power Mode" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømsparetilstand"
+          }
+        }
+      }
+    },
+    "Low Power Mode makes it last longer, by reducing energy use." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømsparetilstand får det til at holde længere ved at bruge mindre energi."
+          }
+        }
+      }
+    },
+    "Low Power Mode Without a Password" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømsparetilstand uden adgangskode"
+          }
+        }
+      }
+    },
+    "Low Power Mode, battery health and charging, in System Settings." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømsparetilstand, batteritilstand og opladning i Systemindstillinger."
+          }
+        }
+      }
+    },
+    "macOS" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS"
+          }
+        }
+      }
+    },
+    "macOS holds the limit itself, so it stays on when WatchMyBattery isn't running. It's the same setting as in System Settings › Battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS holder selv grænsen, så den gælder, også når WatchMyBattery ikke kører. Det er den samme indstilling som i Systemindstillinger › Batteri."
+          }
+        }
+      }
+    },
+    "macOS is still calculating the time left." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS beregner stadig den resterende tid."
+          }
+        }
+      }
+    },
+    "Maximum capacity is how much charge the battery holds compared with when it was new. A charge cycle is using 100% of its capacity, in total, not necessarily all at once." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maksimal kapacitet er, hvor meget strøm batteriet kan rumme i forhold til, da det var nyt. En opladningscyklus er, når 100 % af kapaciteten er brugt i alt, ikke nødvendigvis på én gang."
+          }
+        }
+      }
+    },
+    "Measures for a couple of seconds, then gets the name of the app using the most energy. Apps hidden in WatchMyBattery's settings are left out." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Måler i et par sekunder og henter derefter navnet på den app, der bruger mest energi. Apps, der er skjult i WatchMyBatterys indstillinger, medtages ikke."
+          }
+        }
+      }
+    },
+    "Measuring its processes…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Måler dens processer…"
+          }
+        }
+      }
+    },
+    "Menu Bar" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menulinje"
+          }
+        }
+      }
+    },
+    "More Than Usual" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mere end normalt"
+          }
+        }
+      }
+    },
+    "Much more than a sleep should use. Usually something kept waking the Mac: a Bluetooth device, Wake for network access in System Settings › Battery, or an app." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meget mere, end en dvale bør bruge. Som regel blev Mac'en ved med at blive vækket: af en Bluetooth-enhed, Vågn ved netværksadgang i Systemindstillinger › Batteri eller en app."
+          }
+        }
+      }
+    },
+    "Needs a Mac with Apple silicon and macOS 26.4 or later." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kræver en Mac med Apple silicon og macOS 26.4 eller nyere."
+          }
+        }
+      }
+    },
+    "Needs Battery History, in Settings › Panel." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kræver Batterihistorik under Indstillinger › Panel."
+          }
+        }
+      }
+    },
+    "Never shown in the battery, so they can't be quit by accident." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vises aldrig i batteriet, så de ikke kan afsluttes ved et uheld."
+          }
+        }
+      }
+    },
+    "New Apps Using a Lot" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nye apps, der bruger meget"
+          }
+        }
+      }
+    },
+    "No accessories with a battery are connected." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der er ikke forbundet noget tilbehør med batteri."
+          }
+        }
+      }
+    },
+    "No app has used much battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen app har brugt meget batteri."
+          }
+        }
+      }
+    },
+    "No app is using much energy right now." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen apps bruger meget energi lige nu."
+          }
+        }
+      }
+    },
+    "None" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen"
+          }
+        }
+      }
+    },
+    "Normal" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        }
+      }
+    },
+    "not charging" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "oplader ikke"
+          }
+        }
+      }
+    },
+    "Not charging" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplader ikke"
+          }
+        }
+      }
+    },
+    "Nothing is keeping your Mac awake." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intet holder din Mac vågen."
+          }
+        }
+      }
+    },
+    "Nothing yet. Sleeps show here once your Mac has slept and woken with WatchMyBattery running." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intet endnu. Dvaler vises her, når din Mac har været i dvale og er vågnet, mens WatchMyBattery kørte."
+          }
+        }
+      }
+    },
+    "Notification" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifikation"
+          }
+        }
+      }
+    },
+    "Notifications" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifikationer"
+          }
+        }
+      }
+    },
+    "Notifications are turned off for WatchMyBattery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifikationer er slået fra for WatchMyBattery."
+          }
+        }
+      }
+    },
+    "Notifications are turned off, so it only shows in the panel." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifikationer er slået fra, så den vises kun i panelet."
+          }
+        }
+      }
+    },
+    "Notify At" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Giv besked ved"
+          }
+        }
+      }
+    },
+    "Now %@, charging to %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nu %1$@, oplader til %2$@"
+          }
+        }
+      }
+    },
+    "Off" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fra"
+          }
+        }
+      }
+    },
+    "Often why a Mac uses battery asleep. Turn it off in System Settings › Battery › Options." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ofte grunden til, at en Mac bruger batteri i dvale. Slå det fra i Systemindstillinger › Batteri › Indstillinger."
+          }
+        }
+      }
+    },
+    "on battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "på batteri"
+          }
+        }
+      }
+    },
+    "On battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "På batteri"
+          }
+        }
+      }
+    },
+    "Once a day. Nothing about you is sent." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Én gang om dagen. Der sendes intet om dig."
+          }
+        }
+      }
+    },
+    "Open at Login" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbn ved login"
+          }
+        }
+      }
+    },
+    "Open Control Center Settings" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbn indstillinger for Kontrolcenter"
+          }
+        }
+      }
+    },
+    "Open Finder" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbn Finder"
+          }
+        }
+      }
+    },
+    "Open the Panel" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbn panelet"
+          }
+        }
+      }
+    },
+    "Open…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbn…"
+          }
+        }
+      }
+    },
+    "Opens and closes the panel from any app." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbner og lukker panelet fra en hvilken som helst app."
+          }
+        }
+      }
+    },
+    "Opens Buy Me a Coffee in your browser." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbner Buy Me a Coffee i din browser."
+          }
+        }
+      }
+    },
+    "Optimized" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimeret"
+          }
+        }
+      }
+    },
+    "Optimized Battery Charging and more, in System Settings." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimeret batteriopladning og mere i Systemindstillinger."
+          }
+        }
+      }
+    },
+    "Optimized Battery Charging keeps the battery at %@ for now, so it lasts longer, and finishes charging in time for when you usually unplug." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimeret batteriopladning holder batteriet på %@ indtil videre, så det holder længere, og lader færdigt i god tid til, når du plejer at tage stikket ud."
+          }
+        }
+      }
+    },
+    "Over the days the Mac ran on battery. Time on battery includes time asleep." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For de dage, Mac'en kørte på batteri. Tid på batteri omfatter tid i dvale."
+          }
+        }
+      }
+    },
+    "Panel" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Panel"
+          }
+        }
+      }
+    },
+    "Percentage" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Procent"
+          }
+        }
+      }
+    },
+    "Period" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Periode"
+          }
+        }
+      }
+    },
+    "Playing audio" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afspiller lyd"
+          }
+        }
+      }
+    },
+    "Plug in soon." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilslut snart strøm."
+          }
+        }
+      }
+    },
+    "Plug it in soon." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilslut strømmen snart."
+          }
+        }
+      }
+    },
+    "Plug it into this Mac with a cable, unlock it, and tap Trust." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slut den til denne Mac med et kabel, lås den op, og tryk på Har tillid."
+          }
+        }
+      }
+    },
+    "Plugged in" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilsluttet"
+          }
+        }
+      }
+    },
+    "Plugged in, or too short to say how fast it used the battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilsluttet strøm, eller for kort til at sige, hvor hurtigt batteriet blev brugt."
+          }
+        }
+      }
+    },
+    "Position" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Placering"
+          }
+        }
+      }
+    },
+    "Power Source: Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømkilde: Batteri"
+          }
+        }
+      }
+    },
+    "Power Source: Power Adapter" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømkilde: Strømforsyning"
+          }
+        }
+      }
+    },
+    "Power Source: Power Adapter · Fully Charged" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømkilde: Strømforsyning · Fuldt opladet"
+          }
+        }
+      }
+    },
+    "Power Source: Power Adapter · Not Charging" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømkilde: Strømforsyning · Oplader ikke"
+          }
+        }
+      }
+    },
+    "Press Escape to cancel, or Delete to remove the shortcut." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tryk på Escape for at annullere eller Slet for at fjerne genvejen."
+          }
+        }
+      }
+    },
+    "Put the Limit Back Now" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sæt grænsen tilbage nu"
+          }
+        }
+      }
+    },
+    "Quit" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afslut"
+          }
+        }
+      }
+    },
+    "Quit %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afslut %@"
+          }
+        }
+      }
+    },
+    "Quit %@?" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afslut %@?"
+          }
+        }
+      }
+    },
+    "Quit WatchMyBattery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afslut WatchMyBattery"
+          }
+        }
+      }
+    },
+    "Quits it straight away, without asking about unsaved changes." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afslutter den med det samme uden at spørge om ændringer, der ikke er arkiveret."
+          }
+        }
+      }
+    },
+    "R" : {
+      "comment" : "Short for the right earbud",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "H"
+          }
+        }
+      }
+    },
+    "read %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "læst %@"
+          }
+        }
+      }
+    },
+    "Read it again. It needs to be awake and on the same Wi‑Fi." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Læs den igen. Den skal være vågen og på samme Wi‑Fi."
+          }
+        }
+      }
+    },
+    "Reading…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Læser…"
+          }
+        }
+      }
+    },
+    "Reads only when your meetings start and end. macOS asks you to allow it once." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Læser kun, hvornår dine møder starter og slutter. macOS beder dig tillade det én gang."
+          }
+        }
+      }
+    },
+    "Recent Sleeps" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seneste dvaler"
+          }
+        }
+      }
+    },
+    "Record Shortcut" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optag genvej"
+          }
+        }
+      }
+    },
+    "Reduces energy use, so the battery lasts longer." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bruger mindre energi, så batteriet holder længere."
+          }
+        }
+      }
+    },
+    "Refresh" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opdater"
+          }
+        }
+      }
+    },
+    "Relaunch Now" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Genstart nu"
+          }
+        }
+      }
+    },
+    "Remove the shortcut" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fjern genvejen"
+          }
+        }
+      }
+    },
+    "Removes the battery from the menu bar until you open the app again." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fjerner batteriet fra menulinjen, indtil du åbner appen igen."
+          }
+        }
+      }
+    },
+    "Report a Bug" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rapporter en fejl"
+          }
+        }
+      }
+    },
+    "Restore Limit" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gendan grænse"
+          }
+        }
+      }
+    },
+    "Right" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Højre"
+          }
+        }
+      }
+    },
+    "Right %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Højre %@"
+          }
+        }
+      }
+    },
+    "Select it in Finder's sidebar. On the General tab, turn on “Show this iPhone when on Wi‑Fi” and click Apply." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vælg den i Finders indholdsoversigt. Slå “Vis denne iPhone, når den er på Wi‑Fi” til på fanen Generelt, og klik på Anvend."
+          }
+        }
+      }
+    },
+    "Service Recommended" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Service anbefales"
+          }
+        }
+      }
+    },
+    "Set Up…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfigurer…"
+          }
+        }
+      }
+    },
+    "Settings…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indstillinger…"
+          }
+        }
+      }
+    },
+    "Show" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis"
+          }
+        }
+      }
+    },
+    "Show %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis %@"
+          }
+        }
+      }
+    },
+    "Show Card" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis kort"
+          }
+        }
+      }
+    },
+    "Show in the battery again" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis i batteriet igen"
+          }
+        }
+      }
+    },
+    "Show in the Panel" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis i panelet"
+          }
+        }
+      }
+    },
+    "Show Processes" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis processer"
+          }
+        }
+      }
+    },
+    "Shown" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vist"
+          }
+        }
+      }
+    },
+    "Shows the battery level and the apps that used the most battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Viser batteriniveauet og de apps, der brugte mest batteri."
+          }
+        }
+      }
+    },
+    "Since %@, when the Mac was unplugged. The average includes time asleep." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siden %@, da Mac'en blev frakoblet. Gennemsnittet tæller tid i dvale med."
+          }
+        }
+      }
+    },
+    "Sleep" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dvale"
+          }
+        }
+      }
+    },
+    "Sleep in the Panel" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dvale i panelet"
+          }
+        }
+      }
+    },
+    "Slides in below the menu bar when AirPods or other headphones connect, with the battery of each earbud and the case." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glider ind under menulinjen, når AirPods eller andre hovedtelefoner forbindes, med batteriet i hver øretelefon og etuiet."
+          }
+        }
+      }
+    },
+    "Software Update" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Softwareopdatering"
+          }
+        }
+      }
+    },
+    "Sound" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lyd"
+          }
+        }
+      }
+    },
+    "Source Code on GitHub" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kildekode på GitHub"
+          }
+        }
+      }
+    },
+    "Spotlight" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spotlight"
+          }
+        }
+      }
+    },
+    "Spreadsheet (CSV)…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regneark (CSV)…"
+          }
+        }
+      }
+    },
+    "Start" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
+          }
+        }
+      }
+    },
+    "Start WatchMyBattery when you log in." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start WatchMyBattery, når du logger ind."
+          }
+        }
+      }
+    },
+    "Stays For" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vises i"
+          }
+        }
+      }
+    },
+    "Stays while the pointer is over it. Click it to open the panel." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bliver, mens markøren er over det. Klik på det for at åbne panelet."
+          }
+        }
+      }
+    },
+    "Stops charging at %@ while plugged in, so the battery lasts longer." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stopper opladningen ved %@, mens strømmen er tilsluttet, så batteriet holder længere."
+          }
+        }
+      }
+    },
+    "System Default" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Systemets standard"
+          }
+        }
+      }
+    },
+    "Temperature" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperatur"
+          }
+        }
+      }
+    },
+    "Temperature, Voltage and Current" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperatur, spænding og strøm"
+          }
+        }
+      }
+    },
+    "The apps using the most energy each get a slice." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De apps, der bruger mest energi, får hver en bid."
+          }
+        }
+      }
+    },
+    "The battery is at %@ and charging." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriet er på %@ og oplades."
+          }
+        }
+      }
+    },
+    "The battery is at %@." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriet er på %@."
+          }
+        }
+      }
+    },
+    "The battery is fully charged." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriet er fuldt opladet."
+          }
+        }
+      }
+    },
+    "The battery is hot: macOS slows or pauses charging until it cools down." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriet er varmt: macOS sænker eller sætter opladningen på pause, til det er kølet af."
+          }
+        }
+      }
+    },
+    "The battery is warm. Time spent warm wears it a little faster." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriet er lunt. Tid som lunt slider det lidt hurtigere."
+          }
+        }
+      }
+    },
+    "The battery level and the apps that used it over the last 24 hours, and a summary of the last two weeks. Apps are measured every few minutes while on battery, and the history stays on this Mac." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriniveauet og de apps, der brugte det, de seneste 24 timer, og et overblik over de seneste to uger. Apps måles med få minutters mellemrum på batteri, og historikken bliver på denne Mac."
+          }
+        }
+      }
+    },
+    "The battery level shows here as it changes." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriniveauet vises her, efterhånden som det ændrer sig."
+          }
+        }
+      }
+    },
+    "The battery should last until about %@, and the meeting runs until %@." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriet bør holde til ca. kl. %1$@, og mødet varer til kl. %2$@."
+          }
+        }
+      }
+    },
+    "The battery should last until about %@." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriet bør holde til ca. kl. %@."
+          }
+        }
+      }
+    },
+    "The battery's temperature." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriets temperatur."
+          }
+        }
+      }
+    },
+    "The charts, the apps that used the most battery and what's usual for this Mac start again from now." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagrammerne, de apps, der brugte mest batteri, og hvad der er normalt for denne Mac, starter forfra fra nu."
+          }
+        }
+      }
+    },
+    "The last sleep, and what's keeping the Mac awake." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den seneste dvale, og hvad der holder Mac'en vågen."
+          }
+        }
+      }
+    },
+    "The Mac is plugged in, and the battery isn't charging." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac'en er tilsluttet strøm, og batteriet oplades ikke."
+          }
+        }
+      }
+    },
+    "Their battery, next to your accessories." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deres batteri, ved siden af dit tilbehør."
+          }
+        }
+      }
+    },
+    "This Mac doesn't have a battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denne Mac har ikke et batteri."
+          }
+        }
+      }
+    },
+    "Time" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tid"
+          }
+        }
+      }
+    },
+    "Time left" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tid tilbage"
+          }
+        }
+      }
+    },
+    "Time Left" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tid tilbage"
+          }
+        }
+      }
+    },
+    "Time Machine" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time Machine"
+          }
+        }
+      }
+    },
+    "Time remaining" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resterende tid"
+          }
+        }
+      }
+    },
+    "Tip: press Tab to move between slices with the keyboard, and Delete to quit one." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tip: Tryk på Tab for at gå mellem bidderne med tastaturet, og på Slet for at afslutte en."
+          }
+        }
+      }
+    },
+    "Top Center" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Øverst i midten"
+          }
+        }
+      }
+    },
+    "Top Right" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Øverst til højre"
+          }
+        }
+      }
+    },
+    "Turn On Low Power Mode" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slå strømsparetilstand til"
+          }
+        }
+      }
+    },
+    "Turn on Wi‑Fi in Finder" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slå Wi‑Fi til i Finder"
+          }
+        }
+      }
+    },
+    "Turned off in System Settings › Privacy & Security › Calendars." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slået fra i Systemindstillinger › Anonymitet og sikkerhed › Kalendere."
+          }
+        }
+      }
+    },
+    "Two batteries in your menu bar?" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To batterier på menulinjen?"
+          }
+        }
+      }
+    },
+    "Type Shortcut…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tryk på genvej…"
+          }
+        }
+      }
+    },
+    "Typically %@%% an hour asleep on battery. About 1%% or less is normal." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Typisk %@ %% i timen i dvale på batteri. Ca. 1 %% eller mindre er normalt."
+          }
+        }
+      }
+    },
+    "under 1m" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "under 1m"
+          }
+        }
+      }
+    },
+    "Under the battery, each with the level of every part." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Under batteriet, hver med niveauet for hver del."
+          }
+        }
+      }
+    },
+    "Unplug it" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag kablet ud"
+          }
+        }
+      }
+    },
+    "Unplug now to keep the battery between 20%% and %@, where it wears the least." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag strømmen fra nu for at holde batteriet mellem 20 %% og %@, hvor det slides mindst."
+          }
+        }
+      }
+    },
+    "Unplugged" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frakoblet"
+          }
+        }
+      }
+    },
+    "Until %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indtil %@"
+          }
+        }
+      }
+    },
+    "Until full" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indtil fuldt"
+          }
+        }
+      }
+    },
+    "Update available" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opdatering tilgængelig"
+          }
+        }
+      }
+    },
+    "Updates" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opdateringer"
+          }
+        }
+      }
+    },
+    "Used" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brugt"
+          }
+        }
+      }
+    },
+    "Used the most battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brugte mest batteri"
+          }
+        }
+      }
+    },
+    "uses %@ watts" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bruger %@ watt"
+          }
+        }
+      }
+    },
+    "Using more power than usual" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bruger mere strøm end normalt"
+          }
+        }
+      }
+    },
+    "Using the microphone" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bruger mikrofonen"
+          }
+        }
+      }
+    },
+    "Version %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@"
+          }
+        }
+      }
+    },
+    "Version %@ · Last checked %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@ · Sidst søgt %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Version %1$@ · Last checked %2$@"
+          }
+        }
+      }
+    },
+    "Version %@ is available." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@ er tilgængelig."
+          }
+        }
+      }
+    },
+    "Version %@ is ready to install." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@ er klar til at blive installeret."
+          }
+        }
+      }
+    },
+    "Voltage & Current" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spænding og strøm"
+          }
+        }
+      }
+    },
+    "Wake for Network Access" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vågn ved netværksadgang"
+          }
+        }
+      }
+    },
+    "Warn" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advar"
+          }
+        }
+      }
+    },
+    "WatchMyBattery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WatchMyBattery"
+          }
+        }
+      }
+    },
+    "WatchMyBattery %@ is the latest version." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WatchMyBattery %@ er den nyeste version."
+          }
+        }
+      }
+    },
+    "WatchMyBattery Settings" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indstillinger for WatchMyBattery"
+          }
+        }
+      }
+    },
+    "WatchMyBattery Settings…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indstillinger for WatchMyBattery…"
+          }
+        }
+      }
+    },
+    "WatchMyBattery switches language when it opens again." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WatchMyBattery skifter sprog, når den åbnes igen."
+          }
+        }
+      }
+    },
+    "WatchMyBattery wants to turn off Low Power Mode." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WatchMyBattery vil slå strømsparetilstand fra."
+          }
+        }
+      }
+    },
+    "WatchMyBattery wants to turn on Low Power Mode." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WatchMyBattery vil slå strømsparetilstand til."
+          }
+        }
+      }
+    },
+    "What the battery controller measures right now." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hvad batteriets controller måler lige nu."
+          }
+        }
+      }
+    },
+    "What the battery controller measures, under the battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hvad batteriets controller måler, under batteriet."
+          }
+        }
+      }
+    },
+    "What's New" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nyheder"
+          }
+        }
+      }
+    },
+    "When an app that hadn't used much battery in the last two weeks is now among the hungriest." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når en app, der ikke har brugt meget batteri de seneste to uger, nu er blandt de mest strømslugende."
+          }
+        }
+      }
+    },
+    "When Headphones Connect" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når hovedtelefoner forbindes"
+          }
+        }
+      }
+    },
+    "When It's Charged" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når det er opladet"
+          }
+        }
+      }
+    },
+    "When the battery won't last through your next meeting. Uses the Calendar app, and only reads when events start and end." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når batteriet ikke holder dit næste møde igennem. Bruger appen Kalender og læser kun, hvornår begivenheder starter og slutter."
+          }
+        }
+      }
+    },
+    "When the Mac uses clearly more power than it usually does at this time of day, and which app is behind it. Once it knows what's usual, after about a week." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når Mac'en bruger tydeligt mere strøm, end den plejer på dette tidspunkt af dagen, og hvilken app der står bag. Når den ved, hvad der er normalt, efter ca. en uge."
+          }
+        }
+      }
+    },
+    "When you drag an app out of the battery. Delete on a selected slice always asks." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når du trækker en app ud af batteriet. Slet på en valgt bid spørger altid."
+          }
+        }
+      }
+    },
+    "Without %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uden %@"
+          }
+        }
+      }
+    },
+    "Woke %@." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vågnede %@."
+          }
+        }
+      }
+    },
+    "You can unplug your Mac." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du kan tage strømmen fra din Mac."
+          }
+        }
+      }
+    },
+    "Your %@ limit comes back when you unplug." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Din grænse på %@ kommer tilbage, når du tager strømmen fra."
+          }
+        }
+      }
+    },
+    "Your battery, and who's draining it." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dit batteri, og hvem der dræner det."
+          }
+        }
+      }
+    },
+    "Your charge limit keeps the battery at %@, so it lasts longer. The Mac runs from the adapter once it's there." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Din opladningsgrænse holder batteriet på %@, så det holder længere. Mac'en kører på strømforsyningen, når den er nået."
+          }
+        }
+      }
+    },
+    "Your charge limit stops charging at %@, so the notification comes then." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Din opladningsgrænse stopper opladningen ved %@, så notifikationen kommer der."
+          }
+        }
+      }
+    },
+    "Your Mac used %@ while asleep" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Din Mac brugte %@ i dvale"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

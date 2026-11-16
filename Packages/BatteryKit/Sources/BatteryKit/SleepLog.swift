@@ -105,7 +105,7 @@ public struct SleepLog: Codable, Sendable, Equatable {
         return rates.count.isMultiple(of: 2) ? (rates[middle - 1] + rates[middle]) / 2 : rates[middle]
     }
 
-    /// The sleeps on battery since `start`, newest first, for a list.
+    /// The sleeps that ended since `start`, on battery or not, newest first, for a list.
     public func recent(since start: Date) -> [SleepSession] {
         sessions.filter { $0.end >= start }.reversed()
     }

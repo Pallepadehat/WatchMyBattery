@@ -4,6 +4,28 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-11-16
+
+A panel that fits every screen, what's new right in the update window, and a tidier, lighter app underneath.
+
+### Added
+
+- 📝 **What's new, before you update.** The update window now lists what changed in the new version, straight from this changelog, so you know what you're getting before you click Install Update.
+
+### Fixed
+
+- 📏 **The panel fits on every screen.** On a shorter display, or with lots of accessories and sections, the panel ran past the bottom of the screen. Now it stops above the Dock, and its middle scrolls with soft fades at the edges, while the header and the menu items stay where they are. A small chevron at the bottom shows there's more, and scrolls to it with a click.
+- **The Quit button on an energy notification quits the right app.** With two "using a lot of energy" notifications in Notification Center, the older one's button could name, and quit, the app from the newer one.
+- **Clear History clears everything.** Readings from the last few minutes, not yet saved, came back after the next launch.
+- **Energy is charged to the right app** when macOS reuses a process ID: a new process could inherit the old one's app for its whole life.
+- **What keeps the Mac awake stays up to date in Settings**, even after the panel closes, and stops being read once neither is open.
+- **The iPhone and iPad rows** switch to "read a while ago" smoothly as the minutes pass, and VoiceOver says how old the reading is.
+
+### Changed
+
+- 🪶 **Lighter on the Mac.** Recording the apps' energy for the history takes about 7 µs instead of 170 µs. The AirPods card lets go of its view once it's hidden, so a charging case's glow no longer keeps animating out of sight. A few once-a-second checks let macOS group their wake-ups, and the accessory rows no longer load symbol images on every redraw.
+- 🗂️ **Easier to find your way around the code.** The app, the helper and what they share now live under `Sources/`, the app's folders follow its features (Battery, Energy, History, Insights, Sleep and more), and [docs/ARCHITECTURE.md](https://github.com/Pallepadehat/WatchMyBattery/blob/main/docs/ARCHITECTURE.md) explains how it all fits together.
+
 ## [0.3.2] - 2026-11-13
 
 Less in the battery when you want less, and a Settings window that comes to the front.
@@ -203,7 +225,8 @@ The first release.
 - Automatic updates with Sparkle, from EdDSA-signed releases.
 - One-command install, and build, packaging and release scripts.
 
-[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.2.6...v0.3.0

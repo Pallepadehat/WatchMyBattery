@@ -24,22 +24,15 @@
     },
   ],
   "files": [
-    { "kind": "folder", "path": "WatchMyBattery", "target-membership": [ "WatchMyBattery" ] },
-    { "kind": "folder", "path": "WatchMyBatteryHelper", "target-membership": [ "WatchMyBatteryHelper" ] },
-    { "kind": "folder", "path": "Shared", "target-membership": [ "WatchMyBattery", "WatchMyBatteryHelper" ] },
+    { "kind": "folder", "path": "Sources/WatchMyBattery", "target-membership": [ "WatchMyBattery" ] },
+    { "kind": "folder", "path": "Sources/WatchMyBatteryHelper", "target-membership": [ "WatchMyBatteryHelper" ] },
+    { "kind": "folder", "path": "Sources/Shared", "target-membership": [ "WatchMyBattery", "WatchMyBatteryHelper" ] },
     {
       "kind": "group",
       "name": "Products",
       "children": [
         { "path": "<PRODUCTS>/WatchMyBattery.app", "id": "C432364C30A339F000B1E421", "type": "wrapper.application", "index": false },
-        {
-          "path": "<PRODUCTS>/WatchMyBatteryHelper",
-          "id": "C432364C30A339F000B1E422",
-          "type": "compiled.mach-o.executable",
-          "index": false,
-          "target-membership": [ "WatchMyBattery/copy/EmbedHelper" ],
-          "attributes": [ "code-sign-on-copy" ],
-        },
+        { "path": "<PRODUCTS>/WatchMyBatteryHelper", "id": "C432364C30A339F000B1E422", "type": "compiled.mach-o.executable", "index": false, "target-membership": [ "WatchMyBattery/copy/EmbedHelper" ] },
       ],
     }, {
       "kind": "group",
@@ -71,19 +64,28 @@
         "SKIP_INSTALL": "YES",
         "SWIFT_VERSION": "6.0",
       },
-    },
-    {
+    }, {
       "name": "WatchMyBattery",
       "id": "C432364B30A339F000B1E421",
       "product": "Products/WatchMyBattery.app",
       "product-type": "application",
-      "dependencies": [ "WatchMyBatteryHelper" ],
+      "dependencies": [
+        "WatchMyBatteryHelper",
+      ],
       "build-phases": [
         "compile-sources",
         "frameworks",
         "resources",
-        { "kind": "copy", "name": "EmbedHelper", "bundle-base-path": "executables-directory" },
-        { "kind": "copy", "name": "EmbedDaemon", "bundle-base-path": "contents-directory", "relative-path": "Library/LaunchDaemons" },
+        {
+          "kind": "copy",
+          "name": "EmbedHelper",
+          "bundle-base-path": "executables-directory",
+        }, {
+          "kind": "copy",
+          "name": "EmbedDaemon",
+          "bundle-base-path": "contents-directory",
+          "relative-path": "Library/LaunchDaemons",
+        },
       ],
       "package-product-members": [
         {
@@ -115,7 +117,7 @@
           "$(inherited)",
           "@executable_path/../Frameworks",
         ],
-        "MARKETING_VERSION": "0.3.2",
+        "MARKETING_VERSION": "0.3.3",
         "PRODUCT_BUNDLE_IDENTIFIER": "com.pallepadehat.WatchMyBattery",
         "PRODUCT_NAME": "$(TARGET_NAME)",
         "STRING_CATALOG_GENERATE_SYMBOLS": "YES",
