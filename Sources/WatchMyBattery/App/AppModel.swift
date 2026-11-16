@@ -17,6 +17,8 @@ final class AppModel {
     let accessories = AccessoryMonitor()
     let chargeLimit = ChargeLimit()
     let sleep = SleepMonitor()
+    let powerDraw = PowerDrawMonitor()
+    let chime = ChargingChime()
 
     init(settings: AppSettings = AppSettings(), history: HistoryRecorder? = nil) {
         self.settings = settings
@@ -53,11 +55,13 @@ final class AppModel {
     }
 
     @ObservationIgnored private lazy var settingsWindow = SettingsWindowController(model: self)
+    @ObservationIgnored private lazy var onboardingWindow = OnboardingWindowController(model: self)
 
     func start() {
         battery.start()
         updater.start()
         notifier.start(model: self)
+        chime.start(model: self)
         history.start(model: self)
         insights.start(model: self)
         accessories.onArrival = { [weak self] accessory in
@@ -104,8 +108,7 @@ final class AppModel {
         usage.start()
         battery.refreshHealthIfNeeded()
         insights.refresh()
-        let shown = Self.readBuiltInBatteryShown()
-        if shown != isBuiltInBatteryShown { isBuiltInBatteryShown = shown }
+        refreshBuiltInBatteryShown()
         accessories.includesDevices = settings.showsDevices
         accessories.refresh()
         chargeLimit.refresh()
@@ -149,6 +152,26 @@ final class AppModel {
         history.flush()
     }
 
+    /// The welcome tour: on first launch, and from Settings › General.
+    func openOnboarding(at step: OnboardingView.Step = .welcome) {
+        onboardingWindow.show(at: step)
+    }
+
+    #if DEBUG
+        /// Forgets the tour was seen, as on a first launch, and opens it from the start: for working on it. Debug
+        /// builds only (the menu bar icon's menu, or `--reset-onboarding`).
+        func resetOnboarding() {
+            settings.hasCompletedOnboarding = false
+            openOnboarding()
+        }
+    #endif
+
+    /// Whether macOS's own battery is in the menu bar too: read when the panel opens, and by the welcome tour.
+    func refreshBuiltInBatteryShown() {
+        let shown = Self.readBuiltInBatteryShown()
+        if shown != isBuiltInBatteryShown { isBuiltInBatteryShown = shown }
+    }
+
     func openSettings(_ pane: SettingsPane? = nil) {
         if let pane { settingsPane = pane }
         settingsWindow.show()
@@ -172,6 +195,15 @@ final class AppModel {
         CFPreferencesSynchronize(domain, kCFPreferencesCurrentUser, kCFPreferencesCurrentHost)
         let value = CFPreferencesCopyValue(ControlCenterBattery.key as CFString, domain, kCFPreferencesCurrentUser, kCFPreferencesCurrentHost)
         return ControlCenterBattery.isShownInMenuBar(flags: value as? Int)
+    }
+
+    /// Why charging is paused or slow, when the panel can tell. It needs the panel's measurements (the Mac's power
+    /// draw and the battery's readings), so it's only known while the panel is open. On battery there's nothing to
+    /// say, and it returns before reading them, so the panel doesn't redraw each time they change.
+    var chargingNote: ChargingNote? {
+        guard battery.snapshot.isPluggedIn else { return nil }
+        return ChargingNote.evaluate(
+            snapshot: battery.snapshot, adapter: battery.adapter, systemWatts: usage.systemWatts, readings: battery.readings)
     }
 
     /// The numbers behind the panel's estimates, for the current moment.

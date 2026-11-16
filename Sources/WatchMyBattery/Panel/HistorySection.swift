@@ -194,8 +194,11 @@ private struct LevelChart: View {
             .foregroundStyle(color(for: bucket))
     }
 
+    /// Time on battery: a quiet grey, so the green of time plugged in, and the red of running low, stand out.
+    static let plainBar = Color.secondary.opacity(0.55)
+
     private func color(for bucket: BatteryHistory.LevelBucket) -> Color {
-        let plain = colorScheme == .dark ? Color.white.opacity(0.85) : Color(white: 0.12).opacity(0.85)
+        let plain = Self.plainBar
         guard usesColor else { return bucket.isPluggedIn ? plain.opacity(0.45) : plain }
         if bucket.isPluggedIn { return ChargeTrack.green }
         if let level = bucket.percentage, level <= BatteryIcon.lowPercentage { return Self.red }
@@ -224,7 +227,7 @@ private struct DayChart: View {
 
     var body: some View {
         let top = max(100, days.map(\.drained).max() ?? 0)
-        let plain = colorScheme == .dark ? Color.white.opacity(0.85) : Color(white: 0.12).opacity(0.85)
+        let plain = LevelChart.plainBar
         Chart(days) { day in
             BarMark(x: .value("Day", day.start, unit: .day), y: .value("Used", day.drained), width: .ratio(0.62))
                 .cornerRadius(1.5)

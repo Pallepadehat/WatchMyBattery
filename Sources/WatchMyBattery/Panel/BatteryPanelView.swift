@@ -53,7 +53,16 @@ struct BatteryPanelView: View {
         .animation(.snappy(duration: 0.35), value: model.accessories.accessories.map(\.id))
         .animation(.snappy(duration: 0.3), value: model.usage.inspectedApp)
         .animation(.snappy(duration: 0.3), value: model.chargeLimit.isSupported)
+        .animation(.snappy(duration: 0.3), value: chargingNote)
+        .animation(.snappy(duration: 0.3), value: model.battery.adapter)
+        // Read a moment after the panel opens: they slide in rather than pop.
+        .animation(.snappy(duration: 0.3), value: model.battery.health)
+        .animation(.snappy(duration: 0.3), value: SleepSection.applies(to: model.sleep))
+        .animation(.snappy(duration: 0.3), value: model.updater.availableVersion)
     }
+
+    /// Why charging is paused or slow, when there's something to say.
+    private var chargingNote: ChargingNote? { model.chargingNote }
 
     /// The gauge, the details and the sections: the part that scrolls when the screen is short.
     @ViewBuilder private var scrollingContent: some View {
@@ -66,6 +75,7 @@ struct BatteryPanelView: View {
                     centerLabel: model.settings.centerLabel,
                     usesColor: model.settings.usesColor,
                     animatesCharging: model.settings.showsChargingAnimation && model.isPanelOpen,
+                    holdingMotion: model.settings.holdingMotion,
                     focusedApp: $focusedApp,
                     quit: { quit($0, asking: model.settings.confirmsQuit) },
                     confirmQuit: { quit($0, asking: true) },
@@ -75,7 +85,7 @@ struct BatteryPanelView: View {
                     inspectedApp: model.usage.inspectedApp,
                     inspect: { app in
                         withAnimation(.snappy(duration: 0.3)) {
-                            model.usage.inspectedApp = model.usage.inspectedApp == app.id ? nil : app.id
+                            model.usage.inspected = model.usage.inspected?.id == app.id ? nil : app
                         }
                     }
                 )
@@ -87,7 +97,7 @@ struct BatteryPanelView: View {
                         app: app, processes: model.usage.inspectedProcesses,
                         quit: { quit(app, asking: model.settings.confirmsQuit) },
                         forceQuit: { withAnimation(.snappy) { model.usage.forceQuit(app.id) } },
-                        close: { withAnimation(.snappy(duration: 0.3)) { model.usage.inspectedApp = nil } }
+                        close: { withAnimation(.snappy(duration: 0.3)) { model.usage.inspected = nil } }
                     )
                     .padding(.horizontal, 10)
                     .padding(.top, 8)
@@ -109,6 +119,11 @@ struct BatteryPanelView: View {
                         TimeRow(snapshot: snapshot, estimates: model.estimates, focusedApp: focusedApp)
                             .frame(minHeight: Self.rowHeight)
                     }
+                    if let adapter = model.battery.adapter {
+                        ChargerRow(adapter: adapter, note: chargingNote)
+                            .frame(minHeight: Self.rowHeight)
+                            .transition(.opacity)
+                    }
                     if let health = model.battery.health, !health.isEmpty {
                         HealthRow(health: health)
                             .frame(minHeight: Self.rowHeight)
@@ -120,8 +135,7 @@ struct BatteryPanelView: View {
                             .transition(.opacity)
                     }
                     if model.settings.showsBatteryReadings {
-                        BatteryReadingsRows(
-                            battery: model.battery, isVisible: model.isPanelOpen, usesColor: model.settings.usesColor, rowHeight: Self.rowHeight)
+                        BatteryReadingsRows(battery: model.battery, usesColor: model.settings.usesColor, rowHeight: Self.rowHeight)
                     }
                     if model.lowPowerMode.isSupported {
                         LowPowerModeRow(isOn: snapshot.isLowPowerModeOn, isChanging: model.lowPowerMode.isChanging) { on in
@@ -132,6 +146,17 @@ struct BatteryPanelView: View {
                 }
                 .padding(.horizontal, Self.inset)
                 .padding(.top, 6)
+                // The readings rows show them, and a plugged-in Mac needs them to tell why charging is paused.
+                .modifier(
+                    BatteryReadingsRefresh(
+                        battery: model.battery, isActive: model.isPanelOpen && (model.settings.showsBatteryReadings || snapshot.isPluggedIn)))
+
+                if let chargingNote {
+                    ChargingNoteCard(note: chargingNote)
+                        .padding(.horizontal, 10)
+                        .padding(.top, 10)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                }
 
                 if model.lowPowerMode.suggests(for: snapshot) {
                     LowPowerSuggestion(
@@ -248,11 +273,8 @@ struct BatteryPanelView: View {
         }
     }
 
-    /// The app whose slice was clicked, while it still has one.
-    private var inspectedApp: AppUsage? {
-        guard let pid = model.usage.inspectedApp else { return nil }
-        return model.usage.apps.first { $0.id == pid }
-    }
+    /// The app whose slice was clicked, until its card is closed or it quits.
+    private var inspectedApp: AppUsage? { model.usage.inspected }
 
     /// Connected accessories with a battery, when there are any.
     @ViewBuilder private var accessoriesSection: some View {
@@ -303,8 +325,10 @@ struct BatteryPanelView: View {
         switch (snapshot.powerSource, snapshot.chargeState) {
         case (.battery, _): "Power Source: Battery"
         case (.powerAdapter, .charged): "Power Source: Power Adapter · Fully Charged"
-        // Held at its target on purpose: the charge bar says so, so "Not Charging" would only alarm.
+        // Held at its target on purpose, or resting just short of it: the charge bar or a note says so, so "Not Charging"
+        // would only alarm.
         case (.powerAdapter, .notCharging) where snapshot.hasChargeLimit && snapshot.isAtTarget: "Power Source: Power Adapter"
+        case (.powerAdapter, .notCharging) where chargingNote?.isResting == true: "Power Source: Power Adapter"
         case (.powerAdapter, .notCharging): "Power Source: Power Adapter · Not Charging"
         case (.powerAdapter, _): "Power Source: Power Adapter"
         }
@@ -544,6 +568,8 @@ private struct RefusalNotice: View {
 
 /// The small round × that closes a notice.
 struct DismissButton: View {
+    /// What it dismisses, for VoiceOver: "Dismiss Battery is low".
+    var title: String?
     let action: () -> Void
 
     var body: some View {
@@ -555,7 +581,7 @@ struct DismissButton: View {
                 .background(.quaternary, in: .circle)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Dismiss")
+        .accessibilityLabel(title.map { String(localized: "Dismiss \($0)") } ?? String(localized: "Dismiss"))
     }
 }
 
@@ -700,7 +726,7 @@ private struct ScrollAffordancesBody: ViewModifier {
     @State private var latest = Latest()
     @State private var position = ScrollPosition(edge: .top)
 
-    private static let topFade: CGFloat = 14
+    private static let topFade: CGFloat = 28
     private static let bottomFade: CGFloat = 40
 
     func body(content: Content) -> some View {

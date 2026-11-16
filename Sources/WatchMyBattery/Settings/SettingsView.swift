@@ -169,6 +169,16 @@ private struct GeneralPane: View {
 
             Section {
                 LabeledContent {
+                    Button("Show…") { model.openOnboarding() }
+                } label: {
+                    SettingLabel("Welcome Tour", symbol: "sparkles", color: .green) {
+                        Text("The menu bar, how it moves, the panel and notifications, one step at a time.")
+                    }
+                }
+            }
+
+            Section {
+                LabeledContent {
                     Button("Quit") { NSApp.terminate(nil) }
                 } label: {
                     SettingLabel("Quit WatchMyBattery", symbol: "power", color: .red) {
@@ -187,11 +197,33 @@ private struct MenuBarPane: View {
         @Bindable var settings = model.settings
         Form {
             Section {
-                PercentageStylePicker(snapshot: model.battery.snapshot, settings: settings)
+                MenuBarStylePicker(snapshot: model.battery.snapshot, settings: settings, watts: model.powerDraw.watts)
                     .listRowInsets(EdgeInsets(top: 14, leading: 14, bottom: 14, trailing: 14))
+                // Shows what the menu bar shows (text only turns "Nothing" into the percentage), and saves what you pick.
+                Picker(selection: Binding(get: { settings.effectiveMenuBarLabel }, set: { settings.menuBarLabel = $0 })) {
+                    ForEach(MenuBarLabel.allCases) { label in
+                        // Text only always shows some text, so "Nothing" isn't a choice there.
+                        if label != .none || settings.menuBarIconStyle != .textOnly {
+                            Text(label.title).tag(label)
+                        }
+                    }
+                } label: {
+                    SettingLabel(settings.menuBarIconStyle == .textOnly ? "Text" : "Beside the Icon", symbol: "textformat", color: .blue) {
+                        Text(labelSubtitle(settings.effectiveMenuBarLabel))
+                    }
+                }
+                if settings.menuBarIconStyle == .battery {
+                    Toggle(isOn: $settings.showsPercentageInside) {
+                        SettingLabel("Percentage Inside the Battery", symbol: SettingIcon.batteryWithNumber, color: .green) {
+                            Text("Printed in the battery, cut out of the charge so it reads on any wallpaper.")
+                        }
+                    }
+                    .transition(.opacity)
+                }
             } header: {
-                Text("Percentage")
+                Text("Style")
             }
+            .animation(.snappy, value: settings.menuBarIconStyle)
             Section {
                 Toggle(isOn: $settings.usesColor) {
                     SettingLabel("Colorful States", symbol: "paintpalette.fill", color: .orange) {
@@ -200,12 +232,35 @@ private struct MenuBarPane: View {
                 }
                 Toggle(isOn: $settings.showsChargingAnimation) {
                     SettingLabel("Charging Animation", symbol: "bolt.fill", color: .green) {
-                        Text("A soft glow flows into the battery while it charges, here and in the panel.")
+                        Text("The battery moves while it charges and while it's held, here and in the panel.")
+                    }
+                }
+                if settings.showsChargingAnimation {
+                    MotionPicker("While Charging", symbol: "bolt.fill", selection: $settings.chargingMotion) {
+                        switch $0 {
+                        case .flow: "A soft swell of light rolls into the battery."
+                        case .liquid: "The charge ripples like a liquid as it rises. Moves all the time."
+                        case .stripes: "Stripes glide through the part still to charge."
+                        }
+                    }
+                    MotionPicker("Last Few Percent", symbol: "battery.100percent.bolt", selection: $settings.trickleMotion) {
+                        switch $0 {
+                        case .calmLiquid: "The liquid slows to a gentle sway. Moves all the time."
+                        case .slowPulse: "The edge of the charge pulses softly."
+                        }
+                    }
+                    MotionPicker("Holding the Charge", symbol: "powerplug.fill", selection: $settings.holdingMotion) {
+                        switch $0 {
+                        case .stillWater: "The liquid at rest, tilting very slowly. Moves all the time."
+                        case .heartbeat: "The plug gives a soft double beat every few seconds."
+                        case .breathing: "The charge dims a little and comes back, slowly."
+                        }
                     }
                 }
             } header: {
                 Text("Look")
             }
+            .animation(.snappy, value: settings.showsChargingAnimation)
             Section {
                 LabeledContent {
                     ShortcutRecorder(model: model)
@@ -223,6 +278,44 @@ private struct MenuBarPane: View {
                 Text("Panel")
             }
         }
+    }
+
+    private func labelSubtitle(_ label: MenuBarLabel) -> LocalizedStringKey {
+        switch label {
+        case .none: "Just the icon."
+        case .percentage: "How charged the battery is."
+        case .timeRemaining: "Until empty, or until full while charging. The percentage when there's no time to show."
+        case .powerDraw: "What the whole Mac draws right now, read every few seconds while it's shown."
+        }
+    }
+}
+
+/// One state's animation: a menu of its styles, with what the chosen one does underneath.
+private struct MotionPicker<Style: MotionStyle>: View {
+    let title: LocalizedStringKey
+    let symbol: String
+    @Binding var selection: Style
+    let describe: (Style) -> LocalizedStringKey
+
+    init(_ title: LocalizedStringKey, symbol: String, selection: Binding<Style>, describe: @escaping (Style) -> LocalizedStringKey) {
+        self.title = title
+        self.symbol = symbol
+        _selection = selection
+        self.describe = describe
+    }
+
+    var body: some View {
+        Picker(selection: $selection) {
+            ForEach(Style.allCases) { style in
+                Text(style.title).tag(style)
+            }
+        } label: {
+            SettingLabel(title, symbol: symbol, color: .green) {
+                Text(describe(selection))
+            }
+        }
+        .padding(.leading, 12)
+        .transition(.opacity)
     }
 }
 
@@ -651,82 +744,6 @@ private struct LowPowerModeHelperRow: View {
 
 // MARK: - Keyboard shortcut
 
-/// Shows the panel's shortcut; click it, then press the keys for a new one. Escape cancels, Delete clears.
-private struct ShortcutRecorder: View {
-    let model: AppModel
-    @State private var isRecording = false
-    @State private var monitor: Any?
-    /// The last key press couldn't be a shortcut, because it had no ⌘, ⌥ or ⌃.
-    @State private var needsModifier = false
-
-    var body: some View {
-        HStack(spacing: 6) {
-            Button(action: toggleRecording) {
-                Text(title)
-                    .monospacedDigit()
-                    .frame(minWidth: 110)
-                    .foregroundStyle(isRecording ? Color.accentColor : model.settings.panelShortcut == nil ? .secondary : .primary)
-            }
-            .help(isRecording ? "Press Escape to cancel, or Delete to remove the shortcut." : "Click, then press the keys you want.")
-            if model.settings.panelShortcut != nil, !isRecording {
-                Button {
-                    model.setPanelShortcut(nil)
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                .help("Remove the shortcut")
-                .accessibilityLabel("Remove the shortcut")
-            }
-        }
-        .onDisappear(perform: stopRecording)
-    }
-
-    private var title: String {
-        if isRecording { return needsModifier ? String(localized: "Add ⌘, ⌥ or ⌃") : String(localized: "Type Shortcut…") }
-        return model.settings.panelShortcut?.displayString ?? String(localized: "Record Shortcut")
-    }
-
-    private func toggleRecording() {
-        isRecording ? stopRecording() : startRecording()
-    }
-
-    private func startRecording() {
-        isRecording = true
-        needsModifier = false
-        model.pausePanelShortcut()
-        monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            MainActor.assumeIsolated { record(event) }
-            return nil
-        }
-    }
-
-    private func record(_ event: NSEvent) {
-        let plain = event.modifierFlags.isDisjoint(with: [.command, .option, .control, .shift])
-        if plain && event.keyCode == 53 {  // Escape
-            stopRecording()
-        } else if plain && (event.keyCode == 51 || event.keyCode == 117) {  // Delete, Forward Delete
-            model.setPanelShortcut(nil)
-            stopRecording()
-        } else if let hotkey = Hotkey(event: event) {
-            model.setPanelShortcut(hotkey)
-            stopRecording()
-        } else {
-            needsModifier = true
-            NSSound.beep()
-        }
-    }
-
-    private func stopRecording() {
-        if let monitor { NSEvent.removeMonitor(monitor) }
-        monitor = nil
-        if isRecording { model.registerPanelShortcut() }
-        isRecording = false
-        needsModifier = false
-    }
-}
-
 // MARK: - Hidden apps
 
 /// Apps that never get a slice of the battery, with buttons to add and remove them.
@@ -836,62 +853,56 @@ private struct HistoryRows: View {
     }
 }
 
-// MARK: - Percentage style
+// MARK: - Menu bar style
 
-/// Three menu bars side by side, one per percentage style; click one to choose it.
-private struct PercentageStylePicker: View {
+/// Three menu bars side by side, one per icon style, each with the text you chose; click one to choose it.
+private struct MenuBarStylePicker: View {
     let snapshot: BatterySnapshot
     @Bindable var settings: AppSettings
+    let watts: Double?
     @State private var wallpaper = Wallpaper()
 
     var body: some View {
         HStack(spacing: 12) {
-            ForEach(PercentageStyle.allCases) { style in
+            ForEach(MenuBarIconStyle.allCases) { style in
                 Button {
-                    withAnimation(.snappy) { settings.percentageStyle = style }
+                    withAnimation(.snappy) { settings.menuBarIconStyle = style }
                 } label: {
                     VStack(spacing: 8) {
-                        MenuBarSample(snapshot: snapshot, settings: settings, style: style, wallpaper: wallpaper)
+                        MenuBarSample(snapshot: snapshot, settings: settings, style: style, watts: watts, wallpaper: wallpaper)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 9, style: .continuous)
-                                    .strokeBorder(Color.accentColor, lineWidth: settings.percentageStyle == style ? 2.5 : 0)
+                                    .strokeBorder(Color.accentColor, lineWidth: settings.menuBarIconStyle == style ? 2.5 : 0)
                                     .padding(-3)
                             )
                         Text(style.title)
                             .font(.caption)
-                            .foregroundStyle(settings.percentageStyle == style ? .primary : .secondary)
+                            .foregroundStyle(settings.menuBarIconStyle == style ? .primary : .secondary)
                     }
                     .frame(maxWidth: .infinity)
                     .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
-                .accessibilityAddTraits(settings.percentageStyle == style ? .isSelected : [])
+                .accessibilityAddTraits(settings.menuBarIconStyle == style ? .isSelected : [])
             }
         }
         .task { await wallpaper.load() }
     }
 }
 
-/// A slice of menu bar over your own desktop picture, showing the battery in one style.
+/// A slice of menu bar over your own desktop picture, showing the battery in one style, laid out as the menu bar
+/// lays it out.
 private struct MenuBarSample: View {
     let snapshot: BatterySnapshot
     let settings: AppSettings
-    let style: PercentageStyle
+    let style: MenuBarIconStyle
+    let watts: Double?
     let wallpaper: Wallpaper
 
     var body: some View {
-        let icon = BatteryIcon(
-            snapshot: snapshot, percentageStyle: style, usesColor: settings.usesColor, drawsForDarkBar: wallpaper.isDark
-        ).image()
-        HStack(spacing: 4) {
-            if style == .beside {
-                Text(snapshot.level, format: .percent.precision(.fractionLength(0)))
-                    .font(.system(size: 12))
-                    .monospacedDigit()
-            }
-            Image(nsImage: icon)
-                .renderingMode(icon.isTemplate ? .template : .original)
-        }
+        MenuBarItemView(
+            item: MenuBarItem(snapshot: snapshot, settings: settings, style: style, watts: watts, drawsForDarkBar: wallpaper.isDark)
+        )
         .foregroundStyle(wallpaper.isDark ? Color.white : Color.black)
         .frame(maxWidth: .infinity)
         .frame(height: 38)

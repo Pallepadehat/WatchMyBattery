@@ -76,7 +76,9 @@ struct AccessoryCard: View {
                         Text("Connected")
                     }
                 }
-                .lineLimit(1)
+                // A long model ("AirPods 4 with Active Noise Cancellation") gets a second line rather than being cut off.
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
                 .font(.system(size: 11.5))
                 .foregroundStyle(.secondary)
             }

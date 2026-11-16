@@ -74,7 +74,7 @@ struct SettingIcon: View {
             let icon = BatteryIcon(
                 snapshot: BatterySnapshot(
                     percentage: low ? 18 : 100, powerSource: .battery, chargeState: .discharging, timeRemaining: nil),
-                percentageStyle: symbol == Self.batteryWithNumber ? .inside : .hidden, usesColor: false
+                showsPercentageInside: symbol == Self.batteryWithNumber, usesColor: false
             ).image()
             Image(nsImage: icon)
                 .renderingMode(.template)

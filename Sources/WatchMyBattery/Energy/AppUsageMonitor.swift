@@ -20,14 +20,17 @@ final class AppUsageMonitor {
     /// Mac's whole draw, less what every app you could quit uses. `nil` until there's a reading of both.
     private(set) var systemSliceWatts: Double?
 
-    /// The app whose processes the panel lists (its slice was clicked); `nil` for none.
-    var inspectedApp: pid_t? {
+    /// The app whose processes the panel lists (its slice was clicked); `nil` for none. It stays until it's closed or
+    /// the app quits, even once others overtake it and its slice is gone: you asked to look at it.
+    var inspected: AppUsage? {
         didSet {
-            guard inspectedApp != oldValue else { return }
+            guard inspected?.id != oldValue?.id else { return }
             inspectedProcesses = []
             refreshInspected()
         }
     }
+    /// ``inspected``'s process ID.
+    var inspectedApp: pid_t? { inspected?.id }
     /// ``inspectedApp`` and the helpers it started, hungriest first, from the latest sample.
     private(set) var inspectedProcesses: [ProcessEnergy] = []
 
@@ -79,7 +82,7 @@ final class AppUsageMonitor {
     func stop() {
         task?.cancel()
         task = nil
-        inspectedApp = nil
+        inspected = nil
         Task { [sampler] in await sampler.reset() }
     }
 
@@ -110,7 +113,7 @@ final class AppUsageMonitor {
     func forceQuit(_ pid: pid_t) {
         guard let running = NSRunningApplication(processIdentifier: pid) else { return }
         if refusal?.id == pid { refusal = nil }
-        if inspectedApp == pid { inspectedApp = nil }
+        if inspected?.id == pid { inspected = nil }
         quitting[pid] = .now
         apps.removeAll { $0.id == pid }
         if !running.forceTerminate() {
@@ -183,7 +186,7 @@ final class AppUsageMonitor {
 
         /// Shows made-up processes for the inspected app, for previews.
         func preview(inspecting pid: pid_t, processes: [ProcessEnergy]) {
-            inspectedApp = pid
+            inspected = apps.first { $0.id == pid }
             inspectedProcesses = processes
         }
     #endif
@@ -221,8 +224,8 @@ final class AppUsageMonitor {
 
         // Keep the slices still while one is being dragged, so the drag isn't pulled out from under the pointer.
         if Self.differsVisibly(next, from: apps), !DragToQuitController.shared.isDragging { apps = next }
-        // Its slice is gone (it quit, or others overtook it), so its processes go too.
-        if let inspectedApp, !apps.contains(where: { $0.id == inspectedApp }) { self.inspectedApp = nil }
+        // Its card closes when the app has quit, not when others overtake it.
+        if let inspected, NSRunningApplication(processIdentifier: inspected.id)?.isTerminated ?? true { self.inspected = nil }
         if isWarmingUp { isWarmingUp = false }
     }
 

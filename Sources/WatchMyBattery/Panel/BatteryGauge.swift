@@ -16,6 +16,8 @@ struct BatteryGauge: View {
     let usesColor: Bool
     /// Play the charging animation (the setting is on, the panel is open, and it's charging).
     let animatesCharging: Bool
+    /// How a held battery moves: with a heartbeat, or breathing (still water breathes here, as the panel has no liquid).
+    var holdingMotion: HoldingMotionStyle = .breathing
     @Binding var focusedApp: AppUsage?
     /// Quits right away (asking first only if the user wants that): a drag out of the panel.
     let quit: (AppUsage) -> Void
@@ -160,13 +162,13 @@ struct BatteryGauge: View {
         HStack(spacing: 0) {
             ZStack {
                 Rectangle().fill(baseFill)
-                if showsChargingAnimation {
+                if motion == .charging {
                     ChargingWave(color: waveColor, brightens: baseFill != .white)
                         .transition(.opacity)
                 }
                 centerText
             }
-            .chargingAnimation(showsChargingAnimation)
+            .chargingAnimation(motion)
             .frame(width: layout.baseWidth)
 
             let visible: [AppUsage] = layout.pieces.compactMap {
@@ -226,9 +228,15 @@ struct BatteryGauge: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private var showsChargingAnimation: Bool {
-        // Like the menu bar's glint: none in Low Power Mode, where every bit of energy counts.
-        animatesCharging && snapshot.isCharging && !reduceMotion && !snapshot.isLowPowerModeOn
+    /// Like the menu bar's: a wave while charging, a slow breath while plugged in and holding the charge, and nothing
+    /// in Low Power Mode, where every bit of energy counts.
+    private var motion: ChargingMotion? {
+        guard animatesCharging, !reduceMotion, !snapshot.isLowPowerModeOn else { return nil }
+        switch snapshot.chargeState {
+        case .charging: return .charging
+        case .notCharging: return holdingMotion == .heartbeat ? .heartbeat : .breathing
+        case .charged, .discharging: return nil
+        }
     }
 
     /// White light on a dark or green battery; a green wave on a white one, where white light wouldn't show.
@@ -261,7 +269,9 @@ struct BatteryGauge: View {
                     .font(.system(size: 18, weight: .bold))
                     .modifier(ChargingGlow(color: baseFill == .white ? waveColor : .white))
             } else if snapshot.chargeState == .notCharging {
-                Image(systemName: "powerplug.fill").font(.system(size: 17, weight: .semibold))
+                Image(systemName: "powerplug.fill")
+                    .font(.system(size: 17, weight: .semibold))
+                    .modifier(HeldGlyph())
             }
             Text(centerString)
                 .font(.system(size: 24, weight: .semibold))
@@ -298,7 +308,7 @@ struct BatteryGauge: View {
                             .opacity(draggedApp == app.id ? 0 : 1)
                     case .system(let watts):
                         Text(costText(forWatts: watts))
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(.secondary)
                     }
                 }
                 .font(.system(size: 11, weight: .medium))
