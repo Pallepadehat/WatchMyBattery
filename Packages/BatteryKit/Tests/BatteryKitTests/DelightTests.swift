@@ -105,18 +105,27 @@ import Testing
 
     // MARK: - Resting
 
-    @Test func theRestingBreathEasesInAndOut() {
-        #expect(RestingBreath.strength(at: 0) == 0)
-        #expect(RestingBreath.strength(at: 1) < 0.0001)
-        #expect(abs(RestingBreath.strength(at: 0.5) - 1) < 0.0001)
-        // Gentle at the edges: a quarter of the way in, it's only half as bright.
-        #expect(abs(RestingBreath.strength(at: 0.25) - 0.5) < 0.0001)
-        let phases = RestingBreath.phases
-        #expect(phases == phases.sorted())
-        #expect(!phases.contains(0) && !phases.contains(1))
-        // Fewer frames, less often, than the charging glint.
-        let restingRate = Double(phases.count) / (RestingBreath.duration + RestingBreath.rest)
-        #expect(restingRate < Double(ChargingGlint.maximumFrames) / ChargingGlint.sweepDuration / 4)
+    @Test func theRestingShimmerCrossesTheChargeThenGlowsAtItsEdge() {
+        let fill = 18.0
+        let start = RestingShimmer.frame(at: 0, fillWidth: fill)
+        let middle = RestingShimmer.frame(at: 0.35, fillWidth: fill)
+        let arrived = RestingShimmer.frame(at: 0.7, fillWidth: fill)
+        let end = RestingShimmer.frame(at: 1, fillWidth: fill)
+        // It enters from the left, crosses, and leaves past the edge.
+        #expect(start.center < 0 && start.strength == 0)
+        #expect(abs(middle.center - fill / 2) < 0.001 && middle.strength > 0.99)
+        #expect(arrived.center > fill && arrived.strength < 0.001)
+        // The edge lights up as it arrives, and is dark again at the end.
+        #expect(start.glow == 0 && middle.glow == 0)
+        #expect(RestingShimmer.frame(at: 0.75, fillWidth: fill).glow > 0.99)
+        #expect(end.glow < 0.001)
+        // Moving steadily forward, frame by frame.
+        let centers = RestingShimmer.phases.map { RestingShimmer.frame(at: $0, fillWidth: fill).center }
+        #expect(zip(centers, centers.dropFirst()).allSatisfy { $0 <= $1 })
+        // Lighter than the charging glint.
+        let restingRate = Double(RestingShimmer.phases.count) / (RestingShimmer.duration + RestingShimmer.rest)
+        let chargingRate = Double(ChargingGlint.maximumFrames) / (ChargingGlint.sweepDuration + 1.9)
+        #expect(restingRate < chargingRate)
     }
 
     // MARK: - An app's processes

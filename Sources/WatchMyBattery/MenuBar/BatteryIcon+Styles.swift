@@ -47,7 +47,7 @@ extension BatteryIcon {
         if let animationPhase {
             switch chargeState {
             case .charging: drawRingGlint(at: animationPhase, center: center, color: palette.charge, context: context)
-            case .notCharging: drawRingBreath(at: animationPhase, center: center, color: palette.charge)
+            case .notCharging: drawRingShimmer(at: animationPhase, center: center, color: palette.charge, context: context)
             case .charged, .discharging: break
             }
         }
@@ -99,19 +99,39 @@ extension BatteryIcon {
         glow.stroke()
     }
 
-    /// Holding its charge: the end of the charge glows softly, swelling and fading, like the battery's breath.
-    private func drawRingBreath(at phase: Double, center: CGPoint, color: NSColor) {
-        let strength = RestingBreath.strength(at: phase)
-        let length = Double(Self.ringLength)
-        let end = ChargingGlint.fillWidth(bodyWidth: length, level: level)
-        // Brightest at the end of the charge, fading either side of it.
-        let reach = 3 + 2 * strength
+    /// Holding its charge: the battery's shimmer, bent round the ring. A sheen glides along the charge from the top,
+    /// cut out of it, and the end of the charge glows as it arrives.
+    private func drawRingShimmer(at phase: Double, center: CGPoint, color: NSColor, context: CGContext) {
+        let fill = ChargingGlint.fillWidth(bodyWidth: Double(Self.ringLength), level: level)
+        let frame = RestingShimmer.frame(at: phase, fillWidth: fill)
+
+        if frame.strength > 0.01 {
+            context.saveGState()
+            context.setBlendMode(.destinationOut)
+            let segments = 10
+            let start = frame.center - frame.width / 2
+            let step = frame.width / Double(segments)
+            for index in 0..<segments {
+                let from = max(start + Double(index) * step, 0)
+                let to = min(start + Double(index + 1) * step, fill)
+                guard to > from else { continue }
+                let brightness = sin(.pi * (Double(index) + 0.5) / Double(segments))
+                NSColor.black.withAlphaComponent(0.6 * brightness * frame.strength).setStroke()
+                let piece = arc(around: center, from: from, to: to)
+                piece.lineCapStyle = .butt
+                piece.stroke()
+            }
+            context.restoreGState()
+        }
+
+        guard frame.glow > 0.01 else { return }
+        let reach = 2.5 + 3 * frame.glow
         let segments = 8
         for index in 0..<segments {
-            let from = end - reach + 2 * reach * Double(index) / Double(segments)
+            let from = fill - reach + 2 * reach * Double(index) / Double(segments)
             let to = from + 2 * reach / Double(segments)
             let brightness = sin(.pi * (Double(index) + 0.5) / Double(segments))
-            color.withAlphaComponent(0.7 * brightness * strength).setStroke()
+            color.withAlphaComponent(0.8 * brightness * frame.glow).setStroke()
             let piece = arc(around: center, from: from, to: to)
             piece.lineCapStyle = .butt
             piece.stroke()

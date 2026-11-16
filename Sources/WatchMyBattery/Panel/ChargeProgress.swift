@@ -53,7 +53,7 @@ struct ChargeProgressRow: View {
 
             ChargeTrack(
                 level: snapshot.level, target: Double(snapshot.chargeTarget) / 100, isCharging: snapshot.isCharging,
-                tint: tint, animates: animates && snapshot.isCharging
+                tint: tint, animates: animates
             )
             .frame(height: 8)
         }
@@ -98,6 +98,7 @@ struct ChargeTrack: View {
     let target: Double
     let isCharging: Bool
     let tint: Color
+    /// Play its animation: light flowing to the target while charging, the target's glow breathing while holding.
     let animates: Bool
 
     /// The panel's green: this bar, the battery while it charges, and the hours plugged in on the history chart.
@@ -140,13 +141,10 @@ struct ChargeTrack: View {
             }
             .clipShape(.capsule)
             .overlay(alignment: .leading) {
-                // The target: a notch standing just proud of the bar.
+                // The target: a notch standing just proud of the bar, glowing while the charge is held there.
                 if target < 1 {
-                    Capsule()
-                        .fill(.primary)
-                        .frame(width: 2, height: height + 6)
+                    TargetNotch(height: height + 6, tint: tint, glows: !isCharging, breathes: animates && !isCharging)
                         .offset(x: targetX - 1)
-                        .shadow(color: tint.opacity(isCharging ? 0 : 0.6), radius: 3)
                 }
             }
         }
@@ -179,6 +177,33 @@ private struct ChargeFlow: View {
             }
         }
         .allowsHitTesting(false)
+    }
+}
+
+/// Where charging stops. Held there, it glows, and the glow breathes slowly, in time with the panel's battery.
+private struct TargetNotch: View {
+    let height: CGFloat
+    let tint: Color
+    let glows: Bool
+    let breathes: Bool
+
+    var body: some View {
+        if breathes {
+            notch.keyframeAnimator(initialValue: 0.35, repeating: true) { notch, glow in
+                notch.shadow(color: tint.opacity(glow), radius: 2 + 4 * glow)
+            } keyframes: { _ in
+                CubicKeyframe(0.9, duration: ChargingPhase.drift / 2)
+                CubicKeyframe(0.35, duration: ChargingPhase.drift / 2)
+            }
+        } else {
+            notch.shadow(color: tint.opacity(glows ? 0.6 : 0), radius: 3)
+        }
+    }
+
+    private var notch: some View {
+        Capsule()
+            .fill(.primary)
+            .frame(width: 2, height: height)
     }
 }
 

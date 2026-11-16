@@ -3,13 +3,13 @@ import BatteryKit
 
 /// Plays the menu bar icon's animation: a short cycle of frames, then a rest, over and over, for as long as it's
 /// running. Charging, a glint sweeps across the battery towards where it's charging to; plugged in and holding its
-/// charge, a soft breath of light glows at the edge of the charge.
+/// charge, a sheen glides across the charge and its edge glows.
 ///
 /// It's built to cost next to nothing. Every frame makes macOS redraw the
 /// status item and re-snapshot it for each menu bar it shows in, so a cycle
 /// has only the frames it needs (``ChargingGlint`` picks the glint's: fewer
 /// on a fuller battery, where it has less far to go, and none where it
-/// wouldn't show; ``RestingBreath`` has a dozen). Between cycles nothing runs
+/// wouldn't show; ``RestingShimmer`` has 20). Between cycles nothing runs
 /// at all: no timer fires for most of each one. The owner stops it whenever
 /// nobody could see it (displays asleep, another user logged in) or it isn't
 /// wanted (Reduce Motion, Low Power Mode, the setting turned off).
@@ -98,7 +98,7 @@ final class ChargingAnimator {
                 let glint = ChargingGlint(bodyWidth: BatteryIcon.bodyWidth, level: level, target: target)
                 (phases, frameInterval, rest) = (glint.phases, glint.frameInterval, Self.sweepRest)
             case .resting:
-                (phases, frameInterval, rest) = (RestingBreath.phases, RestingBreath.frameInterval, RestingBreath.rest)
+                (phases, frameInterval, rest) = (RestingShimmer.phases, RestingShimmer.frameInterval, RestingShimmer.rest)
             }
         }
 

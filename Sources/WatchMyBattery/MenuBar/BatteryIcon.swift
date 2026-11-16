@@ -18,7 +18,7 @@ struct BatteryIcon: Hashable {
     var isLowPowerModeOn: Bool
     /// The level macOS charges to, 0–1: where the charging glint comes to rest.
     var chargeTarget: Double
-    /// Where the animation is, 0–1: the charging glint's sweep while charging, the resting breath while holding the
+    /// Where the animation is, 0–1: the charging glint's sweep while charging, the resting shimmer while holding the
     /// charge (see ``ChargingAnimator``), or `nil` for a still icon.
     var animationPhase: Double?
     /// Draw for a dark (`true`) or light menu bar, instead of the one being drawn into.
@@ -174,7 +174,7 @@ struct BatteryIcon: Hashable {
             case .charging:
                 drawGlint(at: animationPhase, body: body, bodyPath: bodyPath, fill: fill, terminal: terminal, color: palette.charge, context: context)
             case .notCharging:
-                drawBreath(at: animationPhase, edge: fill.maxX, bodyPath: bodyPath, color: palette.charge, context: context)
+                drawShimmer(at: animationPhase, body: body, bodyPath: bodyPath, fill: fill, color: palette.charge, context: context)
             case .charged, .discharging:
                 break
             }
@@ -285,19 +285,39 @@ struct BatteryIcon: Hashable {
         }
     }
 
-    /// Holding its charge: a soft glow that swells and fades at the edge of the charge, where it's being held.
-    private func drawBreath(at phase: Double, edge: CGFloat, bodyPath: NSBezierPath, color: NSColor, context: CGContext) {
-        let strength = CGFloat(RestingBreath.strength(at: phase))
+    /// Holding its charge: a sheen glides across the charge, then the edge of the charge glows as it arrives, out
+    /// towards where it's held. The sheen is cut out of the charge (only alpha changes), so it reads the same in a
+    /// template icon and a coloured one, on any menu bar. Where it is comes from ``RestingShimmer``.
+    private func drawShimmer(at phase: Double, body: CGRect, bodyPath: NSBezierPath, fill: CGRect, color: NSColor, context: CGContext) {
+        let frame = RestingShimmer.frame(at: phase, fillWidth: Double(fill.width))
+        let space = CGColorSpaceCreateDeviceRGB()
+
+        let strength = CGFloat(frame.strength)
+        if strength > 0.01,
+            let sheen = CGGradient(
+                colorsSpace: space, colors: [0, 0.8, 1, 0.8, 0].map { NSColor.black.withAlphaComponent($0 * 0.6 * strength).cgColor } as CFArray,
+                locations: [0, 0.25, 0.5, 0.75, 1])
+        {
+            let center = fill.minX + CGFloat(frame.center)
+            let half = CGFloat(frame.width) / 2
+            context.saveGState()
+            bodyPath.addClip()
+            context.clip(to: fill)
+            context.setBlendMode(.destinationOut)
+            context.drawLinearGradient(sheen, start: CGPoint(x: center - half, y: 0), end: CGPoint(x: center + half, y: 0), options: [])
+            context.restoreGState()
+        }
+
+        let glow = CGFloat(frame.glow)
         let rgb = color.usingColorSpace(.deviceRGB) ?? color
-        let reach = 3 + 2 * strength
-        guard
-            let glow = CGGradient(
-                colorsSpace: CGColorSpaceCreateDeviceRGB(),
-                colors: [0, 1, 0].map { rgb.withAlphaComponent($0 * 0.75 * strength).cgColor } as CFArray, locations: [0, 0.5, 1])
+        guard glow > 0.01,
+            let light = CGGradient(
+                colorsSpace: space, colors: [0, 1, 0].map { rgb.withAlphaComponent($0 * 0.85 * glow).cgColor } as CFArray, locations: [0, 0.5, 1])
         else { return }
+        let reach = 2.5 + 3 * glow
         context.saveGState()
         bodyPath.addClip()
-        context.drawLinearGradient(glow, start: CGPoint(x: edge - reach, y: 0), end: CGPoint(x: edge + reach, y: 0), options: [])
+        context.drawLinearGradient(light, start: CGPoint(x: fill.maxX - reach, y: 0), end: CGPoint(x: fill.maxX + reach, y: 0), options: [])
         context.restoreGState()
     }
 

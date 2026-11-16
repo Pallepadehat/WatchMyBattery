@@ -4,7 +4,8 @@ import SwiftUI
 enum ChargingMotion: Equatable {
     /// A wave of light rolls across, lighting the bolt as it passes.
     case charging
-    /// A soft light breathes in the middle, around the plug, and fades: nothing flows, it's just held.
+    /// A wide, soft light drifts slowly back and forth across the battery, and the plug glows as it passes: nothing
+    /// flows in, the charge is just held.
     case resting
 }
 
@@ -15,17 +16,17 @@ nonisolated struct ChargingPhase: Equatable, Sendable {
     var wave: Double = 0
     /// How brightly the bolt (or the plug) glows, 0–1. It peaks as the wave reaches the middle.
     var glow: Double = 0
-    /// How strongly the light shows, 0–1: always 1 while charging; the breath while resting.
+    /// How strongly the light shows, 0–1: full while charging, softer while resting.
     var intensity: Double = 1
 
     /// One cycle: a pause, the wave rolling across, the bolt lighting up as it passes.
     static let rest: TimeInterval = 0.6
     static let roll: TimeInterval = 2.0
 
-    /// Resting: a slow breath in and out, then a long pause, timed like the menu bar's (``RestingBreath``).
-    static let breatheIn: TimeInterval = 1.6
-    static let breatheOut: TimeInterval = 1.9
-    static let breathRest: TimeInterval = 2.5
+    /// Resting: the light's drift from one side to the other, and how far towards each edge it goes.
+    static let drift: TimeInterval = 3.4
+    static let driftRange = 0.18...0.82
+    static let restingIntensity = 0.8
 }
 
 private nonisolated struct ChargingPhaseKey: EnvironmentKey {
@@ -72,19 +73,24 @@ private struct ChargingAnimationModifier: ViewModifier {
                 }
             }
         case .resting:
-            // The light stays in the middle, where the plug is, and only breathes.
-            content.keyframeAnimator(initialValue: ChargingPhase(wave: 0.5, intensity: 0), repeating: true) { content, phase in
+            // Eased at each end, like a pendulum; dimmer towards the edges (``ChargingWave`` fades it there), and the
+            // plug glows each time the light passes over it in the middle.
+            let range = ChargingPhase.driftRange
+            content.keyframeAnimator(
+                initialValue: ChargingPhase(wave: range.lowerBound, intensity: ChargingPhase.restingIntensity), repeating: true
+            ) { content, phase in
                 content.environment(\.chargingPhase, phase)
             } keyframes: { _ in
-                KeyframeTrack(\.intensity) {
-                    CubicKeyframe(0.75, duration: ChargingPhase.breatheIn)
-                    CubicKeyframe(0, duration: ChargingPhase.breatheOut)
-                    LinearKeyframe(0, duration: ChargingPhase.breathRest)
+                KeyframeTrack(\.wave) {
+                    CubicKeyframe(range.upperBound, duration: ChargingPhase.drift)
+                    CubicKeyframe(range.lowerBound, duration: ChargingPhase.drift)
                 }
+                // Over the plug on the way across, and again on the way back.
                 KeyframeTrack(\.glow) {
-                    CubicKeyframe(0.55, duration: ChargingPhase.breatheIn)
-                    CubicKeyframe(0, duration: ChargingPhase.breatheOut)
-                    LinearKeyframe(0, duration: ChargingPhase.breathRest)
+                    CubicKeyframe(0.6, duration: ChargingPhase.drift / 2)
+                    CubicKeyframe(0, duration: ChargingPhase.drift / 2)
+                    CubicKeyframe(0.6, duration: ChargingPhase.drift / 2)
+                    CubicKeyframe(0, duration: ChargingPhase.drift / 2)
                 }
             }
         case nil:
