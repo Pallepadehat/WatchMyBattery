@@ -169,9 +169,16 @@ public struct BatteryHistory: Codable, Sendable, Equatable {
             levels.removeFirst(firstKept - 1)
         }
         guard let oldest = samples.first, oldest.date < cutoff else { return }
-        samples.removeFirst(Self.partitionIndex(in: samples) { $0.date < cutoff })
-        // Only samples name apps, so only dropping samples can leave one unused.
-        pruneApps()
+        let dropped = Self.partitionIndex(in: samples) { $0.date < cutoff }
+        // Only samples name apps, so only the apps the dropped samples named can have become unused. Most are still
+        // in a later sample, so looking for just those is far cheaper than gathering every app every sample names.
+        var unused = Array(Set(samples[..<dropped].lazy.flatMap(\.joules.keys)))
+        samples.removeFirst(dropped)
+        for sample in samples {
+            unused.removeAll { sample.joules[$0] != nil }
+            if unused.isEmpty { break }
+        }
+        for key in unused { apps[key] = nil }
     }
 
     /// The index of the first element that isn't `isBefore` the point looked for, in an array in date order. A

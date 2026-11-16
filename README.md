@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/logo.png" width="160" alt="WatchMyBattery icon: the menu bar battery, full, with 100 cut out of it, on a plain white tile">
+  <img src="docs/images/logo.png" width="160" alt="WatchMyBattery icon: the menu bar battery, full, with 100 cut out of it, on a plain white tile">
 </p>
 
 <h1 align="center">WatchMyBattery</h1>
@@ -18,8 +18,8 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/panel-dark.png">
-    <img src="docs/panel-light.png" width="380" alt="The WatchMyBattery panel: 4:50 left, with slices for Xcode (−1:06), Music (−32m) and Safari (−20m), and battery health: Normal, 88%, 564 cycles">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/panel-dark.png">
+    <img src="docs/images/panel-light.png" width="380" alt="The WatchMyBattery panel: 4:50 left, with slices for Xcode (−1:06), Music (−32m) and Safari (−20m), and battery health: Normal, 88%, 564 cycles">
   </picture>
 </p>
 
@@ -62,8 +62,8 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/airpods-card-dark.png">
-    <img src="docs/airpods-card-light.png" width="388" alt="The AirPods card: AirPods Pro, with rings for the left earbud at 82%, the right at 64% and the case at 47%, charging">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/airpods-card-dark.png">
+    <img src="docs/images/airpods-card-light.png" width="388" alt="The AirPods card: AirPods Pro, with rings for the left earbud at 82%, the right at 64% and the case at 47%, charging">
   </picture>
 </p>
 
@@ -100,7 +100,7 @@
 
 ## Languages
 
-English and Danish. WatchMyBattery follows your Mac's language; to pick one just for it, use **Settings › General › Language**. Translations are welcome: see [CONTRIBUTING](CONTRIBUTING.md#translations).
+English and Danish. WatchMyBattery follows your Mac's language; to pick one just for it, use **Settings › General › Language**. Translations are welcome: see [CONTRIBUTING](.github/CONTRIBUTING.md#translations).
 
 ## Install
 
@@ -248,13 +248,22 @@ cd Packages/BatteryKit
 swift test
 ```
 
-| Folder | What's inside |
-| --- | --- |
-| [`Packages/BatteryKit`](Packages/BatteryKit) | The testable logic: battery state and health, accessories' batteries, per-app energy, the time estimates, and when to send a low battery notification. |
-| [`WatchMyBattery`](WatchMyBattery) | The app: the menu bar icon and its charging animation, the panel, notifications, settings, updates, and the strings and their translations (`Localizable.xcstrings`). |
-| [`Config`](Config) | Signing settings and `Info.plist` (including Sparkle's feed URL and public key). |
-| [`scripts`](scripts) | Building, packaging and releasing, plus `generate-icon.swift`, which writes the app icon (`WatchMyBattery/AppIcon.icon`, an Icon Composer icon) and logo, and `generate-social-preview.swift`, which draws the GitHub social preview. |
-| [`install.sh`](install.sh) | The one-command installer. |
+### Project structure
+
+```text
+WatchMyBattery
+├── Sources
+│   ├── WatchMyBattery          the app: menu bar icon, panel, AirPods card, settings, notifications
+│   ├── WatchMyBatteryHelper    a tiny root helper that switches Low Power Mode
+│   └── Shared                  the protocol the app and the helper talk over
+├── Packages/BatteryKit         the testable logic, with its unit, integration and benchmark targets
+├── Config                      Info.plist, entitlements and signing settings
+├── scripts                     build, check, package and release, plus the icon and preview generators
+├── docs                        the architecture guide and the README's images
+└── install.sh                  the one-command installer
+```
+
+How the pieces fit together, and where to find each feature, is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Roadmap
 
@@ -262,7 +271,7 @@ What's coming next is in [ROADMAP.md](ROADMAP.md).
 
 ## Contributing
 
-Contributions are very welcome: bug fixes, polish, better estimates, and ideas. Work lands on the `develop` branch through pull requests. Start with [CONTRIBUTING.md](CONTRIBUTING.md), and please follow the [code of conduct](CODE_OF_CONDUCT.md). Security issues go through [private reporting](SECURITY.md).
+Contributions are very welcome: bug fixes, polish, better estimates, and ideas. Work lands on the `develop` branch through pull requests. Start with [CONTRIBUTING.md](.github/CONTRIBUTING.md), and please follow the [code of conduct](.github/CODE_OF_CONDUCT.md). Security issues go through [private reporting](.github/SECURITY.md).
 
 ## License
 

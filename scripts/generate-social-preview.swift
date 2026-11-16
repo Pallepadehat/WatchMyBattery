@@ -1,7 +1,7 @@
 #!/usr/bin/env swift
-// Draws the GitHub social preview, docs/social-preview.png (1280 × 640).
+// Draws the GitHub social preview, docs/images/social-preview.png (1280 × 640).
 //
-//   swift scripts/generate-icon.swift            # first: the preview uses docs/logo.png
+//   swift scripts/generate-icon.swift            # first: the preview uses docs/images/logo.png
 //   swift scripts/generate-social-preview.swift
 //
 // Minimal, like an Apple product page: a soft light-grey backdrop, a slice of menu bar along the top with the app's
@@ -96,7 +96,7 @@ text("Tue 10 Nov  13.24", barText, gray(0.11), x: size.width - 40 - 166, y: base
 battery(at: CGPoint(x: size.width - 40 - 166 - 74, y: size.height - barHeight / 2 - 10.5), height: 21, level: 0.64, percentage: 64, in: context)
 
 // The icon, the name, the line.
-if let logo = NSImage(contentsOf: root.appending(path: "docs/logo.png"))?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+if let logo = NSImage(contentsOf: root.appending(path: "docs/images/logo.png"))?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
     context.interpolationQuality = .high
     context.draw(logo, in: CGRect(x: size.width / 2 - 110, y: 300, width: 220, height: 220))
 }
@@ -105,5 +105,5 @@ text("Your battery, and who's draining it.", font(32, .regular), gray(0.43), x: 
 
 let image = context.makeImage()!
 try NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])!
-    .write(to: root.appending(path: "docs/social-preview.png"))
-print("Wrote docs/social-preview.png")
+    .write(to: root.appending(path: "docs/images/social-preview.png"))
+print("Wrote docs/images/social-preview.png")

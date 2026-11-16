@@ -5,9 +5,9 @@
 //
 // The icon is the app's menu bar battery, full, with "100" cut out of it, on a plain tile. Nothing else.
 //
-// It's written as an Icon Composer icon, WatchMyBattery/AppIcon.icon: one layer (the battery) over the system's
+// It's written as an Icon Composer icon, Sources/WatchMyBattery/Resources/AppIcon.icon: one layer (the battery) over the system's
 // white fill. macOS draws the tile, its shape and shadow, and makes the dark, clear and tinted versions itself:
-// black battery on white in light mode, white on dark in dark mode. docs/logo.png is a flat 1024 px rendering of the
+// black battery on white in light mode, white on dark in dark mode. docs/images/logo.png is a flat 1024 px rendering of the
 // light version for the README. Coordinates are Core Graphics' own: origin bottom left.
 
 import AppKit
@@ -121,7 +121,7 @@ func pngData(_ image: CGImage) -> Data {
 }
 
 let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-let iconFile = root.appending(path: "WatchMyBattery/AppIcon.icon")
+let iconFile = root.appending(path: "Sources/WatchMyBattery/Resources/AppIcon.icon")
 try FileManager.default.createDirectory(at: iconFile.appending(path: "Assets"), withIntermediateDirectories: true)
 
 // The layer: the battery alone on a transparent 1024 canvas, sized for Icon Composer's full-bleed tile.
@@ -171,5 +171,5 @@ let logo = render { context in
     drawTile(in: context)
     drawBattery(in: context)
 }
-try pngData(logo).write(to: root.appending(path: "docs/logo.png"))
-print("Wrote WatchMyBattery/AppIcon.icon and docs/logo.png")
+try pngData(logo).write(to: root.appending(path: "docs/images/logo.png"))
+print("Wrote Sources/WatchMyBattery/Resources/AppIcon.icon and docs/images/logo.png")

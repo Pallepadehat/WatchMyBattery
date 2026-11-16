@@ -95,6 +95,20 @@ struct HistoryStoreTests {
         #expect(try HistoryStore(url: url).isEmpty)
     }
 
+    /// The app saves every few minutes, so clearing usually comes with readings not yet written: they go too.
+    @Test func clearingDropsWhatWasntSavedYet() throws {
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let store = try HistoryStore(url: url)
+        try recordDay(into: store)
+        let now = Date()
+        store.record(snapshot(12, pluggedIn: false), at: now)
+        store.record(joules: [apps[3]: 40], seconds: 300, systemWatts: 9, at: now)
+        #expect(store.hasUnsavedChanges)
+        store.removeAll()
+        try store.save()
+        #expect(try HistoryStore(url: url).isEmpty)
+    }
+
     /// The app starts again from the current level straight after clearing, and records on from there.
     @Test func recordingCarriesOnAfterClearing() throws {
         defer { try? FileManager.default.removeItem(at: folder) }

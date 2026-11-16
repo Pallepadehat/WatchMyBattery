@@ -57,7 +57,7 @@ step() {  # step <name> <command…>: runs it, keeps its output in build/check, 
   return $code
 }
 
-lint() { swift format lint --strict -r WatchMyBattery WatchMyBatteryHelper Shared Packages/BatteryKit scripts; }
+lint() { swift format lint --strict -r Sources Packages/BatteryKit scripts; }
 tests() { (cd Packages/BatteryKit && swift test); }
 benchmarks() {
   (cd Packages/BatteryKit && swift build -c release --product BatteryKitBenchmarks -q &&

@@ -123,6 +123,12 @@ Released. See the [changelog](CHANGELOG.md).
 - [x] Hide the Display & System slice from the battery, right from its menu
 - [x] Settings, opened from the menu bar icon's menu, comes to the front
 
+## 0.3.3: fits every screen ✅
+
+- [x] The panel stops above the Dock on shorter screens, and its middle scrolls, with a chevron that shows there's more
+- [x] What's new in the update window, from the changelog
+- [x] A cleanup across the code: fixes, less duplication, and less work while idle
+
 ## 0.4.0: delight
 
 **Charging**
