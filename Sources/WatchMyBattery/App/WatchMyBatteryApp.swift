@@ -45,6 +45,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
                 return
             }
+            if CommandLine.arguments.contains("--show-onboarding") {
+                model.openOnboarding()
+                return
+            }
             if CommandLine.arguments.contains("--show-accessory-card") {
                 // `--show-accessory-card` slides in the card for the first headphones (add `--pretend-accessories` for made-up ones).
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
@@ -60,9 +64,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.statusItem?.showPanel() }
             return
         }
-        if !model.settings.hasSeenWelcome {
-            model.settings.hasSeenWelcome = true
-            statusItem?.showPanel()
+        if !model.settings.hasCompletedOnboarding {
+            // Once the menu bar has placed the icon, so the panel it opens at the end lines up under it.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.model.openOnboarding() }
         }
     }
 

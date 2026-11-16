@@ -44,6 +44,7 @@ Everything is in `Sources/WatchMyBattery`. The Xcode project uses synchronized f
 | `Notifications` | `LowBatteryNotifier`: every notification the app sends, and their buttons. |
 | `Accessories` | AirPods, Magic accessories, iPhone and iPad: `AccessoryMonitor`, their rows in the panel, and the AirPods card that slides in when they connect. |
 | `MenuBar` | The status item, `MenuBarItem` (the icon and text it shows, shared with Settings), the icon in its three styles (`BatteryIcon`, `BatteryIcon+Styles`) and its charging animation, the keyboard shortcut, and the panel's window (`BatteryPanelController`). |
+| `Onboarding` | The welcome tour: its opening animation (`OnboardingIntro`), the steps (`OnboardingView`), and its window. Shown once, and from Settings › General. |
 | `Panel` | What the panel shows: `BatteryPanelView` lays it out, with the gauge, the rows and the sections around it. `DragToQuit` is pulling an app out of the battery to quit it. |
 | `Settings` | `AppSettings` (every preference, in `UserDefaults`), the Settings window, and its panes. |
 | `Intents` | The Shortcuts actions. |

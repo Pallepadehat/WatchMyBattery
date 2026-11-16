@@ -394,8 +394,10 @@ final class AppSettings {
         didSet { defaults.set(showsReplaceTip, forKey: Key.showsReplaceTip) }
     }
 
-    var hasSeenWelcome: Bool {
-        didSet { defaults.set(hasSeenWelcome, forKey: Key.hasSeenWelcome) }
+    /// The welcome tour has been through (or closed). It's shown once, to everyone, from 0.4.0 on: updating from 0.3
+    /// too, as the menu bar's settings changed.
+    var hasCompletedOnboarding: Bool {
+        didSet { defaults.set(hasCompletedOnboarding, forKey: Key.hasCompletedOnboarding) }
     }
 
     /// A key combination that opens and closes the panel from any app; `nil` for none.
@@ -428,8 +430,8 @@ final class AppSettings {
         }
         defaults.removePersistentDomain(forName: LaunchOptions.isolatedDefaultsDomain)
         let settings = AppSettings(defaults: defaults)
-        // The welcome panel would open on every isolated run; `--show-panel` opens it when it's wanted.
-        settings.hasSeenWelcome = true
+        // The welcome tour would open on every isolated run; `--show-onboarding` opens it when it's wanted.
+        settings.hasCompletedOnboarding = true
         return settings
     }
 
@@ -464,7 +466,7 @@ final class AppSettings {
             Key.notifiesWhenAccessoryLow: false,
             Key.accessoryLowBatteryLevel: 20,
             Key.showsReplaceTip: true,
-            Key.hasSeenWelcome: false,
+            Key.hasCompletedOnboarding: false,
             Key.showsSystemSlice: true,
             Key.showsBatteryReadings: true,
             Key.showsChargeLimit: true,
@@ -529,7 +531,7 @@ final class AppSettings {
         historyRetention = HistoryRetention(rawValue: defaults.integer(forKey: Key.historyRetention)) ?? .twoWeeks
         showsDevices = defaults.bool(forKey: Key.showsDevices)
         showsReplaceTip = defaults.bool(forKey: Key.showsReplaceTip)
-        hasSeenWelcome = defaults.bool(forKey: Key.hasSeenWelcome)
+        hasCompletedOnboarding = defaults.bool(forKey: Key.hasCompletedOnboarding)
         panelShortcut = defaults.data(forKey: Key.panelShortcut).flatMap { try? JSONDecoder().decode(Hotkey.self, from: $0) }
 
         if legacyStyle != nil {
@@ -585,7 +587,7 @@ final class AppSettings {
         static let notifiesWhenAccessoryLow = "notifiesWhenAccessoryLow"
         static let accessoryLowBatteryLevel = "accessoryLowBatteryLevel"
         static let showsReplaceTip = "showsReplaceTip"
-        static let hasSeenWelcome = "hasSeenWelcome"
+        static let hasCompletedOnboarding = "hasCompletedOnboarding"
         static let panelShortcut = "panelShortcut"
         static let showsSystemSlice = "showsSystemSlice"
         static let showsBatteryReadings = "showsBatteryReadings"

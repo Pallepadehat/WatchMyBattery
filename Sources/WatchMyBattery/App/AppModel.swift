@@ -55,6 +55,7 @@ final class AppModel {
     }
 
     @ObservationIgnored private lazy var settingsWindow = SettingsWindowController(model: self)
+    @ObservationIgnored private lazy var onboardingWindow = OnboardingWindowController(model: self)
 
     func start() {
         battery.start()
@@ -107,8 +108,7 @@ final class AppModel {
         usage.start()
         battery.refreshHealthIfNeeded()
         insights.refresh()
-        let shown = Self.readBuiltInBatteryShown()
-        if shown != isBuiltInBatteryShown { isBuiltInBatteryShown = shown }
+        refreshBuiltInBatteryShown()
         accessories.includesDevices = settings.showsDevices
         accessories.refresh()
         chargeLimit.refresh()
@@ -150,6 +150,17 @@ final class AppModel {
     /// The app is quitting: save what's left to save.
     func stop() {
         history.flush()
+    }
+
+    /// The welcome tour: on first launch, and from Settings › General.
+    func openOnboarding() {
+        onboardingWindow.show()
+    }
+
+    /// Whether macOS's own battery is in the menu bar too: read when the panel opens, and by the welcome tour.
+    func refreshBuiltInBatteryShown() {
+        let shown = Self.readBuiltInBatteryShown()
+        if shown != isBuiltInBatteryShown { isBuiltInBatteryShown = shown }
     }
 
     func openSettings(_ pane: SettingsPane? = nil) {

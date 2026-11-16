@@ -25,6 +25,8 @@
 
 ## Features
 
+**A welcome tour** that walks you through the menu bar, the animations, the panel and notifications, with a live preview of each choice.
+
 **A better battery icon**
 - Drains as your battery drains, just like the built-in one, and sits where it does.
 - Three styles: the **battery**, a **ring** that fills as it charges, or **text only**.
