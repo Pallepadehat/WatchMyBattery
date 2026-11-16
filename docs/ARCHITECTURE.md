@@ -35,7 +35,7 @@ Everything is in `Sources/WatchMyBattery`. The Xcode project uses synchronized f
 
 | Folder | What's in it |
 | --- | --- |
-| `App` | The entry point and app delegate (`WatchMyBatteryApp`), `AppModel`, and `Updater` (Sparkle). |
+| `App` | The entry point and app delegate (`WatchMyBatteryApp`), `AppModel`, `Updater` (Sparkle), and `UsageStats`, Count This Mac's opt-in daily ping to `Server/stats`. |
 | `Battery` | The Mac's own battery: `BatteryMonitor` (level, state, health, readings and the charger), `ChargeLimit`, `LowPowerMode` (which switches it through the helper), `PowerDrawMonitor` for the menu bar's watts, and `ChargingChime`. |
 | `Energy` | The apps using power: `AppUsageMonitor` measures them while the panel is open, quits the one you drag out, and notices when it doesn't quit. `IconTint` picks each app's colour from its icon. |
 | `History` | `HistoryRecorder`: the battery level and the apps' energy over time, stored on disk, for the chart and "Used the most battery". |

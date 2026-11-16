@@ -19,5 +19,10 @@ build/
 # A backed-up Sparkle private key must never be committed (see .github/CONTRIBUTING.md, "Making a release")
 *sparkle-key*.txt
 
+# The install count's deployment: its database ID and Wrangler's local state (see Server/stats/README.md)
+Server/stats/wrangler.toml
+.wrangler/
+Server/stats/.dev.vars
+
 # Agent worktrees
 .claude/worktrees/

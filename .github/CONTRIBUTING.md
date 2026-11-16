@@ -31,6 +31,7 @@ Debug builds understand a few launch arguments (set them in the scheme, or pass 
 | `--reset-onboarding` | Forgets the welcome tour was seen, so it opens as on a first launch. In Debug builds, the menu bar icon's right-click menu also has **Reset Welcome Tour** |
 | `--show-accessory-card` | Slides in the AirPods card for the headphones that are connected (or, with `--pretend-accessories`, the made-up AirPods) |
 | `--isolated <folder>` | Runs without touching the real app: fresh settings of its own, the history in `<folder>`, no updater, no keyboard shortcut. Works in Release builds, for the end-to-end checks. Its panel says "Test copy" |
+| `--send-usage-stats` | Lets a debug build send Count This Mac's daily ping (once it's turned on, and `WMB_USAGE_STATS_HOST` is set in `Config/Local.xcconfig`), which debug builds otherwise never do |
 | `--start-updater` | Turns on Sparkle, which debug builds leave off; add `--check-now` to press Check Now in Settings |
 | `--render-previews <folder>` | Renders the panel (with every charging note), the AirPods card and the menu bar icons in every style to PNG files and quits |
 | `-AppleLanguages '(da)'` | Runs in Danish |

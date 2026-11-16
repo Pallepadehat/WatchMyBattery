@@ -1256,6 +1256,16 @@
         }
       }
     },
+    "Count This Mac" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tæl denne Mac med"
+          }
+        }
+      }
+    },
     "Done" : {
       "localizations" : {
         "da" : {
@@ -1556,6 +1566,26 @@
         }
       }
     },
+    "Once a day, a random ID and the version, so I know how many use it. Nothing else." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Én gang om dagen et tilfældigt id og versionen, så jeg ved, hvor mange der bruger den. Intet andet."
+          }
+        }
+      }
+    },
+    "Once a day, so I know how many Macs run WatchMyBattery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Én gang om dagen, så jeg ved, hvor mange Macs der kører WatchMyBattery."
+          }
+        }
+      }
+    },
     "Open the Panel" : {
       "localizations" : {
         "da" : {
@@ -1566,12 +1596,12 @@
         }
       }
     },
-    "Open the panel from anywhere, and keep WatchMyBattery running." : {
+    "Open the panel from anywhere, keep WatchMyBattery running, and say hi if you like." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Åbn panelet hvor som helst fra, og hold WatchMyBattery kørende."
+            "value" : "Åbn panelet hvor som helst fra, hold WatchMyBattery kørende, og sig hej, hvis du har lyst."
           }
         }
       }
@@ -1652,6 +1682,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Skrevet i batteriet og skåret ud af opladningen, så det kan læses på enhver baggrund."
+          }
+        }
+      }
+    },
+    "Privacy" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privatliv"
           }
         }
       }
@@ -3623,6 +3663,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vælg den i Finders indholdsoversigt. Slå “Vis denne iPhone, når den er på Wi‑Fi” til på fanen Generelt, og klik på Anvend."
+          }
+        }
+      }
+    },
+    "Sends a random ID made on this Mac, the app's version and the macOS version. Nothing about you, your battery or your apps, and the server doesn't keep your IP address. Off until you turn it on; turning it off deletes the ID from the server." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sender et tilfældigt id, der er lavet på denne Mac, appens version og macOS-versionen. Intet om dig, dit batteri eller dine apps, og serveren gemmer ikke din IP-adresse. Slået fra, indtil du slår det til. Når du slår det fra, slettes id'et fra serveren."
           }
         }
       }

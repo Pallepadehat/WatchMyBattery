@@ -19,6 +19,7 @@ final class AppModel {
     let sleep = SleepMonitor()
     let powerDraw = PowerDrawMonitor()
     let chime = ChargingChime()
+    let usageStats = UsageStats()
 
     init(settings: AppSettings = AppSettings(), history: HistoryRecorder? = nil) {
         self.settings = settings
@@ -60,6 +61,7 @@ final class AppModel {
     func start() {
         battery.start()
         updater.start()
+        usageStats.start(settings: settings)
         notifier.start(model: self)
         chime.start(model: self)
         history.start(model: self)
