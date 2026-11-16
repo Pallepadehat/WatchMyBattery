@@ -1586,6 +1586,16 @@
         }
       }
     },
+    "Open the Panel" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbn panelet"
+          }
+        }
+      }
+    },
     "Open the panel from anywhere, and keep WatchMyBattery running." : {
       "localizations" : {
         "da" : {
