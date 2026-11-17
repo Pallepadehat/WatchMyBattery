@@ -185,6 +185,57 @@ enum HistoryRetention: Int, CaseIterable, Identifiable {
     }
 }
 
+/// How far back Settings › History looks. Never further than the history is kept (see ``HistoryRetention``).
+enum HistoryPeriod: Int, CaseIterable, Identifiable {
+    case week = 7
+    case twoWeeks = 14
+    case month = 30
+    case threeMonths = 90
+    case year = 365
+
+    var id: Self { self }
+
+    var title: LocalizedStringResource {
+        switch self {
+        case .week: "7 Days"
+        case .twoWeeks: "14 Days"
+        case .month: "30 Days"
+        case .threeMonths: "3 Months"
+        case .year: "1 Year"
+        }
+    }
+
+    /// "than the month before": what an app's trend is compared with.
+    var before: LocalizedStringResource {
+        switch self {
+        case .week: "than the week before"
+        case .twoWeeks: "than the 2 weeks before"
+        case .month: "than the month before"
+        case .threeMonths: "than the 3 months before"
+        case .year: "than the year before"
+        }
+    }
+
+    /// A bar a day, or a bar a week over a year, so the bars stay wide enough to read.
+    var granularity: UsageReport.Granularity { self == .year ? .week : .day }
+
+    /// The first day in it, ending with today.
+    func start(endingAt now: Date, calendar: Calendar = .current) -> Date {
+        let today = calendar.startOfDay(for: now)
+        return calendar.date(byAdding: .day, value: -(rawValue - 1), to: today) ?? today
+    }
+
+    /// The periods there's history for, kept as long as `retention`.
+    static func available(keeping retention: HistoryRetention) -> [HistoryPeriod] {
+        allCases.filter { $0.rawValue <= retention.rawValue }
+    }
+
+    /// This one, or the longest there's history for.
+    func limited(to retention: HistoryRetention) -> HistoryPeriod {
+        rawValue <= retention.rawValue ? self : Self.available(keeping: retention).last ?? .week
+    }
+}
+
 /// The user's preferences, saved in `UserDefaults` as they change.
 @Observable
 final class AppSettings {
@@ -384,6 +435,11 @@ final class AppSettings {
         didSet { defaults.set(historyRetention.rawValue, forKey: Key.historyRetention) }
     }
 
+    /// How far back Settings › History looks.
+    var historyPeriod: HistoryPeriod {
+        didSet { defaults.set(historyPeriod.rawValue, forKey: Key.historyPeriod) }
+    }
+
     /// iPhones and iPads that trust this Mac show with the accessories.
     var showsDevices: Bool {
         didSet { defaults.set(showsDevices, forKey: Key.showsDevices) }
@@ -495,6 +551,7 @@ final class AppSettings {
             Key.showsSleep: true,
             Key.notifiesAboutSleepDrain: false,
             Key.historyRetention: HistoryRetention.twoWeeks.rawValue,
+            Key.historyPeriod: HistoryPeriod.twoWeeks.rawValue,
             Key.showsDevices: true,
             Key.sharesUsageStats: false,
         ])
@@ -546,6 +603,7 @@ final class AppSettings {
         showsSleep = defaults.bool(forKey: Key.showsSleep)
         notifiesAboutSleepDrain = defaults.bool(forKey: Key.notifiesAboutSleepDrain)
         historyRetention = HistoryRetention(rawValue: defaults.integer(forKey: Key.historyRetention)) ?? .twoWeeks
+        historyPeriod = HistoryPeriod(rawValue: defaults.integer(forKey: Key.historyPeriod)) ?? .twoWeeks
         showsDevices = defaults.bool(forKey: Key.showsDevices)
         showsReplaceTip = defaults.bool(forKey: Key.showsReplaceTip)
         hasCompletedOnboarding = defaults.bool(forKey: Key.hasCompletedOnboarding)
@@ -621,6 +679,7 @@ final class AppSettings {
         static let showsSleep = "showsSleep"
         static let notifiesAboutSleepDrain = "notifiesAboutSleepDrain"
         static let historyRetention = "historyRetention"
+        static let historyPeriod = "historyPeriod"
         static let showsDevices = "showsDevices"
         static let sharesUsageStats = "sharesUsageStats"
         static let usageStatsID = "usageStatsID"

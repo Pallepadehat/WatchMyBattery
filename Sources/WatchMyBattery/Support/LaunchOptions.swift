@@ -39,6 +39,16 @@ nonisolated enum LaunchOptions {
         #endif
     }()
 
+    /// `--pretend-history`: four months of made-up history instead of the real one, kept in memory, for working on
+    /// Settings › History. Debug builds only. With `--isolated`, Settings keeps a year of it, so every period shows.
+    static let pretendsHistory: Bool = {
+        #if DEBUG
+            return CommandLine.arguments.contains("--pretend-history")
+        #else
+            return false
+        #endif
+    }()
+
     private static func value(after flag: String) -> String? {
         let arguments = CommandLine.arguments
         guard let index = arguments.firstIndex(of: flag), arguments.indices.contains(index + 1) else { return nil }

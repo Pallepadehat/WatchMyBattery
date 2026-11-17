@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 
 /// The panes of Settings, in the sidebar.
 enum SettingsPane: String, CaseIterable, Identifiable {
-    case general, menuBar, panel, charging, sleep, accessories, notifications, updates, about
+    case general, menuBar, panel, history, charging, sleep, accessories, notifications, updates, about
 
     var id: Self { self }
 
@@ -14,6 +14,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .general: String(localized: "General")
         case .menuBar: String(localized: "Menu Bar")
         case .panel: String(localized: "Panel")
+        case .history: String(localized: "History")
         case .charging: String(localized: "Charging")
         case .sleep: String(localized: "Sleep")
         case .accessories: String(localized: "Accessories")
@@ -28,6 +29,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .general: "gearshape.fill"
         case .menuBar: "rectangle.topthird.inset.filled"
         case .panel: SettingIcon.battery
+        case .history: "chart.bar.xaxis"
         case .charging: "powerplug.fill"
         case .sleep: "moon.zzz.fill"
         case .accessories: "airpodspro"
@@ -42,6 +44,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .general: .gray
         case .menuBar: .blue
         case .panel: .green
+        case .history: .pink
         case .charging: Color(red: 0.2, green: 0.74, blue: 0.62)
         case .sleep: .purple
         case .accessories: .cyan
@@ -76,6 +79,7 @@ struct SettingsView: View {
                 case .general: GeneralPane(model: model)
                 case .menuBar: MenuBarPane(model: model)
                 case .panel: PanelPane(model: model)
+                case .history: HistoryPane(model: model)
                 case .charging: ChargingPane(model: model)
                 case .sleep: SleepPane(model: model)
                 case .accessories: AccessoriesPane(model: model)
@@ -388,8 +392,6 @@ private struct PanelPane: View {
                     .foregroundStyle(.secondary)
             }
             Section {
-                HistoryRows(model: model)
-                HistoryKeepRows(model: model)
                 Toggle(isOn: $settings.showsInsights) {
                     SettingLabel("Insights", symbol: "lightbulb.fill", color: .yellow) {
                         Text("A line in the panel when the battery won't last through a meeting, the Mac uses more power than usual, or a new app uses a lot.")
@@ -397,7 +399,15 @@ private struct PanelPane: View {
                 }
                 .disabled(!settings.recordsHistory && !settings.warnsBeforeMeetings)
             } header: {
-                Text("History")
+                Text("Insights")
+            } footer: {
+                HStack(spacing: 4) {
+                    Text("Keeping, exporting and clearing the battery history is in")
+                    Button("History") { model.settingsPane = .history }
+                        .buttonStyle(.link)
+                }
+                .font(.callout)
+                .foregroundStyle(.secondary)
             }
         }
     }
@@ -844,7 +854,7 @@ private struct HiddenAppItem: View {
 // MARK: - History
 
 /// Keeping a history on or off, and clearing it.
-private struct HistoryRows: View {
+struct HistoryRows: View {
     let model: AppModel
     @State private var isConfirmingClear = false
 
@@ -853,7 +863,7 @@ private struct HistoryRows: View {
         Toggle(isOn: $settings.recordsHistory) {
             SettingLabel("Battery History", symbol: "chart.xyaxis.line", color: .green) {
                 Text(
-                    "The battery level and the apps that used it over the last 24 hours, and a summary of the last two weeks. Apps are measured every few minutes while on battery, and the history stays on this Mac."
+                    "The battery level and the apps that used it, hour by hour, for as long as you keep it. Apps are measured every few minutes while on battery, and the history stays on this Mac."
                 )
             }
         }

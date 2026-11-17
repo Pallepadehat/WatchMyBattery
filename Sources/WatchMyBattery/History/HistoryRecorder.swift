@@ -21,6 +21,9 @@ import Observation
 final class HistoryRecorder {
     private(set) var history: BatteryHistory
     private(set) var profile: UsageProfile
+    /// Goes up whenever the profile changes, for views that work something out from it once and keep it (Settings ›
+    /// History), rather than comparing whole profiles.
+    private(set) var revision = 0
 
     /// Called after every energy sample, for the insights to take another look.
     @ObservationIgnored var didRecordSample: () -> Void = {}
@@ -43,14 +46,17 @@ final class HistoryRecorder {
         storeURL: URL? = HistoryRecorder.defaultStoreURL, legacyFileURL: URL? = HistoryRecorder.legacyFileURL,
         retention: TimeInterval = UsageProfile.retention
     ) {
-        // A made-up battery shouldn't end up in the real history.
-        let storeURL = LaunchOptions.pretendsCharging ? nil : storeURL
+        // A made-up battery (or history) shouldn't end up in the real history.
+        let storeURL = LaunchOptions.pretendsCharging || LaunchOptions.pretendsHistory ? nil : storeURL
         store = HistoryStore.open(at: storeURL, retention: retention) { error in
             Logger.app.error("Couldn't open the battery history, starting it over: \(error.localizedDescription, privacy: .public)")
         }
         if store.isOnDisk, let legacyFileURL { Self.importLegacy(from: legacyFileURL, into: store) }
         history = store.history
         profile = store.profile
+        #if DEBUG
+            if LaunchOptions.pretendsHistory { (history, profile) = PretendHistory.make() }
+        #endif
     }
 
     /// `~/Library/Application Support/WatchMyBattery/History.store`, or in the folder of an isolated run.
@@ -85,6 +91,8 @@ final class HistoryRecorder {
 
     func start(model: AppModel) {
         self.model = model
+        // A made-up history stays as it was made.
+        guard !LaunchOptions.pretendsHistory else { return }
         observe()
     }
 
@@ -131,8 +139,12 @@ final class HistoryRecorder {
 
     /// Hands the store's latest to observers, only where it changed, so the panel redraws only then.
     private func publish() {
+        guard !LaunchOptions.pretendsHistory else { return }
         if history != store.history { history = store.history }
-        if profile != store.profile { profile = store.profile }
+        if profile != store.profile {
+            profile = store.profile
+            revision += 1
+        }
     }
 
     // MARK: - Watching the battery
@@ -242,6 +254,7 @@ final class HistoryRecorder {
         func preview(_ history: BatteryHistory, profile: UsageProfile = UsageProfile()) {
             self.history = history
             self.profile = profile
+            revision += 1
         }
     #endif
 }

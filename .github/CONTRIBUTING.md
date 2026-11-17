@@ -24,7 +24,8 @@ Debug builds understand a few launch arguments (set them in the scheme, or pass 
 | Flag | What it does |
 | --- | --- |
 | `--show-panel` | Opens the panel right away (Release builds too) |
-| `--show-settings` | Opens Settings; add `--settings-pane updates` (or `general`, `menuBar`, `panel`, `accessories`, `notifications`, `about`) for a pane |
+| `--show-settings` | Opens Settings; add `--settings-pane updates` (or `general`, `menuBar`, `panel`, `history`, `accessories`, `notifications`, `about`) for a pane, and `--history-app com.apple.Safari` (an app's bundle identifier) for that app's page in History |
+| `--pretend-history` | Four months of made-up history, in memory, instead of the real one: for working on the panel's history and Settings › History. With `--isolated`, Settings keeps a year of it so every period shows |
 | `--pretend-charging` | Shows the battery charging at 62% from a 70 W charger, to see the charging animation on a full battery (Release builds only with `--isolated`) |
 | `--pretend-accessories` | Shows AirPods Pro, a Magic Keyboard running low, a Magic Mouse and a charging Magic Trackpad instead of what's connected (Release builds only with `--isolated`) |
 | `--show-onboarding` | Opens the welcome tour; add `--onboarding-step 3` (0 to 5) to open it at a step |

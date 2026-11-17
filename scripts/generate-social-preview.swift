@@ -1,5 +1,4 @@
-#!/usr/bin/env swift
-// Draws the GitHub social preview, docs/images/social-preview.png (1280 × 640).
+#!/usr/bin/env swift  // Draws the GitHub social preview, docs/images/social-preview.png (1280 × 640).
 //
 //   swift scripts/generate-icon.swift            # first: the preview uses docs/images/logo.png
 //   swift scripts/generate-social-preview.swift

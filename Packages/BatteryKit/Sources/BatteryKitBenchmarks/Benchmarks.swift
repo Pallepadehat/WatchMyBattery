@@ -78,6 +78,18 @@ enum Benchmarks {
             let start = Fixtures.now.addingTimeInterval(-10 * 24 * 3600)
             return { blackHole(profile.appEnergy(since: start)) }
         },
+        // Settings' History pane, when it opens or the period changes: a year by the week, and one app over it.
+        Benchmark("report.year", budget: .milliseconds(30)) {
+            let profile = Fixtures.year()
+            let start = Fixtures.now.addingTimeInterval(-365 * 24 * 3600)
+            return { blackHole(profile.report(from: start, to: Fixtures.now, granularity: .week)) }
+        },
+        Benchmark("report.appYear", budget: .milliseconds(40)) {
+            let profile = Fixtures.year()
+            let start = Fixtures.now.addingTimeInterval(-365 * 24 * 3600)
+            let key = profile.appEnergy(since: start).first?.id ?? ""
+            return { blackHole(profile.appReport(for: key, from: start, to: Fixtures.now, granularity: .week)) }
+        },
         Benchmark("insights.usualDrain", budget: .milliseconds(2)) {
             let history = Fixtures.fullDay()
             let profile = Fixtures.twoWeeks()

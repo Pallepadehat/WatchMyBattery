@@ -1,5 +1,4 @@
-#!/usr/bin/env swift
-// Turns one version's section of CHANGELOG.md into the release notes Sparkle shows in its update window.
+#!/usr/bin/env swift  // Turns one version's section of CHANGELOG.md into the release notes Sparkle shows in its update window.
 //
 //   swift scripts/release-notes.swift 0.3.3 < notes.md > build/appcast/WatchMyBattery.html
 //
