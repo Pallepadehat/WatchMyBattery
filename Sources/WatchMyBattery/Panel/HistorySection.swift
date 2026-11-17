@@ -7,7 +7,9 @@ import UniformTypeIdentifiers
 /// The battery's history. Over the last 24 hours: the level with the time
 /// plugged in marked, how long it's been on battery since it was unplugged,
 /// and the apps that used the most of it. Over the last 10 days, like
-/// iPhone's: how much battery each day used, an average day, and the apps.
+/// iPhone's: how much battery each day used, an average day, and the apps;
+/// click a day for its own. Click an app for a closer look, and Settings ›
+/// History has the rest.
 struct HistorySection: View {
     /// The recorder rather than its history, so the history is only read (and the panel only redrawn when it
     /// changes) while the section is open.
@@ -18,9 +20,19 @@ struct HistorySection: View {
     let isVisible: Bool
     @Binding var isExpanded: Bool
     @Binding var range: HistoryRange
+    /// Opens Settings › History, at an app's own history when its key is given.
+    let openHistory: (String?) -> Void
 
     /// A minute is plenty: nothing here changes faster.
     @State private var now = Date()
+    /// A day picked in the ten-day chart, by its start: its numbers and apps instead of the ten days'.
+    @State private var selectedDay: Date? = Self.previewState.day
+    /// The app whose row is open, by its key.
+    @State private var openApp: String? = Self.previewState.app
+
+    /// What the section opens with: nothing picked, except in the preview renderer's pictures of it.
+    @MainActor static var previewState: (day: Date?, app: String?) = (nil, nil)
+    @State private var showsMoreApps = false
 
     private var start: Date { now.addingTimeInterval(-BatteryHistory.retention) }
 
@@ -43,11 +55,24 @@ struct HistorySection: View {
                     case .day: lastDay
                     case .tenDays: lastTenDays
                     }
+
+                    HStack {
+                        Spacer()
+                        Button("All History…") { openHistory(nil) }
+                            .buttonStyle(.link)
+                            .font(.system(size: 11, weight: .medium))
+                            .help("Every app, day by day, for as long as the history is kept, in Settings.")
+                    }
                 }
                 .padding(.top, 6)
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
+        .onChange(of: range) {
+            selectedDay = nil
+            openApp = nil
+        }
+        .onChange(of: selectedDay) { openApp = nil }
         .task(id: isExpanded && isVisible) {
             guard isExpanded, isVisible else { return }
             while !Task.isCancelled {
@@ -69,7 +94,9 @@ extension HistorySection {
             SinceUnpluggedRow(stretch: stretch)
         }
 
-        AppHistoryList(apps: history.appEnergy(since: start), sampledTime: history.sampledTime(since: start))
+        appList(
+            title: "Used the most battery", apps: history.appEnergy(since: start), sampledTime: history.sampledTime(since: start),
+            from: start, to: now, granularity: .hour)
     }
 
     /// Only read while shown, like the day's history, so the panel doesn't redraw for it otherwise.
@@ -77,13 +104,36 @@ extension HistorySection {
         let profile = recorder.profile
         let days = profile.days(10, endingAt: now)
         let since = days.first?.start ?? start
-        DayChart(days: days)
+        DayChart(days: days, usesColor: usesColor, selection: $selectedDay)
 
-        if let average = AverageDay(days) {
-            AverageDayRow(average: average)
+        if let day = days.first(where: { $0.start == selectedDay }) {
+            let end = min(Calendar.current.date(byAdding: .day, value: 1, to: day.start) ?? now, now)
+            let report = profile.report(from: day.start, to: end, granularity: .hour)
+            SelectedDayRow(day: day) { withAnimation(.snappy(duration: 0.25)) { selectedDay = nil } }
+            appList(
+                title: "Used the most on \(day.start.formatted(.dateTime.weekday(.wide)))",
+                apps: report.apps.map { BatteryHistory.AppEnergy(app: $0.app, joules: $0.joules, batteryTime: $0.batteryTime) },
+                sampledTime: report.sampledSeconds, from: day.start, to: end, granularity: .hour)
+        } else {
+            if let average = AverageDay(days) {
+                AverageDayRow(average: average)
+            }
+            appList(
+                title: "Used the most battery", apps: profile.appEnergy(since: since), sampledTime: profile.sampledTime(since: since),
+                from: since, to: now, granularity: .day)
         }
+    }
 
-        AppHistoryList(apps: profile.appEnergy(since: since), sampledTime: profile.sampledTime(since: since))
+    /// The apps, each opening onto its own use over the same time.
+    private func appList(
+        title: LocalizedStringKey, apps: [BatteryHistory.AppEnergy], sampledTime: TimeInterval, from: Date, to: Date,
+        granularity: UsageReport.Granularity
+    ) -> some View {
+        AppHistoryList(title: title, apps: apps, sampledTime: sampledTime, openApp: $openApp, showsMore: $showsMoreApps) { app in
+            AppHistoryPeek(
+                report: recorder.profile.appReport(for: app.id, from: from, to: to, granularity: granularity), app: app.app,
+                more: { openHistory(app.id) })
+        }
     }
 }
 
@@ -219,26 +269,29 @@ private struct LevelChart: View {
 // MARK: - The ten-day chart
 
 /// How much battery each of the last ten days used, a bar a day, like iPhone's Battery settings. A day can use more
-/// than 100% when the Mac was charged in between.
+/// than 100% when the Mac was charged in between. Click a day to see its own apps.
 private struct DayChart: View {
     let days: [UsageProfile.Day]
-
-    @Environment(\.colorScheme) private var colorScheme
+    let usesColor: Bool
+    @Binding var selection: Date?
 
     var body: some View {
         let top = max(100, days.map(\.drained).max() ?? 0)
-        let plain = LevelChart.plainBar
         Chart(days) { day in
             BarMark(x: .value("Day", day.start, unit: .day), y: .value("Used", day.drained), width: .ratio(0.62))
                 .cornerRadius(1.5)
-                .foregroundStyle(plain)
+                .foregroundStyle(color(for: day))
         }
         .chartYScale(domain: 0...top)
         .chartXAxis {
-            AxisMarks(values: days.map(\.start)) { _ in
-                AxisValueLabel(format: .dateTime.weekday(.narrow), centered: true)
-                    .font(.system(size: 10))
-                    .foregroundStyle(Color.secondary)
+            AxisMarks(values: days.map(\.start)) { value in
+                AxisValueLabel(centered: true) {
+                    if let date = value.as(Date.self) {
+                        Text(date, format: .dateTime.weekday(.narrow))
+                            .font(.system(size: 10, weight: date == selection ? .bold : .regular))
+                            .foregroundStyle(date == selection ? Color.primary : Color.secondary)
+                    }
+                }
             }
         }
         .chartYAxis {
@@ -260,17 +313,63 @@ private struct DayChart: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .modifier(PeriodPicking(periods: intervals, selection: $selection))
         .frame(height: 128)
+        .help("Click a day to see the apps that used the most battery that day.")
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Battery used each day, last 10 days")
         .accessibilityValue(accessibilitySummary)
+        .accessibilityHint("Adjust to pick a day and see its apps.")
+    }
+
+    private var intervals: [DateInterval] {
+        days.map { day in
+            DateInterval(start: day.start, end: Calendar.current.date(byAdding: .day, value: 1, to: day.start) ?? day.start.addingTimeInterval(24 * 3600))
+        }
+    }
+
+    /// The picked day stands out; the others step back.
+    private func color(for day: UsageProfile.Day) -> Color {
+        let plain = LevelChart.plainBar
+        guard let selection else { return plain }
+        guard day.start == selection else { return plain.opacity(0.4) }
+        return usesColor ? Color.accentColor : Color.primary.opacity(0.75)
     }
 
     private var accessibilitySummary: String {
         let format = FloatingPointFormatStyle<Double>.Percent().precision(.fractionLength(0))
+        if let day = days.first(where: { $0.start == selection }) {
+            return "\(day.start.formatted(.dateTime.weekday(.wide))) \((Double(day.drained) / 100).formatted(format))"
+        }
         return days.filter { $0.drained > 0 }
             .map { "\($0.start.formatted(.dateTime.weekday(.wide))) \((Double($0.drained) / 100).formatted(format))" }
             .joined(separator: ", ")
+    }
+}
+
+/// "Tuesday 12 Nov  2:10 on battery · 34% used", for the day picked in the chart, with a way back to all ten.
+private struct SelectedDayRow: View {
+    let day: UsageProfile.Day
+    let clear: () -> Void
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text(day.start, format: .dateTime.weekday(.wide).day().month(.abbreviated))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+            Spacer(minLength: 8)
+            Text(details)
+                .monospacedDigit()
+                .lineLimit(1)
+            DismissButton(title: String(localized: "the day"), action: clear)
+                .help("Back to the last 10 days")
+        }
+        .font(.system(size: 12))
+        .accessibilityElement(children: .combine)
+    }
+
+    private var details: String {
+        String(localized: "\(TimeFormat.clock(day.batterySeconds)) on battery · \(HistoryText.points(Double(day.drained))) used")
     }
 }
 
@@ -343,19 +442,36 @@ private struct SinceUnpluggedRow: View {
 
 // MARK: - Apps
 
-/// The apps that used the most battery, with a bar for their share and the battery time it cost.
-private struct AppHistoryList: View {
+/// The apps that used the most battery, with a bar for their share and the battery time it cost. Three to start
+/// with, more on request; click one to open a closer look under it.
+private struct AppHistoryList<Peek: View>: View {
+    let title: LocalizedStringKey
     let apps: [BatteryHistory.AppEnergy]
     /// How much time on battery was measured; with little of it, there's not much to say yet.
     let sampledTime: TimeInterval
+    @Binding var openApp: String?
+    @Binding var showsMore: Bool
+    @ViewBuilder let peek: (BatteryHistory.AppEnergy) -> Peek
 
-    private static let count = 3
+    private static var count: Int { 3 }
+    private static var moreCount: Int { 8 }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text("Used the most battery")
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.secondary)
+            HStack(alignment: .firstTextBaseline) {
+                Text(title)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                Spacer(minLength: 6)
+                if apps.count > Self.count {
+                    Button(showsMore ? "Show Fewer" : "Show More") {
+                        withAnimation(.snappy(duration: 0.3)) { showsMore.toggle() }
+                    }
+                    .buttonStyle(.link)
+                    .font(.system(size: 11, weight: .medium))
+                }
+            }
 
             if apps.isEmpty {
                 Text(
@@ -367,10 +483,22 @@ private struct AppHistoryList: View {
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
             } else {
-                let shown = Array(apps.prefix(Self.count))
+                let shown = Array(apps.prefix(showsMore ? Self.moreCount : Self.count))
                 let most = shown.first?.joules ?? 1
                 ForEach(shown) { app in
-                    AppHistoryRow(app: app, fraction: most > 0 ? app.joules / most : 0)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Button {
+                            withAnimation(.snappy(duration: 0.3)) { openApp = openApp == app.id ? nil : app.id }
+                        } label: {
+                            AppHistoryRow(app: app, fraction: most > 0 ? app.joules / most : 0, isOpen: openApp == app.id)
+                        }
+                        .buttonStyle(.plain)
+                        if openApp == app.id {
+                            peek(app)
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
+                    }
+                    .transition(.opacity)
                 }
             }
         }
@@ -381,6 +509,9 @@ private struct AppHistoryRow: View {
     let app: BatteryHistory.AppEnergy
     /// Its energy compared with the hungriest app's, 0–1.
     let fraction: Double
+    let isOpen: Bool
+
+    @State private var isHovered = false
 
     var body: some View {
         let look = AppLook.of(app.app)
@@ -389,7 +520,7 @@ private struct AppHistoryRow: View {
                 .resizable()
                 .frame(width: 18, height: 18)
             VStack(alignment: .leading, spacing: 2) {
-                HStack(alignment: .firstTextBaseline) {
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(app.app.name)
                         .lineLimit(1)
                     Spacer(minLength: 6)
@@ -398,6 +529,11 @@ private struct AppHistoryRow: View {
                             .monospacedDigit()
                             .foregroundStyle(.secondary)
                     }
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(.tertiary)
+                        .rotationEffect(.degrees(isOpen ? 90 : 0))
+                        .opacity(isOpen || isHovered ? 1 : 0)
                 }
                 .font(.system(size: 12))
                 GeometryReader { proxy in
@@ -408,15 +544,123 @@ private struct AppHistoryRow: View {
                 .frame(height: 3)
             }
         }
+        .contentShape(.rect)
+        .onHover { isHovered = $0 }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(app.app.name)
         .accessibilityValue(cost.map { Text("Cost \($0) of battery") } ?? Text(verbatim: ""))
+        .accessibilityHint(isOpen ? Text("Hides its history.") : Text("Shows its history."))
+        .accessibilityAddTraits(.isButton)
     }
 
-    /// Under a minute rounds away to nothing, so it says so instead.
-    private var cost: String? {
-        guard let time = app.batteryTime else { return nil }
-        return time < 60 ? String(localized: "under 1m") : TimeFormat.compact(time)
+    private var cost: String? { HistoryText.cost(app.batteryTime) }
+}
+
+/// A closer look at one app, under its row: its use over the same time, a line about it, and the way to its full
+/// history in Settings.
+private struct AppHistoryPeek: View {
+    let report: AppUsageReport?
+    let app: BatteryHistory.AppIdentity
+    let more: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            if let report {
+                AppSparkline(report: report, tint: AppLook.of(app).tint)
+            }
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                if let report {
+                    Text(HistoryText.peekFacts(report))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+                Spacer(minLength: 4)
+                Button(action: more) {
+                    HStack(spacing: 2) {
+                        Text("History")
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 8, weight: .bold))
+                    }
+                }
+                .buttonStyle(.link)
+                .fontWeight(.medium)
+                .help("\(app.name)'s battery use, day by day, in Settings.")
+            }
+            .font(.system(size: 11))
+        }
+        .padding(.leading, 25)
+        .padding(.bottom, 4)
+        .accessibilityElement(children: .contain)
+    }
+}
+
+/// An app's use as a small bar chart with no axes: only the shape matters here, and its two ends are named below
+/// it ("24h ago … now", "Mon … Today").
+private struct AppSparkline: View {
+    let report: AppUsageReport
+    let tint: Color
+
+    var body: some View {
+        let values = report.periods.map { $0.batteryTime ?? $0.joules }
+        let top = max(values.max() ?? 0, .leastNonzeroMagnitude)
+        VStack(spacing: 3) {
+            Chart {
+                RuleMark(y: .value("None", 0))
+                    .lineStyle(StrokeStyle(lineWidth: 1))
+                    .foregroundStyle(.quaternary)
+                ForEach(Array(report.periods.enumerated()), id: \.element.id) { index, period in
+                    if values[index] > 0 {
+                        let half = report.granularity == .hour ? 0.33 : 0.27
+                        RectangleMark(
+                            xStart: .value("From", Double(index) - half), xEnd: .value("To", Double(index) + half),
+                            yStart: .value("None", 0), yEnd: .value("Used", max(values[index] / top, 0.06))
+                        )
+                        .cornerRadius(1.5)
+                        .foregroundStyle(tint.gradient)
+                    }
+                }
+            }
+            .chartXScale(domain: -0.5...Double(max(report.periods.count, 1)) - 0.5)
+            .chartYScale(domain: 0...1)
+            .chartXAxis(.hidden)
+            .chartYAxis(.hidden)
+            .frame(height: 30)
+
+            HStack {
+                Text(leadingLabel)
+                Spacer()
+                Text(trailingLabel)
+            }
+            .font(.system(size: 9.5))
+            .foregroundStyle(.tertiary)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("\(report.app.name), battery used over time"))
+    }
+
+    private var leadingLabel: String {
+        guard let first = report.periods.first?.start else { return "" }
+        switch report.granularity {
+        case .hour: return isUpToNow ? String(localized: "24h ago") : first.formatted(date: .omitted, time: .shortened)
+        case .day, .week: return first.formatted(.dateTime.weekday(.abbreviated))
+        }
+    }
+
+    private var trailingLabel: String {
+        guard let last = report.periods.last else { return "" }
+        if isUpToNow { return report.granularity == .hour ? String(localized: "Now") : String(localized: "Today") }
+        return last.end.formatted(date: .omitted, time: .shortened)
+    }
+
+    /// The report runs up to now, rather than being a day picked in the past.
+    private var isUpToNow: Bool { (report.periods.last?.end ?? .distantPast).timeIntervalSinceNow > -5 * 60 }
+}
+
+extension String {
+    /// "18% of what apps used" stays as it is; "on 6 of 10 days" → "On 6 of 10 days", at the start of a line.
+    var capitalizedFirst: String {
+        prefix(1).uppercased() + dropFirst()
     }
 }
 

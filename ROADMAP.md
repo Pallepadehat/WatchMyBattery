@@ -160,6 +160,15 @@ Released. See the [changelog](CHANGELOG.md).
 - [x] Count This Mac: an opt-in, anonymous count of the Macs running WatchMyBattery, in the welcome tour and Settings, sent to a Worker of its own (`Server/stats`) rather than an analytics service
 - [x] Room under the last section in Settings
 
+## 0.4.3: in depth
+
+See the [changelog](CHANGELOG.md).
+
+- [x] Settings › History: battery used each day or week, from 7 days to a year, and every app that used it, ranked
+- [x] A page for each app: battery time, average draw, active days, its trend, and when in the day it's busiest
+- [x] In the panel: click a day in the 10-day chart for its apps, click an app for a closer look, and show more than three
+- [x] Export the apps by day as CSV
+
 ## 0.5.0: everywhere
 
 **Widgets and Shortcuts**

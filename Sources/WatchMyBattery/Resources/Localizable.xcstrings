@@ -1,6 +1,126 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@  %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@  %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@  %2$@"
+          }
+        }
+      }
+    },
+    "%@ %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%@ in all, the most %@ on %@." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ i alt, mest %2$@ %3$@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ in all, the most %2$@ on %3$@."
+          }
+        }
+      }
+    },
+    "%@ of app use" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ af appforbruget"
+          }
+        }
+      }
+    },
+    "%@ of what apps used" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ af det, apps brugte"
+          }
+        }
+      }
+    },
+    "%@ of what apps used · #%lld of %lld" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ af det, apps brugte · nr. %2$lld af %3$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ of what apps used · #%2$lld of %3$lld"
+          }
+        }
+      }
+    },
+    "%@'s battery use, day by day, in Settings." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriforbruget for %@, dag for dag, i Indstillinger."
+          }
+        }
+      }
+    },
+    "%@, battery used over time" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, batteri brugt over tid"
+          }
+        }
+      }
+    },
+    "%lld of %lld days" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld af %2$lld dage"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld days"
+          }
+        }
+      }
+    },
     ", charging" : {
       "localizations" : {
         "da" : {
@@ -335,6 +455,16 @@
         }
       }
     },
+    "14 Days" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "14 dage"
+          }
+        }
+      }
+    },
     "2 Weeks" : {
       "localizations" : {
         "da" : {
@@ -351,6 +481,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "24 timer og 10 dage, og de apps, der brugte mest."
+          }
+        }
+      }
+    },
+    "24h ago" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For 24 t siden"
           }
         }
       }
@@ -381,6 +521,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "24 timer"
+          }
+        }
+      }
+    },
+    "30 Days" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "30 dage"
+          }
+        }
+      }
+    },
+    "7 Days" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7 dage"
           }
         }
       }
@@ -471,6 +631,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Et lille skub på det rigtige tidspunkt. De er alle slået fra, til du slår dem til."
+          }
+        }
+      }
+    },
+    "A row for every hour, or for every app each day, for a spreadsheet. JSON has everything, sleeps included." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En række for hver time, eller for hver app hver dag, til et regneark. JSON har det hele, også dvale."
           }
         }
       }
@@ -585,6 +755,16 @@
         }
       }
     },
+    "About the same" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omtrent det samme"
+          }
+        }
+      }
+    },
     "Accessories" : {
       "localizations" : {
         "da" : {
@@ -615,6 +795,16 @@
         }
       }
     },
+    "Active" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktiv"
+          }
+        }
+      }
+    },
     "Add ⌘, ⌥ or ⌃" : {
       "localizations" : {
         "da" : {
@@ -631,6 +821,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tilføj…"
+          }
+        }
+      }
+    },
+    "Adjust to pick a day and see its apps." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Justér for at vælge en dag og se dens apps."
           }
         }
       }
@@ -706,6 +906,26 @@
         }
       }
     },
+    "All Apps" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle apps"
+          }
+        }
+      }
+    },
+    "All History…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al historik…"
+          }
+        }
+      }
+    },
     "Allow…" : {
       "localizations" : {
         "da" : {
@@ -776,6 +996,26 @@
         }
       }
     },
+    "Apps by Day (CSV)…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps pr. dag (CSV)…"
+          }
+        }
+      }
+    },
+    "Apps show up here once they've been measured on battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps vises her, når de er blevet målt på batteri."
+          }
+        }
+      }
+    },
     "Apps Shown" : {
       "localizations" : {
         "da" : {
@@ -806,12 +1046,32 @@
         }
       }
     },
+    "Apps · %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps · %@"
+          }
+        }
+      }
+    },
     "Ask Before Quitting" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Spørg før afslutning"
+          }
+        }
+      }
+    },
+    "Average" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gennemsnit"
           }
         }
       }
@@ -826,12 +1086,52 @@
         }
       }
     },
+    "Average Draw" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gennemsnitligt forbrug"
+          }
+        }
+      }
+    },
+    "avg" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "gns."
+          }
+        }
+      }
+    },
     "Back" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tilbage"
+          }
+        }
+      }
+    },
+    "Back to every app (⌘[)" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilbage til alle apps (⌘[)"
+          }
+        }
+      }
+    },
+    "Back to the last 10 days" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilbage til de sidste 10 dage"
           }
         }
       }
@@ -946,12 +1246,72 @@
         }
       }
     },
+    "Battery Time" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteritid"
+          }
+        }
+      }
+    },
+    "Battery time it cost" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteritid, den kostede"
+          }
+        }
+      }
+    },
+    "Battery Use" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriforbrug"
+          }
+        }
+      }
+    },
+    "Battery Used" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteri brugt"
+          }
+        }
+      }
+    },
+    "Battery used each day" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteri brugt hver dag"
+          }
+        }
+      }
+    },
     "Battery used each day, last 10 days" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Batteri brugt hver dag, seneste 10 dage"
+          }
+        }
+      }
+    },
+    "Battery used each week" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteri brugt hver uge"
           }
         }
       }
@@ -1012,6 +1372,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vejrtrækning"
+          }
+        }
+      }
+    },
+    "Busiest around %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Travlest omkring %@"
+          }
+        }
+      }
+    },
+    "Busiest around %@." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Travlest omkring %@."
           }
         }
       }
@@ -1236,12 +1616,52 @@
         }
       }
     },
+    "Chart" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagram"
+          }
+        }
+      }
+    },
     "Chime When Charging Starts or Stops" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lyd, når opladningen starter eller stopper"
+          }
+        }
+      }
+    },
+    "Click a day for its apps." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klik på en dag for at se dens apps."
+          }
+        }
+      }
+    },
+    "Click a day to see the apps that used the most battery that day." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klik på en dag for at se de apps, der brugte mest batteri den dag."
+          }
+        }
+      }
+    },
+    "Click a week for its apps." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klik på en uge for at se dens apps."
           }
         }
       }
@@ -1266,12 +1686,32 @@
         }
       }
     },
+    "Daily Average" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gennemsnit pr. dag"
+          }
+        }
+      }
+    },
     "Done" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Færdig"
+          }
+        }
+      }
+    },
+    "Down %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ned"
           }
         }
       }
@@ -1296,6 +1736,56 @@
         }
       }
     },
+    "Each Day" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hver dag"
+          }
+        }
+      }
+    },
+    "Each day's battery use shows here, from the first time the Mac runs on battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hver dags batteriforbrug vises her, fra første gang Mac'en kører på batteri."
+          }
+        }
+      }
+    },
+    "Each Week" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hver uge"
+          }
+        }
+      }
+    },
+    "Every app, day by day, for as long as the history is kept, in Settings." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle apps, dag for dag, så længe historikken gemmes, i Indstillinger."
+          }
+        }
+      }
+    },
+    "Everything (JSON)…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Det hele (JSON)…"
+          }
+        }
+      }
+    },
     "Finishing Touches" : {
       "localizations" : {
         "da" : {
@@ -1306,12 +1796,32 @@
         }
       }
     },
+    "First Measured" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Først målt"
+          }
+        }
+      }
+    },
     "Flow" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bølge"
+          }
+        }
+      }
+    },
+    "From" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fra"
           }
         }
       }
@@ -1356,12 +1866,32 @@
         }
       }
     },
+    "Hide from the Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skjul fra batteriet"
+          }
+        }
+      }
+    },
     "Hide macOS's Battery" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Skjul macOS’ batteri"
+          }
+        }
+      }
+    },
+    "Hides its history." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skjuler dens historik."
           }
         }
       }
@@ -1406,6 +1936,16 @@
         }
       }
     },
+    "Hours (CSV)…" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timer (CSV)…"
+          }
+        }
+      }
+    },
     "How charged the battery is." : {
       "localizations" : {
         "da" : {
@@ -1436,6 +1976,16 @@
         }
       }
     },
+    "It never gets a slice in the panel. Its history is still kept." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den får aldrig en del af batteriet i panelet. Dens historik gemmes stadig."
+          }
+        }
+      }
+    },
     "It's %@, so macOS charges more gently until it cools down." : {
       "localizations" : {
         "da" : {
@@ -1452,6 +2002,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Det er %@. macOS holder opladningen tilbage, mens batteriet er så varmt, og fortsætter af sig selv, når det er kølet af."
+          }
+        }
+      }
+    },
+    "Its battery use day by day, in Settings." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dens batteriforbrug dag for dag, i Indstillinger."
           }
         }
       }
@@ -1486,12 +2046,42 @@
         }
       }
     },
+    "Keeping History" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gem historik"
+          }
+        }
+      }
+    },
+    "Keeping, exporting and clearing the battery history is in" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gem, eksportér og ryd batterihistorikken under"
+          }
+        }
+      }
+    },
     "Last Few Percent" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "De sidste procent"
+          }
+        }
+      }
+    },
+    "Last Measured" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sidst målt"
           }
         }
       }
@@ -1526,6 +2116,16 @@
         }
       }
     },
+    "Measured every few minutes on battery. Time is what each app's energy is worth at this Mac's average draw." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Målt med få minutters mellemrum på batteri. Tiden er, hvad hver apps energi svarer til ved Mac'ens gennemsnitlige forbrug."
+          }
+        }
+      }
+    },
     "Most MacBooks already chime when you plug in." : {
       "localizations" : {
         "da" : {
@@ -1546,6 +2146,76 @@
         }
       }
     },
+    "No app used much battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen app brugte meget batteri."
+          }
+        }
+      }
+    },
+    "No hour stands out" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen time skiller sig ud"
+          }
+        }
+      }
+    },
+    "No hour stands out." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen time skiller sig ud."
+          }
+        }
+      }
+    },
+    "Not enough measured before to compare." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der er ikke målt nok før til at sammenligne."
+          }
+        }
+      }
+    },
+    "Not measured at enough times of day yet" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endnu ikke målt på nok tidspunkter af dagen"
+          }
+        }
+      }
+    },
+    "Not measured using the battery in this time" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ikke målt til at bruge batteriet i denne periode"
+          }
+        }
+      }
+    },
+    "not used" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ikke brugt"
+          }
+        }
+      }
+    },
     "Nothing" : {
       "localizations" : {
         "da" : {
@@ -1556,12 +2226,42 @@
         }
       }
     },
+    "Nothing used yet." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intet brugt endnu."
+          }
+        }
+      }
+    },
     "Notifications are off for WatchMyBattery in System Settings." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Notifikationer er slået fra for WatchMyBattery i Systemindstillinger."
+          }
+        }
+      }
+    },
+    "Now" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nu"
+          }
+        }
+      }
+    },
+    "of %lld days" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "af %lld dage"
           }
         }
       }
@@ -1606,12 +2306,32 @@
         }
       }
     },
+    "Opens its history." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbner dens historik."
+          }
+        }
+      }
+    },
     "Or nothing, for just the icon." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eller ingenting, så det kun er symbolet."
+          }
+        }
+      }
+    },
+    "peaks around %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "topper omkring %@"
           }
         }
       }
@@ -1672,6 +2392,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Strømforbrug"
+          }
+        }
+      }
+    },
+    "Power draw through the day" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømforbrug hen over dagen"
           }
         }
       }
@@ -2012,16 +2742,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kunne ikke nå den"
-          }
-        }
-      }
-    },
-    "CSV has a row for every hour. JSON has everything, sleeps included." : {
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CSV har en række for hver time. JSON har det hele, også dvaler."
           }
         }
       }
@@ -2620,16 +3340,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Den er gratis og open source, lavet i min fritid. Hvis den hjælper dit batteri med at holde, hjælper en kop kaffe mig med at gøre den endnu bedre."
-          }
-        }
-      }
-    },
-    "JSON…" : {
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "JSON…"
           }
         }
       }
@@ -3727,12 +4437,42 @@
         }
       }
     },
+    "Show All" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis alle"
+          }
+        }
+      }
+    },
+    "Show All %lld Apps" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis alle %lld apps"
+          }
+        }
+      }
+    },
     "Show Card" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vis kort"
+          }
+        }
+      }
+    },
+    "Show Fewer" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis færre"
           }
         }
       }
@@ -3757,6 +4497,16 @@
         }
       }
     },
+    "Show More" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis flere"
+          }
+        }
+      }
+    },
     "Show Processes" : {
       "localizations" : {
         "da" : {
@@ -3773,6 +4523,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vist"
+          }
+        }
+      }
+    },
+    "Shows its history." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Viser dens historik."
           }
         }
       }
@@ -3897,16 +4657,6 @@
         }
       }
     },
-    "Spreadsheet (CSV)…" : {
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Regneark (CSV)…"
-          }
-        }
-      }
-    },
     "Start" : {
       "localizations" : {
         "da" : {
@@ -3943,6 +4693,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bliver, mens markøren er over det. Klik på det for at åbne panelet."
+          }
+        }
+      }
+    },
+    "Steady" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabil"
           }
         }
       }
@@ -4073,6 +4833,56 @@
         }
       }
     },
+    "than the 2 weeks before" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "end de 2 uger før"
+          }
+        }
+      }
+    },
+    "than the 3 months before" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "end de 3 måneder før"
+          }
+        }
+      }
+    },
+    "than the month before" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "end måneden før"
+          }
+        }
+      }
+    },
+    "than the week before" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "end ugen før"
+          }
+        }
+      }
+    },
+    "than the year before" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "end året før"
+          }
+        }
+      }
+    },
     "The %lld W charger isn't giving enough for your Mac and its battery right now. A more powerful charger helps." : {
       "localizations" : {
         "da" : {
@@ -4173,12 +4983,12 @@
         }
       }
     },
-    "The battery level and the apps that used it over the last 24 hours, and a summary of the last two weeks. Apps are measured every few minutes while on battery, and the history stays on this Mac." : {
+    "The battery level and the apps that used it, hour by hour, for as long as you keep it. Apps are measured every few minutes while on battery, and the history stays on this Mac." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Batteriniveauet og de apps, der brugte det, de seneste 24 timer, og et overblik over de seneste to uger. Apps måles med få minutters mellemrum på batteri, og historikken bliver på denne Mac."
+            "value" : "Batteriniveauet og de apps, der brugte det, time for time, så længe du gemmer det. Apps måles med få minutters mellemrum på batteri, og historikken bliver på denne Mac."
           }
         }
       }
@@ -4283,6 +5093,16 @@
         }
       }
     },
+    "the day" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dagen"
+          }
+        }
+      }
+    },
     "The edge of the charge pulses softly." : {
       "localizations" : {
         "da" : {
@@ -4363,6 +5183,16 @@
         }
       }
     },
+    "There's no history for this app any more." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der er ikke længere nogen historik for denne app."
+          }
+        }
+      }
+    },
     "This Mac doesn't have a battery." : {
       "localizations" : {
         "da" : {
@@ -4373,8 +5203,17 @@
         }
       }
     },
+    "Through the Day" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hen over dagen"
+          }
+        }
+      }
+    },
     "Time" : {
-      "extractionState" : "stale",
       "localizations" : {
         "da" : {
           "stringUnit" : {
@@ -4444,6 +5283,26 @@
         }
       }
     },
+    "To" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Til"
+          }
+        }
+      }
+    },
+    "Today" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I dag"
+          }
+        }
+      }
+    },
     "Top Center" : {
       "localizations" : {
         "da" : {
@@ -4460,6 +5319,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Øverst til højre"
+          }
+        }
+      }
+    },
+    "Total" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I alt"
+          }
+        }
+      }
+    },
+    "Trend" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tendens"
           }
         }
       }
@@ -4625,6 +5504,16 @@
         }
       }
     },
+    "Up %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ op"
+          }
+        }
+      }
+    },
     "Update available" : {
       "localizations" : {
         "da" : {
@@ -4655,12 +5544,52 @@
         }
       }
     },
+    "Used %@ of battery in the last 24 hours" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brugte %@ batteri de sidste 24 timer"
+          }
+        }
+      }
+    },
+    "Used a Day" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brugt pr. dag"
+          }
+        }
+      }
+    },
+    "Used the most at %@." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brugte mest %@."
+          }
+        }
+      }
+    },
     "Used the most battery" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Brugte mest batteri"
+          }
+        }
+      }
+    },
+    "Used the most on %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brugte mest %@"
           }
         }
       }
@@ -4837,6 +5766,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "WatchMyBattery vil slå strømsparetilstand til."
+          }
+        }
+      }
+    },
+    "Watts" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watt"
+          }
+        }
+      }
+    },
+    "Week of %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ugen fra %@"
           }
         }
       }
@@ -5199,6 +6148,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vælg, hvordan batteriet ser ud deroppe, og hvad der står ved siden af."
+          }
+        }
+      }
+    },
+    "· %@ charges" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "· %@ opladninger"
           }
         }
       }

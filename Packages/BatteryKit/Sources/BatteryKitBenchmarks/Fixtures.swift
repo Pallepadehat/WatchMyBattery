@@ -64,6 +64,26 @@ enum Fixtures {
         return profile
     }
 
+    /// A year of hourly summaries, two weeks like ``twoWeeks(endingAt:)`` over and over: the most Settings keeps.
+    static func year(endingAt end: Date = now) -> UsageProfile {
+        let fortnight = twoWeeks(endingAt: end)
+        var hours: [UsageProfile.Hour] = []
+        for round in (0..<27).reversed() {
+            let shift = -Double(round) * 14 * 24 * 3600
+            hours += fortnight.hours.map { hour in
+                var hour = hour
+                hour.start = hour.start.addingTimeInterval(shift)
+                return hour
+            }
+        }
+        let apps = fortnight.apps.mapValues { app in
+            var app = app
+            app.firstSeen = end.addingTimeInterval(-365 * 24 * 3600)
+            return app
+        }
+        return UsageProfile(hours: hours, apps: apps, lastLevel: nil, now: end, retention: 366 * 24 * 3600)
+    }
+
     /// Readings for the power smoother, like a busy Mac's processes, with some coming and going.
     static func powerReadings(count: Int, round: Int) -> [Int32: Double] {
         var readings: [Int32: Double] = [:]

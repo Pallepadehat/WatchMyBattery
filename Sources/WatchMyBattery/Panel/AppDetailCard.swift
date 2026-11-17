@@ -8,6 +8,10 @@ import SwiftUI
 struct AppDetailCard: View {
     let app: AppUsage
     let processes: [ProcessEnergy]
+    /// The battery time it cost over the last 24 hours, from the history; `nil` when it used none, or there's no history.
+    var lastDay: TimeInterval?
+    /// Opens its history in Settings; `nil` without a history.
+    var openHistory: (() -> Void)?
     let quit: () -> Void
     let forceQuit: () -> Void
     let close: () -> Void
@@ -28,6 +32,12 @@ struct AppDetailCard: View {
                     .font(.system(size: 12, weight: .semibold))
                     .lineLimit(1)
                 processList
+                if let lastDay, let cost = HistoryText.cost(lastDay) {
+                    Text("Used \(cost) of battery in the last 24 hours")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 actions
             }
             Spacer(minLength: 0)
@@ -99,6 +109,10 @@ struct AppDetailCard: View {
 
     @ViewBuilder private var showAndQuit: some View {
         Button("Show") { NSRunningApplication(processIdentifier: app.id)?.activate() }
+        if let openHistory {
+            Button("History", action: openHistory)
+                .help("Its battery use day by day, in Settings.")
+        }
         Button("Quit", action: quit)
     }
 

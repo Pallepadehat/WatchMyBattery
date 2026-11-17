@@ -3,15 +3,17 @@ import Foundation
 /// The history, written out for a spreadsheet (CSV) or a script (JSON).
 ///
 /// CSV has one row per hour of the kept history (two weeks, or longer if chosen), which is what a spreadsheet
-/// does well with. JSON has everything: the hours, the last day's level readings and app samples, the sleeps, and
-/// the apps by name.
+/// does well with; the apps' CSV has a row for each app on each day it used the battery. JSON has everything: the
+/// hours, the last day's level readings and app samples, the sleeps, and the apps by name.
 public enum HistoryExport {
     public enum Format: String, Sendable, CaseIterable, Identifiable {
         case csv
+        /// A row for each app on each day.
+        case appsCSV = "apps-csv"
         case json
 
         public var id: Self { self }
-        public var fileExtension: String { rawValue }
+        public var fileExtension: String { self == .json ? "json" : "csv" }
     }
 
     public static func data(
@@ -19,14 +21,15 @@ public enum HistoryExport {
     ) throws -> Data {
         switch format {
         case .csv: Data(csv(profile: profile).utf8)
+        case .appsCSV: Data(appsCSV(profile: profile).utf8)
         case .json: try json(history: history, profile: profile, sleeps: sleeps, now: now)
         }
     }
 
-    /// "WatchMyBattery History 2026-11-13.csv"
+    /// "WatchMyBattery History 2026-11-13.csv", or "WatchMyBattery Apps 2026-11-13.csv"
     public static func suggestedFileName(_ format: Format, now: Date = Date()) -> String {
         let day = now.formatted(.iso8601.year().month().day())
-        return "WatchMyBattery History \(day).\(format.fileExtension)"
+        return "WatchMyBattery \(format == .appsCSV ? "Apps" : "History") \(day).\(format.fileExtension)"
     }
 
     // MARK: - CSV
@@ -52,6 +55,33 @@ public enum HistoryExport {
                 apps,
             ]
             lines.append(fields.map(escaped).joined(separator: ","))
+        }
+        return lines.joined(separator: "\n") + "\n"
+    }
+
+    /// Each app's energy each day, by `calendar`'s days, oldest day first and the hungriest app first within it. The
+    /// share is of what all the apps used that day; battery minutes are at that day's average power draw, when known.
+    public static func appsCSV(profile: UsageProfile, calendar: Calendar = .current) -> String {
+        var lines = [
+            ["day", "app", "bundle_identifier", "energy_wh", "share_percent", "battery_minutes"].joined(separator: ",")
+        ]
+        guard let first = profile.hours.first?.start, let last = profile.hours.last?.start else { return lines[0] + "\n" }
+        let report = profile.report(from: first, to: last.addingTimeInterval(3600), granularity: .day, calendar: calendar)
+        // The day as the calendar has it, not as it is in UTC.
+        let dayFormat = Date.ISO8601FormatStyle(timeZone: calendar.timeZone).year().month().day()
+        for period in report.periods where period.appJoules > 0 {
+            let day = profile.report(from: period.start, to: period.end, granularity: .day, calendar: calendar)
+            for app in day.apps {
+                let fields = [
+                    period.start.formatted(dayFormat),
+                    app.app.name,
+                    app.app.bundleIdentifier ?? "",
+                    number(app.joules / 3600, digits: 3),
+                    number(app.share * 100, digits: 1),
+                    app.batteryTime.map { number($0 / 60, digits: 1) } ?? "",
+                ]
+                lines.append(fields.map(escaped).joined(separator: ","))
+            }
         }
         return lines.joined(separator: "\n") + "\n"
     }

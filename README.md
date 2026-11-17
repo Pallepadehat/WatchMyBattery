@@ -48,11 +48,12 @@
 - Works with the keyboard and VoiceOver too: Tab between slices, Delete to quit one.
 - Hide apps you never want to quit by accident, like Music or your VPN.
 
-**The last 24 hours, and the last 10 days**
+**The last 24 hours, the last 10 days, and the last year**
 - A chart of the battery level over the last day, with the time plugged in marked, like iPhone's Battery settings.
-- Switch to **10 Days** for how much battery each day used, an average day, and the apps that used the most over them.
+- Switch to **10 Days** for how much battery each day used, an average day, and the apps that used the most over them. Click a day for that day's own apps.
 - How long the Mac has been on battery since it was unplugged, and the average drain per hour.
-- The apps that used the most battery, and how much battery time each one cost.
+- The apps that used the most battery, and how much battery time each one cost. Click one for its use hour by hour (or day by day), its share and when it's busiest.
+- 📊 **Settings › History** goes back as far as the history is kept, up to a year: battery used each day (or week), every app ranked, and a page for each app with the battery time it cost, its average draw, the days it ran, when in the day it's busiest, and whether it's using more or less than before.
 - An optional notification when an app keeps using a lot of power for a while, with a button that quits it.
 
 **Insights, at the right moment**
@@ -92,7 +93,7 @@
 - Condition, maximum capacity and cycle count, quietly, under the time.
 - The battery's temperature, voltage and current, from its own controller.
 - Click an app's slice to see the processes behind it, with Quit and Force Quit. Display & System get a slice of their own.
-- Export the history as CSV or JSON, and keep it for up to a year.
+- Export the history as CSV (every hour, or every app each day) or JSON, and keep it for up to a year.
 - An optional notification at the levels you choose, naming the hungriest app, with a button that quits it.
 - A soft glow flows into the battery while it charges, in the menu bar and the panel. Turn it off if you prefer a still icon.
 - Shortcuts actions for the battery level, the time left and the app using the most energy, also in Spotlight.
@@ -175,7 +176,7 @@ The numbers in the panel are **estimates**. They're good at answering "what's ea
 
 **How much power each app is using.** The kernel keeps a running energy counter for every process (`ri_energy_nj` from `proc_pid_rusage`, `RUSAGE_INFO_V6`, in nanojoules). While the panel is open, WatchMyBattery reads it for every process at regular intervals and divides the change by the time between readings, which gives each process's average power over that interval. Processes are grouped by their **responsible app**, so a browser's helper and renderer processes count toward the browser, the same grouping Activity Monitor uses.
 
-**History.** On battery, WatchMyBattery reads the same counters every five minutes. They keep counting in between, so a rare reading still sees all the energy each app used (except apps that opened and quit between two readings). Each app's energy over the last 24 hours, divided by the Mac's average power draw, is the battery time it cost. The battery level is recorded whenever macOS reports a change. Every hour is also summed up (time on battery, battery used, the Mac's power draw and each app's energy), and those summaries are kept for two weeks, for the ten-day chart and the insights. It's all kept with SwiftData in `~/Library/Application Support/WatchMyBattery/History.store`, which only writes what changed: a row for each level change or sample, and the hour it touched.
+**History.** On battery, WatchMyBattery reads the same counters every five minutes. They keep counting in between, so a rare reading still sees all the energy each app used (except apps that opened and quit between two readings). Each app's energy over the last 24 hours, divided by the Mac's average power draw, is the battery time it cost. The battery level is recorded whenever macOS reports a change. Every hour is also summed up (time on battery, battery used, the Mac's power draw and each app's energy), and those summaries are kept for two weeks (or up to a year, if you choose), for the ten-day chart, Settings › History and the insights. An app's trend compares its average draw over all the time measured on battery with the same length of time just before, and only once each has at least two hours measured; under 10% either way is "about the same". Its busiest hour has to be measured for half an hour or more and use at least a third more than the others' average. It's all kept with SwiftData in `~/Library/Application Support/WatchMyBattery/History.store`, which only writes what changed: a row for each level change or sample, and the hour it touched.
 
 **Insights.** *More than usual* compares the Mac's average power draw over the last 45 minutes with the same time of day (give or take an hour) on earlier days, and only once at least five days have readings then. It speaks up at 20% and 1 W more, rounds to the nearest 10%, and names an app only if it accounts for at least half of the difference. *A new app* needs a week of history: an app first seen in the last three days that's among the three hungriest of the last 24 hours, with at least a fifth of their energy. *Charge before your meeting* adds macOS's time left to now, and warns when that's before the end of a meeting starting within the warning time you chose (or already under way). It skips all-day events, ones you've declined and ones marked as free.
 
@@ -213,7 +214,7 @@ So treat **−48m** as "this app is a big reason your battery is draining", not 
 - **Accessories** are read from what macOS already knows about them, without Bluetooth permission and without talking to the devices. Connecting, disconnecting and AirPods' levels changing arrive as notifications. The Magic accessories' levels don't, so while one is connected they're also read every quarter of an hour (and when the panel opens): a handful of IOKit calls.
 - The low battery, runaway app, accessory and insight notifications are off until you turn them on. When the low battery one goes off, apps are measured for two seconds to find the hungriest one.
 - Battery changes arrive as IOPowerSources notifications, so there's no polling timer, and the menu bar icon is redrawn **only when something visible changes**.
-- Processes are sampled every two seconds while the panel is open, and otherwise **only on battery, every five minutes**, for the history. A sample is about a millisecond of CPU time (on a Mac running around 900 processes), so roughly 12 ms an hour. macOS gets a minute's leeway on each one to fold it into other wake-ups. Turn the history off in **Settings › Panel** and the app is idle with the panel closed, as before. The history never leaves your Mac. The insights are worked out from those same samples, with no sampling of their own; the meeting warning is checked when the battery or your calendar changes, and once more when a meeting comes close, never on a timer.
+- Processes are sampled every two seconds while the panel is open, and otherwise **only on battery, every five minutes**, for the history. A sample is about a millisecond of CPU time (on a Mac running around 900 processes), so roughly 12 ms an hour. macOS gets a minute's leeway on each one to fold it into other wake-ups. Turn the history off in **Settings › History** and the app is idle with the panel closed, as before. The history never leaves your Mac. The insights are worked out from those same samples, with no sampling of their own; the meeting warning is checked when the battery or your calendar changes, and once more when a meeting comes close, never on a timer.
 
 ## Settings
 
@@ -223,7 +224,8 @@ Settings is laid out like System Settings, with a pane for each part:
 | --- | --- |
 | General | Open at login, language (System, English or Dansk), shortcuts to hide the built-in battery and to System Settings › Battery, Count This Mac (opt in), and the welcome tour |
 | Menu Bar | The battery, a ring or text only; beside it, the percentage, the time left, the power draw or nothing; the percentage inside the battery; coloured states (red when low, green when charging) or monochrome; the charging animation |
-| Panel | Time remaining or percentage in the centre of the battery, how many apps get a slice, asking before quitting, hidden apps that never get a slice, a Display & System slice, temperature, voltage and current, the battery history (on, off, how long to keep it, export or clear it), and insights in the panel |
+| Panel | Time remaining or percentage in the centre of the battery, how many apps get a slice, asking before quitting, hidden apps that never get a slice, a Display & System slice, temperature, voltage and current, and insights in the panel |
+| History | Battery used each day or week over 7 days to a year, every app that used it, and a page for each app; then the battery history itself: on or off, how long to keep it, export or clear it |
 | Charging | The charge limit (a slider from 80% to 100%), Charge to Full Once, the "when it's charged" notification, a chime when you plug in or unplug (when, and which sound), and the charge limit in the panel |
 | Sleep | Recent sleeps and how much each used, what's keeping the Mac awake now, Wake for Network Access, sleep in the panel, and a notification for heavy drain while asleep |
 | Accessories | The accessories connected now, the AirPods card (on or off, below the menu bar icon, top center or top right, and how long it stays, with a button to try it), accessories in the panel, and your iPhone and iPad (with how to set them up) |
