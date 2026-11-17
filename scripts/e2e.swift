@@ -1,4 +1,5 @@
-#!/usr/bin/env swift  // End-to-end checks of the real app: launches WatchMyBattery.app the way people run it, checks that it works, and  // measures what it costs, with the same counters Activity Monitor reads (CPU time, wake-ups, energy, memory).
+#!/usr/bin/env swift  // End-to-end checks of the real app: launches WatchMyBattery.app the way people run it, checks that it works, and
+// measures what it costs, with the same counters Activity Monitor reads (CPU time, wake-ups, energy, memory).
 //
 //   swift scripts/e2e.swift --app build/E2E/Release/WatchMyBattery.app [--debug-app build/E2E/Debug/WatchMyBattery.app]
 //
