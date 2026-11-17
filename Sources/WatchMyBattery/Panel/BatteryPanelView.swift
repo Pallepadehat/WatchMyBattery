@@ -69,6 +69,14 @@ struct BatteryPanelView: View {
     /// Why charging is paused or slow, when there's something to say.
     private var chargingNote: ChargingNote? { model.chargingNote }
 
+    /// What an app cost the battery over the last day, from the history, for its card: `nil` when it used none.
+    private func lastDayCost(of app: AppUsage) -> TimeInterval? {
+        let key = BatteryHistory.AppIdentity(name: app.name, bundleIdentifier: app.bundleIdentifier).key
+        let history = model.history.history
+        let start = Date().addingTimeInterval(-BatteryHistory.retention)
+        return history.appEnergy(since: start).first { $0.id == key }?.batteryTime
+    }
+
     /// The gauge, the details and the sections: the part that scrolls when the screen is short.
     @ViewBuilder private var scrollingContent: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -100,6 +108,12 @@ struct BatteryPanelView: View {
                 if let app = inspectedApp {
                     AppDetailCard(
                         app: app, processes: model.usage.inspectedProcesses,
+                        lastDay: model.settings.recordsHistory ? lastDayCost(of: app) : nil,
+                        openHistory: model.settings.recordsHistory
+                            ? {
+                                close()
+                                model.openHistory(app: BatteryHistory.AppIdentity(name: app.name, bundleIdentifier: app.bundleIdentifier).key)
+                            } : nil,
                         quit: { quit(app, asking: model.settings.confirmsQuit) },
                         forceQuit: { withAnimation(.snappy) { model.usage.forceQuit(app.id) } },
                         close: { withAnimation(.snappy(duration: 0.3)) { model.usage.inspected = nil } }
@@ -217,7 +231,11 @@ struct BatteryPanelView: View {
                         .padding(.top, 10)
                     HistorySection(
                         recorder: model.history, snapshot: snapshot, usesColor: model.settings.usesColor, isVisible: model.isPanelOpen,
-                        isExpanded: $settings.showsHistory, range: $settings.historyRange
+                        isExpanded: $settings.showsHistory, range: $settings.historyRange,
+                        openHistory: { key in
+                            close()
+                            model.openHistory(app: key)
+                        }
                     )
                     .padding(.horizontal, Self.inset)
                     .padding(.top, 8)

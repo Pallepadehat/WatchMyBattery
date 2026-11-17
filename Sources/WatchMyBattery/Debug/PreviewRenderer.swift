@@ -78,6 +78,9 @@
                 ("slowcharger", BatterySnapshot(percentage: 47, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 3 * 3600)),
                 ("hot", BatterySnapshot(percentage: 62, powerSource: .powerAdapter, chargeState: .notCharging, timeRemaining: nil)),
                 ("nearlyfull", BatterySnapshot(percentage: 97, powerSource: .powerAdapter, chargeState: .notCharging, timeRemaining: nil)),
+                // 0.4.3: an app's history opened in the last day, and a day picked in the last ten.
+                ("historyapp", BatterySnapshot(percentage: 64, powerSource: .battery, chargeState: .discharging, timeRemaining: 4 * 3600 + 50 * 60)),
+                ("historyday", BatterySnapshot(percentage: 64, powerSource: .battery, chargeState: .discharging, timeRemaining: 4 * 3600 + 50 * 60)),
             ]
             /// The charger in each 0.4.0 state, and what the Mac draws from it.
             let chargers: [String: (adapter: PowerAdapter, systemWatts: Double)] = [
@@ -109,6 +112,15 @@
                     let history = sampleHistory(apps: sampleApps.map(\.path), now: snapshot)
                     model.history.preview(history, profile: sampleProfile(history: history))
                     if name == "tendays" { model.settings.historyRange = .tenDays }
+                    HistorySection.previewState = (nil, nil)
+                    if name == "historyapp" || name == "historyday" {
+                        let made = PretendHistory.make(days: 30)
+                        model.history.preview(made.history, profile: made.profile)
+                        let calendar = Calendar.current
+                        let day = calendar.date(byAdding: .day, value: -2, to: calendar.startOfDay(for: Date()))
+                        if name == "historyday" { model.settings.historyRange = .tenDays }
+                        HistorySection.previewState = (name == "historyday" ? day : nil, "com.apple.dt.Xcode")
+                    }
                     if name == "insights" { previewInsights(model.insights, history: history) }
                     if name == "discharging" || name == "charging" || name == "short" { model.accessories.preview(AccessoryMonitor.samples) }
                     if name == "short" {

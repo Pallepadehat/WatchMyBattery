@@ -23,6 +23,10 @@ final class AppModel {
 
     init(settings: AppSettings = AppSettings(), history: HistoryRecorder? = nil) {
         self.settings = settings
+        #if DEBUG
+            // Every period of a made-up history, but never by changing the real app's settings.
+            if LaunchOptions.pretendsHistory, LaunchOptions.isIsolated { settings.historyRetention = .year }
+        #endif
         // Opened with the chosen retention, as opening it already lets go of anything older.
         self.history = history ?? HistoryRecorder(retention: settings.historyRetention.interval)
     }
@@ -39,6 +43,9 @@ final class AppModel {
 
     /// The pane Settings shows.
     var settingsPane: SettingsPane? = .general
+
+    /// An app for Settings › History to open, set from the panel; the pane takes it once it's there.
+    var historyApp: String?
 
     /// The panel is on screen, so its animations may run.
     private(set) var isPanelOpen = false
@@ -140,6 +147,8 @@ final class AppModel {
     /// Keeps the hourly history this long from now on.
     func setHistoryRetention(_ retention: HistoryRetention) {
         settings.historyRetention = retention
+        // Settings › History can't look further back than what's kept.
+        settings.historyPeriod = settings.historyPeriod.limited(to: retention)
         history.setRetention(retention.interval)
     }
 
@@ -177,6 +186,12 @@ final class AppModel {
     func openSettings(_ pane: SettingsPane? = nil) {
         if let pane { settingsPane = pane }
         settingsWindow.show()
+    }
+
+    /// Settings › History, at an app's own history when a key (``BatteryHistory/AppIdentity/key``) is given.
+    func openHistory(app key: String? = nil) {
+        historyApp = key
+        openSettings(.history)
     }
 
     /// System Settings › Battery.

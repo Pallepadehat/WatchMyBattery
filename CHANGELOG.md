@@ -4,6 +4,29 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-11-17
+
+Your history, in depth: every app, every day, as far back as you keep it.
+
+### Added
+
+- 📊 **Settings › History**, a pane of its own. Pick 7 days, 14 days, 30 days, 3 months or a year (as far back as the history is kept) and see:
+  - **The whole period at a glance**: time on battery, battery used (and how many full charges that is), an average day, and how many apps were measured.
+  - **Battery used each day**, or each week over a year. Click a bar for that day's (or week's) own apps.
+  - **Every app that used the battery**, ranked, with its share and the battery time it cost. Not just the top three.
+- 🔍 **A page for each app**: the battery time it cost, its average draw on battery, how many days it ran, and its **trend**, whether it's using more or less than the same length of time before. Then its use day by day, and **through the day**: its power draw at each hour, so you can see when it's busiest. With when it was first and last measured, and a switch to hide it from the battery.
+- 👆 **More history in the panel.**
+  - **Click a day** in the 10-day chart for that day's own apps, and its time on battery and battery used.
+  - **Click an app** under "Used the most battery" for a closer look: its use hour by hour (or day by day), its share of what apps used, how many days it ran and when it's busiest, with a link to its page in Settings.
+  - **Show More** lists up to eight apps instead of three, and **All History…** opens Settings › History.
+  - An app's card (click its slice) says what it used in the last 24 hours, with a **History** button.
+- 📄 **Apps by Day (CSV)**: a new export with a row for each app on each day, with its energy, its share and the battery time it cost, for a spreadsheet.
+
+### Changed
+
+- Keeping, exporting and clearing the history moved from Settings › Panel to Settings › History. Insights stay in Panel.
+- Battery time in the history reads "1h 10m" rather than "1:10", so a long one isn't mistaken for a time of day.
+
 ## [0.4.2] - 2026-11-16
 
 Say hi, if you like.
@@ -285,7 +308,8 @@ The first release.
 - Automatic updates with Sparkle, from EdDSA-signed releases.
 - One-command install, and build, packaging and release scripts.
 
-[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.3...HEAD
+[0.4.3]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.3.3...v0.4.0
