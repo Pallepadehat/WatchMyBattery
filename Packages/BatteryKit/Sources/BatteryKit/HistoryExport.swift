@@ -10,6 +10,8 @@ public enum HistoryExport {
         case csv
         /// A row for each app on each day.
         case appsCSV = "apps-csv"
+        /// A row for each hour of the battery's vitals: temperature, voltage, power.
+        case vitalsCSV = "vitals-csv"
         case json
 
         public var id: Self { self }
@@ -17,11 +19,13 @@ public enum HistoryExport {
     }
 
     public static func data(
-        _ format: Format, history: BatteryHistory, profile: UsageProfile, sleeps: SleepLog, now: Date = Date()
+        _ format: Format, history: BatteryHistory, profile: UsageProfile, sleeps: SleepLog, vitals: BatteryVitals = BatteryVitals(),
+        now: Date = Date()
     ) throws -> Data {
         switch format {
         case .csv: Data(csv(profile: profile).utf8)
         case .appsCSV: Data(appsCSV(profile: profile).utf8)
+        case .vitalsCSV: Data(vitalsCSV(vitals).utf8)
         case .json: try json(history: history, profile: profile, sleeps: sleeps, now: now)
         }
     }
@@ -29,7 +33,42 @@ public enum HistoryExport {
     /// "WatchMyBattery History 2026-11-13.csv", or "WatchMyBattery Apps 2026-11-13.csv"
     public static func suggestedFileName(_ format: Format, now: Date = Date()) -> String {
         let day = now.formatted(.iso8601.year().month().day())
-        return "WatchMyBattery \(format == .appsCSV ? "Apps" : "History") \(day).\(format.fileExtension)"
+        let name =
+            switch format {
+            case .appsCSV: "Apps"
+            case .vitalsCSV: "Battery Vitals"
+            case .csv, .json: "History"
+            }
+        return "WatchMyBattery \(name) \(day).\(format.fileExtension)"
+    }
+
+    /// The vitals' hours, oldest first, then nothing else: health days have a column of their own, on the hour they
+    /// were read in (the first of their day).
+    public static func vitalsCSV(_ vitals: BatteryVitals, calendar: Calendar = .current) -> String {
+        var lines = [
+            [
+                "hour_start", "readings", "temperature_avg_c", "temperature_min_c", "temperature_max_c", "voltage_avg_v", "voltage_min_v",
+                "voltage_max_v", "charging_avg_w", "discharging_avg_w", "mac_draw_avg_w", "mac_draw_max_w", "charger_avg_w", "level_min_percent",
+                "level_max_percent", "plugged_in_percent", "maximum_capacity_percent", "cycle_count",
+            ].joined(separator: ",")
+        ]
+        var healthByDay = Dictionary(vitals.health.map { ($0.day, $0) }, uniquingKeysWith: { _, last in last })
+        func value(_ number: Double?, _ digits: Int) -> String { number.map { Self.number($0, digits: digits) } ?? "" }
+        for hour in vitals.hours {
+            let day = calendar.startOfDay(for: hour.start)
+            let health = healthByDay.removeValue(forKey: day)
+            let fields = [
+                iso(hour.start), String(hour.readings),
+                value(hour.temperature.mean, 1), value(hour.temperature.low, 1), value(hour.temperature.high, 1),
+                value(hour.voltage.mean, 3), value(hour.voltage.low, 3), value(hour.voltage.high, 3),
+                value(hour.charging.mean, 2), value(hour.discharging.mean, 2), value(hour.system.mean, 2), value(hour.system.high, 2),
+                value(hour.charger.mean, 2), value(hour.level.low, 0), value(hour.level.high, 0),
+                value(hour.readings > 0 ? Double(hour.pluggedIn) / Double(hour.readings) * 100 : nil, 0),
+                value(health?.maximumCapacity.map { $0 * 100 }, 1), health?.cycleCount.map(String.init) ?? "",
+            ]
+            lines.append(fields.map(escaped).joined(separator: ","))
+        }
+        return lines.joined(separator: "\n") + "\n"
     }
 
     // MARK: - CSV

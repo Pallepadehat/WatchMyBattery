@@ -4,6 +4,27 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-11-19
+
+The battery's own history: how warm it runs, how deep it goes, what it takes and gives, and how it wears.
+
+### Added
+
+- 🌡️ **Settings › Battery Health**, a pane of its own. The battery right now (temperature, voltage, charging or discharging, maximum capacity and cycles), then its history over 24 hours, 7 days, … up to a year:
+  - **Temperature**: the lowest to the highest each hour, day or week, with the average marked and 38 °C (where charging slows and wear adds up) drawn in. How long it ran warm.
+  - **Charge level**: how low and high it went, the average, and how much of the time it sat on the charger.
+  - **Power**: what the Mac drew, and what came in from the charger, with averages and peaks.
+  - **Voltage**, the same way.
+  - **Health**: maximum capacity and charge cycles day by day, and how much each changed over the period. Kept for good, so you can watch the battery wear over the years.
+  - Hover over any chart for its numbers. **Battery Vitals (CSV)** exports a row an hour.
+- Read every five minutes, plugged in or not, while the history is on; a reading is a few registry reads. Health is read once a day.
+- 🍎 **More of macOS by name**: Bluetooth, AirDrop & Handoff, Notifications, Apple Account, Storage, Printing and Control Center get slices of their own when they're busy.
+
+### Changed
+
+- **System Settings' own icons** for macOS's work: Wi‑Fi & Network, Sound, Security Checks and the new ones now show the icon of their pane in System Settings, in light and dark. Display & System shows the Displays icon, and its card shows an icon beside every process.
+- Settings › History's weekly chart (over a year) scales to weeks that use several charges, instead of cutting them off at 100%.
+
 ## [0.4.4] - 2026-11-19
 
 Better numbers, and more of them: the GPU counts, so do your command-line tools and macOS's own work, and the charger card says what's really going on.
@@ -327,7 +348,8 @@ The first release.
 - Automatic updates with Sparkle, from EdDSA-signed releases.
 - One-command install, and build, packaging and release scripts.
 
-[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.4...HEAD
+[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.5...HEAD
+[0.4.5]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.1...v0.4.2

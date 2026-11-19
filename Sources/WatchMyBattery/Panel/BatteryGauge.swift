@@ -524,9 +524,12 @@ private struct SystemSlice: View {
             Rectangle()
                 .fill(Color.gray.opacity(colorScheme == .dark ? 0.5 : 0.38))
                 .overlay(.white.opacity(isHovered || isInspected ? 0.14 : 0))
-            Image(systemName: "sun.max.fill")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.9))
+            // System Settings' own Displays icon, like the real icons the apps' slices have.
+            Image(nsImage: SystemIcons.displays)
+                .resizable()
+                .interpolation(.high)
+                .frame(width: 24, height: 24)
+                .shadow(color: .black.opacity(0.2), radius: 1, y: 0.5)
                 .scaleEffect(isHovered ? 1.12 : 1)
         }
         .animation(.snappy(duration: 0.2), value: isHovered)

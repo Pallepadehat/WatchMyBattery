@@ -45,6 +45,7 @@
 
         private static func render(to folder: URL) {
             renderOnboarding(to: folder)
+            renderVitals(to: folder)
             let apps = sampleApps.enumerated().map { index, sample in
                 let icon = NSWorkspace.shared.icon(forFile: sample.path)
                 return AppUsage(
@@ -370,6 +371,28 @@
                     id: 2005, name: "postgres", bundleIdentifier: nil, icon: program, tint: ProgramTint.color(for: "postgres"), watts: 0.6,
                     kind: .program, label: "postgres"),
             ]
+        }
+
+        /// Settings › Battery Health, with months of made-up vitals, whole (not scrolled), in dark and light.
+        private static func renderVitals(to folder: URL) {
+            for scheme in [ColorScheme.dark, .light] {
+                for days in [1, 30] {
+                    let model = AppModel(settings: previewSettings(), history: HistoryRecorder(storeURL: nil, legacyFileURL: nil))
+                    model.settings.historyRetention = .year
+                    UserDefaults.standard.set(days, forKey: "vitalsPeriodDays")
+                    model.history.preview(vitals: PretendHistory.makeVitals())
+                    model.battery.preview(
+                        BatterySnapshot(percentage: 81, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 35 * 60),
+                        health: BatteryHealth(condition: .normal, maximumCapacity: 0.94, cycleCount: 296),
+                        readings: BatteryReadings(temperature: 34.2, voltage: 12.71, current: 2.35))
+                    let view = VitalsPane(model: model)
+                        .formStyle(.grouped)
+                        .frame(width: 530, height: 1720)
+                        .environment(\.colorScheme, scheme)
+                    saveInWindow(
+                        view, scheme: scheme, scrolledBy: 0, to: folder.appending(path: "vitals-\(days)d-\(scheme == .dark ? "dark" : "light").png"))
+                }
+            }
         }
 
         private static func renderOnboarding(to folder: URL) {

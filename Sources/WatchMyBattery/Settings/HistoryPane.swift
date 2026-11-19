@@ -226,7 +226,7 @@ private struct PeriodPicker: View {
 // MARK: - Numbers
 
 /// One figure in a ``MetricRow``.
-private struct MetricItem {
+struct MetricItem {
     let title: Text
     let value: String
     var unit: Text?
@@ -236,7 +236,7 @@ private struct MetricItem {
 }
 
 /// A row of figures like Screen Time's: small grey names over large numbers, split by hairlines. No boxes.
-private struct MetricRow: View {
+struct MetricRow: View {
     let metrics: [MetricItem]
 
     var body: some View {
@@ -305,7 +305,7 @@ private struct BatteryUseChart: View {
                     .foregroundStyle(.secondary.opacity(selection == nil ? 1 : 0.35))
             }
         }
-        .chartYScale(domain: 0...max(100, periods.map(\.drained).max() ?? 0))
+        .chartYScale(domain: 0...scale.top)
         .chartXAxis {
             AxisMarks(values: HistoryAxis.dates(periods.map(\.start), granularity: report.granularity)) { _ in
                 AxisValueLabel(
@@ -315,7 +315,7 @@ private struct BatteryUseChart: View {
             }
         }
         .chartYAxis {
-            AxisMarks(position: .trailing, values: [0, 50, 100]) { value in
+            AxisMarks(position: .trailing, values: scale.marks) { value in
                 AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5)).foregroundStyle(.quaternary)
                 AxisValueLabel {
                     if let level = value.as(Int.self) {
@@ -351,6 +351,16 @@ private struct BatteryUseChart: View {
         .accessibilityLabel(report.granularity == .week ? Text("Battery used each week") : Text("Battery used each day"))
         .accessibilityValue(accessibilityValue)
         .accessibilityHint("Adjust to pick a day and see its apps.")
+    }
+
+    /// 0, 50 and 100% for days; for weeks, which use several charges each, a step that keeps three labels apart
+    /// (0, 300, 600%), with the top on a step.
+    private var scale: (top: Int, marks: [Int]) {
+        let most = report.periods.map(\.drained).max() ?? 0
+        guard most > 100 else { return (100, [0, 50, 100]) }
+        let step = [100, 200, 250, 500, 1000, 2000].first { $0 * 2 >= most } ?? 5000
+        let top = Int((Double(most) / Double(step)).rounded(.up)) * step
+        return (top, Array(stride(from: 0, through: top, by: step)))
     }
 
     /// Over the days (or weeks) that used any.

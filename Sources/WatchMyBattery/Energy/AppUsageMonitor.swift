@@ -481,7 +481,7 @@ struct AppInfoCache {
     /// A part of macOS worth a slice of its own (see ``MacOSServices``).
     private static func service(_ pid: pid_t) -> Info? {
         guard let service = MacOSServices.service(forProcessNamed: ProcessName.of(pid)) else { return nil }
-        let icon = NSWorkspace.shared.icon(forFile: service.iconPath)
+        let icon = service.icon
         return Info(
             name: service.name, bundleIdentifier: nil, icon: icon, tint: IconTint.color(of: icon, for: "service:" + service.name),
             kind: .macOS, detail: service.detail)
