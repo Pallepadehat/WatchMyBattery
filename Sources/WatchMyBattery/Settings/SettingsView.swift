@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 
 /// The panes of Settings, in the sidebar.
 enum SettingsPane: String, CaseIterable, Identifiable {
-    case general, menuBar, panel, history, charging, sleep, accessories, notifications, updates, about
+    case general, menuBar, panel, history, vitals, charging, sleep, accessories, notifications, updates, about
 
     var id: Self { self }
 
@@ -15,6 +15,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .menuBar: String(localized: "Menu Bar")
         case .panel: String(localized: "Panel")
         case .history: String(localized: "History")
+        case .vitals: String(localized: "Battery Health")
         case .charging: String(localized: "Charging")
         case .sleep: String(localized: "Sleep")
         case .accessories: String(localized: "Accessories")
@@ -30,6 +31,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .menuBar: "rectangle.topthird.inset.filled"
         case .panel: SettingIcon.battery
         case .history: "chart.bar.xaxis"
+        case .vitals: "heart.text.square.fill"
         case .charging: "powerplug.fill"
         case .sleep: "moon.zzz.fill"
         case .accessories: "airpodspro"
@@ -45,6 +47,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .menuBar: .blue
         case .panel: .green
         case .history: .pink
+        case .vitals: .red
         case .charging: Color(red: 0.2, green: 0.74, blue: 0.62)
         case .sleep: .purple
         case .accessories: .cyan
@@ -80,6 +83,7 @@ struct SettingsView: View {
                 case .menuBar: MenuBarPane(model: model)
                 case .panel: PanelPane(model: model)
                 case .history: HistoryPane(model: model)
+                case .vitals: VitalsPane(model: model)
                 case .charging: ChargingPane(model: model)
                 case .sleep: SleepPane(model: model)
                 case .accessories: AccessoriesPane(model: model)

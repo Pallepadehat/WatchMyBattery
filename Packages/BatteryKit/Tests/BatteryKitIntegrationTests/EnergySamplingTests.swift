@@ -135,3 +135,20 @@ struct OwnershipSystemTests {
         return Array(pids.prefix(Int(max(count, 0))))
     }
 }
+
+/// `ps`, run the way the sampler runs it: every process's CPU time, the kernel's and this one's among them.
+@Suite(.tags(.system))
+struct CPUTimesSystemTests {
+    @Test func readsEveryProcess() throws {
+        let times = try #require(CPUTimes.read())
+        #expect(times.count > 50)
+        #expect(times[1] != nil)  // launchd, root's, which only `ps` (set to run as root) can read
+        #expect(times[getpid()] != nil)
+    }
+
+    @Test func aFailingProgramGivesNothing() {
+        #expect(CPUTimes.run("/usr/bin/false", []) == nil)
+        #expect(CPUTimes.run("/no/such/program", []) == nil)
+        #expect(CPUTimes.run("/bin/echo", ["hi"]).map { String(decoding: $0, as: UTF8.self) } == "hi\n")
+    }
+}

@@ -9,18 +9,54 @@ import Foundation
 /// time is asked for.
 enum CPUTimes {
     /// Seconds of CPU time used by each process since it started; `nil` if `ps` couldn't be run.
+    ///
+    /// Started with `posix_spawn` and read straight from a pipe: Foundation's `Process` costs several times what `ps`
+    /// itself does, in setting up and watching for its end, which adds up every few seconds while the panel's open.
     static func read() -> [pid_t: Double]? {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/bin/ps")
-        process.arguments = ["-A", "-o", "pid=,time="]
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = FileHandle.nullDevice
-        do { try process.run() } catch { return nil }
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        process.waitUntilExit()
-        guard process.terminationStatus == 0 else { return nil }
-        return parse(String(decoding: data, as: UTF8.self))
+        guard let output = run("/bin/ps", ["-A", "-o", "pid=,time="]) else { return nil }
+        return parse(String(decoding: output, as: UTF8.self))
+    }
+
+    /// Runs a program and returns what it wrote, or `nil` if it couldn't be run or failed.
+    static func run(_ path: String, _ arguments: [String]) -> [UInt8]? {
+        var fds: [Int32] = [0, 0]
+        guard pipe(&fds) == 0 else { return nil }
+        let (readEnd, writeEnd) = (fds[0], fds[1])
+        var actions: posix_spawn_file_actions_t?
+        posix_spawn_file_actions_init(&actions)
+        defer { posix_spawn_file_actions_destroy(&actions) }
+        posix_spawn_file_actions_adddup2(&actions, writeEnd, STDOUT_FILENO)
+        posix_spawn_file_actions_addopen(&actions, STDERR_FILENO, "/dev/null", O_WRONLY, 0)
+        posix_spawn_file_actions_addclose(&actions, readEnd)
+        posix_spawn_file_actions_addclose(&actions, writeEnd)
+
+        let argv: [UnsafeMutablePointer<CChar>?] = ([path] + arguments).map { strdup($0) } + [nil]
+        defer { for argument in argv { free(argument) } }
+        var pid: pid_t = 0
+        let spawned = posix_spawn(&pid, path, &actions, nil, argv, nil)
+        close(writeEnd)
+        guard spawned == 0 else {
+            close(readEnd)
+            return nil
+        }
+
+        var output: [UInt8] = []
+        output.reserveCapacity(32_768)
+        var buffer = [UInt8](repeating: 0, count: 16_384)
+        while true {
+            let count = buffer.withUnsafeMutableBytes { Darwin.read(readEnd, $0.baseAddress, $0.count) }
+            if count > 0 {
+                output.append(contentsOf: buffer[..<count])
+            } else if count == 0 || errno != EINTR {
+                break
+            }
+        }
+        close(readEnd)
+
+        var status: Int32 = 0
+        while waitpid(pid, &status, 0) == -1 && errno == EINTR {}
+        // Exited normally (no signal), with 0.
+        return status & 0x7f == 0 && (status >> 8) & 0xff == 0 ? output : nil
     }
 
     /// `ps`'s lines: a process ID and its time, as `[[dd-]hh:]mm:ss.cc`. Separate so it can be tested.

@@ -27,6 +27,9 @@ struct AppDetailCard: View {
                 .resizable()
                 .interpolation(.high)
                 .frame(width: 26, height: 26)
+                .overlay(alignment: .bottomTrailing) {
+                    if app.isCommand { TerminalBadge(size: 13).offset(x: 4, y: 4) }
+                }
             VStack(alignment: .leading, spacing: 6) {
                 VStack(alignment: .leading, spacing: 1) {
                     Text(app.name)
