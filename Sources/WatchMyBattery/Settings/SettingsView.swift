@@ -73,7 +73,11 @@ struct SettingsView: View {
                 .padding(.vertical, 2)
                 .tag(pane)
             }
-            .navigationSplitViewColumnWidth(min: 180, ideal: 190, max: 220)
+            // One width, like System Settings' sidebar: dragging it wider only squeezed the pane, and the window can't
+            // grow to make up for it. Wide enough for the longest name ("Batteriets tilstand" in Danish).
+            .navigationSplitViewColumnWidth(Self.sidebarWidth)
+            // SwiftUI's fixed width can still be dragged; the split view's own limits can't.
+            .background(FixedSidebarWidth(width: Self.sidebarWidth))
             .toolbar(removing: .sidebarToggle)
         } detail: {
             let pane = model.settingsPane ?? .general
@@ -105,6 +109,48 @@ struct SettingsView: View {
 
     /// The window's one size: wide enough for a row and its subtitle, tall enough for most panes without scrolling.
     static let size = CGSize(width: 720, height: 560)
+    static let sidebarWidth: CGFloat = 215
+}
+
+/// Holds the sidebar at one width, as System Settings does: finds the split view the sidebar is in and gives its item
+/// the same minimum and maximum, so the divider can't be dragged.
+private struct FixedSidebarWidth: NSViewRepresentable {
+    let width: CGFloat
+
+    func makeNSView(context: Context) -> Locker {
+        let view = Locker()
+        view.width = width
+        return view
+    }
+
+    func updateNSView(_ view: Locker, context: Context) {
+        view.width = width
+        view.lock()
+    }
+
+    final class Locker: NSView {
+        var width: CGFloat = 0
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            lock()
+            // SwiftUI sets the split view up as the window comes on screen; once more after it has.
+            DispatchQueue.main.async { [weak self] in self?.lock() }
+        }
+
+        func lock() {
+            var ancestor = superview
+            while let current = ancestor, !(current is NSSplitView) { ancestor = current.superview }
+            guard let split = ancestor as? NSSplitView, let controller = split.delegate as? NSSplitViewController,
+                let sidebar = controller.splitViewItems.first, width > 0
+            else { return }
+            guard sidebar.minimumThickness != width || sidebar.maximumThickness != width else { return }
+            sidebar.canCollapse = false
+            sidebar.minimumThickness = width
+            sidebar.maximumThickness = width
+            split.setPosition(width, ofDividerAt: 0)
+        }
+    }
 }
 
 /// Sets the title of the window it's in.

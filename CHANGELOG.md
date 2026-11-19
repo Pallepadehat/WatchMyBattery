@@ -4,7 +4,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
-## [0.4.5] - 2026-11-19
+## [0.4.5] - 2026-11-20
 
 The battery's own history: how warm it runs, how deep it goes, what it takes and gives, and how it wears.
 
@@ -26,11 +26,16 @@ The battery's own history: how warm it runs, how deep it goes, what it takes and
 ### Changed
 
 - 🖥️ **A command run in a terminal shows as an icon, not its name**: the icon of the app it runs in (Visual Studio Code, Ghostty, Terminal…) with a small terminal badge, in its slice and its card.
-
 - **System Settings' own icons** for macOS's work: Wi‑Fi & Network, Sound, Security Checks and the new ones now show the icon of their pane in System Settings, in light and dark. Display & System shows the Displays icon, and its card shows an icon beside every process.
 - `ps`, which measures macOS's own processes every few seconds while the panel's open, is started directly rather than through Foundation's `Process`, which cost several times what `ps` itself does.
+- Settings' sidebar has one width, like System Settings', and can't be dragged: dragging it wider squeezed the pane until it ran off the window.
 - Rows of figures in Settings › History and Battery Health go onto two lines when the pane is narrow (with the sidebar dragged wider, say), instead of running off its edge.
 - Settings › History's weekly chart (over a year) scales to weeks that use several charges, instead of cutting them off at 100%.
+
+### Fixed
+
+- **The charging bolt on AirPods and other accessories** sat inside their small level ring, in the same green, and read as one green blob. It's now beside the percentage, like macOS's own battery lists.
+- **Numbers that said nothing**: a range like "30–30 °C" (29.6° and 30.4°, rounded) now shows its decimal, or isn't shown when there's no spread at all; summaries say "around 30°" rather than "average 30°, up to 30°"; figures with nothing to show (charging, on battery) are left out; and a health change needs two days to compare.
 
 ## [0.4.4] - 2026-11-19
 
