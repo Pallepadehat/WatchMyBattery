@@ -220,7 +220,8 @@ final class AppModel {
     var chargingNote: ChargingNote? {
         guard battery.snapshot.isPluggedIn else { return nil }
         return ChargingNote.evaluate(
-            snapshot: battery.snapshot, adapter: battery.adapter, systemWatts: usage.systemWatts, readings: battery.readings)
+            snapshot: battery.snapshot, adapter: battery.adapter, systemWatts: usage.systemWatts, chargerWatts: usage.chargerWatts,
+            readings: battery.readings)
     }
 
     /// The numbers behind the panel's estimates, for the current moment.

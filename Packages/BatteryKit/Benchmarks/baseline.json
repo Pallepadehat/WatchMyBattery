@@ -73,9 +73,9 @@
       "minimumNanoseconds" : 4169.900590551181
     },
     "sampler.sampleEnergy" : {
-      "iterations" : 90,
-      "medianNanoseconds" : 344278.23333333334,
-      "minimumNanoseconds" : 342494.44444444444
+      "iterations" : 31,
+      "medianNanoseconds" : 847747.3225806452,
+      "minimumNanoseconds" : 787592.7419354839
     },
     "smoother.add" : {
       "iterations" : 593,

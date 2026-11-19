@@ -33,6 +33,10 @@ struct BatteryGauge: View {
     var inspectedApp: pid_t? = nil
     /// Click on a slice: list its processes (or stop listing them).
     var inspect: (AppUsage) -> Void = { _ in }
+    /// Display & System's card is open.
+    var isSystemInspected = false
+    /// Click on Display & System: show what's in it (or stop).
+    var inspectSystem: () -> Void = {}
 
     @State private var draggedApp: AppUsage.ID?
     /// The slice with focus (Tab moves between slices).
@@ -179,9 +183,11 @@ struct BatteryGauge: View {
                 case .app(let app):
                     appSlice(app, width: piece.width, visible: visible)
                 case .system(let watts):
-                    SystemSlice(costDescription: costDescription(forWatts: watts), hide: hideSystem)
-                        .frame(width: piece.width)
-                        .transition(.opacity)
+                    SystemSlice(
+                        costDescription: costDescription(forWatts: watts), hide: hideSystem, isInspected: isSystemInspected, inspect: inspectSystem
+                    )
+                    .frame(width: piece.width)
+                    .transition(.opacity)
                 }
             }
         }
@@ -191,6 +197,7 @@ struct BatteryGauge: View {
     private func appSlice(_ app: AppUsage, width: CGFloat, visible: [AppUsage]) -> some View {
         AppSlice(
             app: app,
+            width: width,
             costDescription: costDescription(forWatts: app.watts),
             isDragged: draggedApp == app.id,
             isKeyboardFocused: keyboardSlice == app.id,
@@ -206,7 +213,7 @@ struct BatteryGauge: View {
         .focusEffectDisabled()
         .focused($focusedSlice, equals: app.id)
         .onKeyPress(keys: [.delete, .deleteForward]) { _ in
-            guard keyboardSlice == app.id else { return .ignored }
+            guard keyboardSlice == app.id, app.canQuit else { return .ignored }
             confirmQuit(app)
             return .handled
         }
@@ -357,6 +364,8 @@ struct BatteryGauge: View {
 /// One app's slice: its colour, its icon, and the drag that quits it.
 private struct AppSlice: View {
     let app: AppUsage
+    /// Its width, for whether a program's name fits in it.
+    let width: CGFloat
     let costDescription: String
     let isDragged: Bool
     let isKeyboardFocused: Bool
@@ -377,10 +386,7 @@ private struct AppSlice: View {
                 .overlay(.white.opacity(isHovered && !isDragged ? 0.16 : 0))
                 .opacity(isDragged ? 0.25 : 1)
 
-            Image(nsImage: app.icon)
-                .resizable()
-                .interpolation(.high)
-                .frame(width: 24, height: 24)
+            glyph
                 .scaleEffect(isHovered || isKeyboardFocused ? 1.12 : 1)
                 .opacity(isDragged ? 0 : 1)
         }
@@ -414,14 +420,18 @@ private struct AppSlice: View {
                 if draggedApp == nil { NSCursor.arrow.set() }
             }
         }
-        .gesture(dragToQuit)
+        .gesture(dragToQuit, isEnabled: app.canQuit)
         .simultaneousGesture(TapGesture().onEnded { inspect(app) })
         .contextMenu {
             Button("Show Processes") { inspect(app) }
-            Divider()
-            Button("Quit \(app.name)") { quit(app) }
-            Button("Show \(app.name)") {
-                NSRunningApplication(processIdentifier: app.id)?.activate()
+            if app.canQuit {
+                Divider()
+                Button("Quit \(app.name)") { quit(app) }
+            }
+            if app.isApp {
+                Button("Show \(app.name)") {
+                    NSRunningApplication(processIdentifier: app.id)?.activate()
+                }
             }
             if let exclude {
                 Divider()
@@ -434,10 +444,49 @@ private struct AppSlice: View {
         .accessibilityValue(costDescription)
         .accessibilityHint("Click to see its processes. Drag out of the panel, or press Delete, to quit")
         .accessibilityAddTraits(.isButton)
-        .accessibilityAction(named: "Quit \(app.name)") { quit(app) }
+        .accessibilityAction(named: "Quit \(app.name)") { if app.canQuit { quit(app) } }
         .accessibilityAction(named: "Show \(app.name)") { NSRunningApplication(processIdentifier: app.id)?.activate() }
         .accessibilityAction(named: "Show Processes") { inspect(app) }
     }
+
+    /// Its icon; for a program without one of its own, its name where there's room, which says more than a borrowed
+    /// icon would.
+    @ViewBuilder private var glyph: some View {
+        if let label = app.label {
+            Group {
+                if Self.labelWidth(label) <= width - 8 {
+                    Text(verbatim: label)
+                        .font(Self.labelFont)
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .fixedSize()
+                        .shadow(color: .black.opacity(0.2), radius: 1, y: 0.5)
+                } else {
+                    Image(nsImage: app.icon)
+                        .resizable()
+                        .interpolation(.high)
+                        .frame(width: 24, height: 24)
+                }
+            }
+        } else {
+            Image(nsImage: app.icon)
+                .resizable()
+                .interpolation(.high)
+                .frame(width: 24, height: 24)
+        }
+    }
+
+    private static let labelFont = Font.system(size: 10.5, weight: .semibold, design: .monospaced)
+
+    /// A monospaced name's width: every character is the same, so it's arithmetic, not a layout pass.
+    private static func labelWidth(_ label: String) -> CGFloat {
+        CGFloat(label.count) * characterWidth
+    }
+
+    private static let characterWidth: CGFloat = {
+        let font = NSFont.monospacedSystemFont(ofSize: 10.5, weight: .semibold)
+        return ("M" as NSString).size(withAttributes: [.font: font]).width
+    }()
 
     /// Starts the drag; `DragToQuitController` follows it from there and reports how it ended.
     private var dragToQuit: some Gesture {
@@ -465,30 +514,41 @@ private struct AppSlice: View {
 private struct SystemSlice: View {
     let costDescription: String
     let hide: (() -> Void)?
+    let isInspected: Bool
+    let inspect: () -> Void
     @Environment(\.colorScheme) private var colorScheme
+    @State private var isHovered = false
 
     var body: some View {
         ZStack {
             Rectangle()
                 .fill(Color.gray.opacity(colorScheme == .dark ? 0.5 : 0.38))
+                .overlay(.white.opacity(isHovered || isInspected ? 0.14 : 0))
             Image(systemName: "sun.max.fill")
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.9))
+                .scaleEffect(isHovered ? 1.12 : 1)
         }
+        .animation(.snappy(duration: 0.2), value: isHovered)
+        .onHover { isHovered = $0 }
+        .onTapGesture(perform: inspect)
         .overlay(alignment: .leading) {
             Rectangle().fill(.black.opacity(0.15)).frame(width: 1)
         }
         .contentShape(.rect)
         .contextMenu {
+            Button("Show What's in It") { inspect() }
             Button("Displays Settings…") { SystemSettings.open(.displays) }
             if let hide {
                 Divider()
                 Button("Don't Show Display & System in the Battery") { hide() }
             }
         }
-        .help("Display & System: the screen, graphics, Wi‑Fi, Bluetooth and macOS itself. A dimmer screen makes it smaller.")
+        .help("Display & System: the screen, Wi‑Fi, memory and the parts of macOS with no slice of their own. Click to see what's in it.")
         .accessibilityElement()
         .accessibilityLabel("Display and system")
         .accessibilityValue(costDescription)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { inspect() }
     }
 }

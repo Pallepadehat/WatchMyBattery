@@ -4,6 +4,25 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-11-19
+
+Better numbers, and more of them: the GPU counts, so do your command-line tools and macOS's own work, and the charger card says what's really going on.
+
+### Changed
+
+- 🎮 **Apps that use the GPU are measured properly.** The kernel's energy counter, which the panel used for each app, covers the CPU only, so an app keeping the GPU busy (a game, a video call, a browser full of animations) looked almost free: a GPU running flat out at 14 W showed as 0.003 W. Now the GPU's own energy is read too, and shared out by how long the GPU worked for each app. The slices, the time each app costs, the history and the runaway alerts all include it. No permission needed; Intel Macs measure the CPU, as before.
+- 🐳 **Command-line tools and background programs get slices of their own.** Before, only apps with a Dock icon or a menu bar item did: Docker's engine, a VM, `ollama serve` or a Homebrew service went into Display & System, and anything you ran in a terminal counted as Terminal (or iTerm, Ghostty, Visual Studio Code…). Now what you type at a shell prompt is its own slice, with everything it starts (`npm run dev` and its Node processes are one), named for what it runs (`claude-code`, not `node`). A program inside an app's bundle, or named like an app you've installed, gets that app's real icon (Docker, Ollama, OrbStack); a command gets the icon of the terminal it runs in, and its name in its slice when there's room; anything else gets macOS's own program icon. Quit sends it the signal Ctrl-C would; Force Quit, `kill -9`. They're in the history too.
+- 🍎 **macOS's own work, by name.** Spotlight indexing, iCloud syncing, Photos analysis, Time Machine, Software Update, the Window Server, Siri & Apple Intelligence and more get slices with Apple's own icons and a line about what they're doing, when they're busy. They can't be quit (they settle by themselves), so they can't be dragged out.
+- 🔎 **Every process counts, even the ones macOS won't show.** About a third of the Mac's processes (WindowServer, Spotlight's indexers, the kernel) belong to macOS or other users, and an app may not read their energy. Their CPU time is read instead, with `ps`, every few seconds, and turned into watts at the rate the processes that can be read use energy per second of CPU. Those figures are marked "≈" and are never allowed to add up to more than the Mac draws.
+- ☀️ **Click Display & System to see what's in it**: the macOS processes with no slice of their own, by name, and what's left, the screen and the rest of the hardware, which macOS only reports all together.
+- The battery shows four slices by default instead of three.
+- 🔌 **The Charger row shows what's coming in**: "12 W of 96 W", what the Mac is getting from the charger out of what it can give.
+- Apps drawing under 0.1 W no longer get a slice. A slice reading "<0.1 W" or "costs less than a minute" said nothing you could act on.
+
+### Fixed
+
+- **"The charger can't keep up" with a 100 W charger and a Mac using 6.6 W.** A battery running down while plugged in was always blamed on the charger being too small. Now the Mac's draw is compared with what actually comes in from the charger: the charger is only called too small when the Mac uses about all of it. Otherwise the card says the Mac is **running on battery while plugged in**, and how much it's getting from the charger. That points to the charger, the cable or the port not giving full power, or to another battery app discharging on purpose. A stray current reading no longer raises the card when the charger covers everything.
+
 ## [0.4.3] - 2026-11-17
 
 Your history, in depth: every app, every day, as far back as you keep it.
@@ -308,7 +327,8 @@ The first release.
 - Automatic updates with Sparkle, from EdDSA-signed releases.
 - One-command install, and build, packaging and release scripts.
 
-[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.3...HEAD
+[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.4...HEAD
+[0.4.4]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.0...v0.4.1
