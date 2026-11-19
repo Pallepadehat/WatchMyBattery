@@ -390,17 +390,23 @@ public struct VitalsReport: Sendable, Equatable {
 
     /// How the maximum capacity moved over the stretch, in points of capacity (0–1): negative is wear.
     public var capacityChange: Double? {
-        guard let last = health.last(where: { $0.maximumCapacity != nil })?.maximumCapacity,
-            let first = (healthBefore?.maximumCapacity) ?? health.first(where: { $0.maximumCapacity != nil })?.maximumCapacity
-        else { return nil }
+        guard let (first, last) = ends(\.maximumCapacity) else { return nil }
         return last - first
     }
 
     /// Charge cycles added over the stretch.
     public var cyclesAdded: Int? {
-        guard let last = health.last(where: { $0.cycleCount != nil })?.cycleCount,
-            let first = healthBefore?.cycleCount ?? health.first(where: { $0.cycleCount != nil })?.cycleCount
-        else { return nil }
+        guard let (first, last) = ends(\.cycleCount) else { return nil }
         return max(last - first, 0)
+    }
+
+    /// The first and last readings of something, from the last day before the stretch (or its first) to its last:
+    /// `nil` unless they're two different days, as one reading has nothing to compare with.
+    private func ends<Value>(_ value: KeyPath<BatteryVitals.HealthDay, Value?>) -> (Value, Value)? {
+        let days = ([healthBefore].compactMap { $0 } + health).filter { $0[keyPath: value] != nil }
+        guard let first = days.first, let last = days.last, first.day != last.day,
+            let from = first[keyPath: value], let to = last[keyPath: value]
+        else { return nil }
+        return (from, to)
     }
 }
