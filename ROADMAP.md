@@ -169,6 +169,17 @@ See the [changelog](CHANGELOG.md).
 - [x] In the panel: click a day in the 10-day chart for its apps, click an app for a closer look, and show more than three
 - [x] Export the apps by day as CSV
 
+## 0.4.4: better numbers
+
+See the [changelog](CHANGELOG.md).
+
+- [x] The GPU's energy in each app's power, shared out by GPU time
+- [x] Command-line tools and background programs (Docker, a VM, what you run in a terminal) as slices of their own
+- [x] macOS's own work by name (Spotlight, iCloud, Photos analysis…), measured from CPU time where the kernel won't show its energy
+- [x] Display & System taken apart, as far as macOS allows
+- [x] What comes in from the charger, in the Charger row and behind the charger card
+- [x] "The charger can't keep up" only when the Mac uses about all of it
+
 ## 0.5.0: everywhere
 
 **Widgets and Shortcuts**

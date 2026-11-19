@@ -100,7 +100,9 @@ struct BatteryPanelView: View {
                         withAnimation(.snappy(duration: 0.3)) {
                             model.usage.inspected = model.usage.inspected?.id == app.id ? nil : app
                         }
-                    }
+                    },
+                    isSystemInspected: model.usage.isInspectingSystem,
+                    inspectSystem: { withAnimation(.snappy(duration: 0.3)) { model.usage.isInspectingSystem.toggle() } }
                 )
                 .padding(.horizontal, Self.inset)
                 .padding(.top, 14)
@@ -123,6 +125,20 @@ struct BatteryPanelView: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
 
+                if model.usage.isInspectingSystem {
+                    SystemDetailCard(
+                        breakdown: model.usage.systemBreakdown,
+                        openDisplaySettings: {
+                            close()
+                            SystemSettings.open(.displays)
+                        },
+                        close: { withAnimation(.snappy(duration: 0.3)) { model.usage.isInspectingSystem = false } }
+                    )
+                    .padding(.horizontal, 10)
+                    .padding(.top, 8)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+
                 // The details, one rhythm for all of them: a label on the left, its value on the right.
                 VStack(spacing: Self.rowSpacing) {
                     if ChargeProgressRow.applies(to: snapshot) {
@@ -139,7 +155,7 @@ struct BatteryPanelView: View {
                             .frame(minHeight: Self.rowHeight)
                     }
                     if let adapter = model.battery.adapter {
-                        ChargerRow(adapter: adapter, note: chargingNote)
+                        ChargerRow(adapter: adapter, chargerWatts: model.usage.chargerWatts, note: chargingNote)
                             .frame(minHeight: Self.rowHeight)
                             .transition(.opacity)
                     }
@@ -562,12 +578,16 @@ private struct RefusalNotice: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text("\(refusal.name) didn't quit")
                     .font(.system(size: 12, weight: .semibold))
-                Text("It may be asking what to do with unsaved changes, or have stopped responding.")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                Text(
+                    refusal.isApp
+                        ? "It may be asking what to do with unsaved changes, or have stopped responding."
+                        : "It may be finishing what it was doing, or ignoring the request to stop."
+                )
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 12) {
-                    Button("Show \(refusal.name)", action: show)
+                    if refusal.isApp { Button("Show \(refusal.name)", action: show) }
                     if isConfirmingForceQuit {
                         Button("Force Quit, Losing Unsaved Changes", action: forceQuit)
                             .foregroundStyle(.red)
