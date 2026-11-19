@@ -675,13 +675,21 @@ enum AppLook {
 
     @MainActor static func of(_ app: BatteryHistory.AppIdentity) -> Look {
         if let look = cache[app.key] { return look }
-        let icon: NSImage
+        let look: Look
         if let bundleIdentifier = app.bundleIdentifier, let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) {
-            icon = NSWorkspace.shared.icon(forFile: url.path)
+            let icon = NSWorkspace.shared.icon(forFile: url.path)
+            look = Look(icon: icon, tint: IconTint.color(of: icon, for: app.key))
         } else {
-            icon = NSWorkspace.shared.icon(for: .applicationBundle)
+            // A part of macOS, a program that isn't an app, or an app that's since gone: the same icon the panel gives it.
+            if let service = MacOSServices.all.first(where: { $0.name == app.name }) {
+                let icon = NSWorkspace.shared.icon(forFile: service.iconPath)
+                look = Look(icon: icon, tint: IconTint.color(of: icon, for: app.key))
+            } else if let icon = InstalledApps.icon(forCommand: app.name) {
+                look = Look(icon: icon, tint: IconTint.color(of: icon, for: app.key))
+            } else {
+                look = Look(icon: NSWorkspace.shared.icon(for: .unixExecutable), tint: ProgramTint.color(for: app.name))
+            }
         }
-        let look = Look(icon: icon, tint: IconTint.color(of: icon, for: app.key))
         cache[app.key] = look
         return look
     }

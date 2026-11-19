@@ -513,7 +513,7 @@ final class AppSettings {
             Key.menuBarIconStyle: MenuBarIconStyle.battery.rawValue,
             Key.usesColor: true,
             Key.centerLabel: CenterLabel.timeRemaining.rawValue,
-            Key.maximumApps: 3,
+            Key.maximumApps: 4,
             Key.confirmsQuit: false,
             Key.showsChargingAnimation: true,
             Key.chargingMotion: ChargingMotionStyle.flow.rawValue,

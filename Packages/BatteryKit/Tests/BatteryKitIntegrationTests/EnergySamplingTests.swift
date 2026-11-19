@@ -14,11 +14,31 @@ struct EnergySamplingTests {
         return (ownEnergy() ?? 0) > (before ?? .max)
     }()
 
+    /// Running in a virtual machine, where macOS reports `kern.hv_vmm_present`.
+    static let isVirtual: Bool = {
+        var present: Int32 = 0
+        var size = MemoryLayout<Int32>.size
+        return sysctlbyname("kern.hv_vmm_present", &present, &size, nil, 0) == 0 && present == 1
+    }()
+
     @Test func firstSampleIsOnlyABaseline() async {
         let sampler = ProcessEnergySampler()
         let (joules, seconds) = await sampler.sampleEnergy()
         #expect(joules.isEmpty)
         #expect(seconds == 0)
+    }
+
+    /// The GPU's energy and each process's GPU time, where the Mac reports them (Apple silicon does): readings that only
+    /// grow, and something to share between, as WindowServer always uses the GPU. Virtual Macs (CI runners) have no GPU
+    /// energy counter, so there's nothing to read there.
+    @Test(.enabled(if: !isVirtual)) func theGPUIsReadOnAppleSilicon() throws {
+        #if arch(arm64)
+            let counter = try #require(GPUEnergyCounter())
+            let first = try #require(counter.joules())
+            let second = try #require(counter.joules())
+            #expect(second >= first)
+            #expect(!GPUEnergySampler().clients().isEmpty)
+        #endif
     }
 
     @Test func resetStartsAfresh() async {
@@ -37,7 +57,7 @@ struct EnergySamplingTests {
         let (joules, seconds) = await sampler.sampleEnergy()
 
         #expect(seconds >= 0.3 && seconds < 5)
-        let responsible = Responsibility.responsiblePID(for: getpid())
+        let responsible = Ownership.owner(of: getpid())
         let used = try #require(joules[responsible], "The work done here wasn't credited to process \(responsible)")
         // A core flat out for 0.3 s: well over a millijoule, and nowhere near what a whole Mac could use.
         #expect(used > 0.001)
@@ -51,7 +71,7 @@ struct EnergySamplingTests {
         _ = await sampler.sample()
         burnCPU(for: .milliseconds(200))
         let watts = await sampler.sample()
-        let responsible = Responsibility.responsiblePID(for: getpid())
+        let responsible = Ownership.owner(of: getpid())
         // One busy core: more than nothing, less than a whole Mac.
         #expect((watts[responsible] ?? 0) > 0)
         #expect(watts.values.allSatisfy { $0 >= 0 && $0 < 500 })
@@ -83,4 +103,35 @@ func burnCPU(for duration: Duration) {
         for _ in 0..<10_000 { value = value &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407 }
     }
     withExtendedLifetime(value) {}
+}
+
+/// Against real processes: a command run by a shell is a program named for itself, and belongs with the command
+/// that started it (the outermost one typed at a shell: when these tests run from a terminal, `swift test`).
+@Suite(.tags(.system), .serialized)
+struct OwnershipSystemTests {
+    @Test func aCommandUnderAShellOwnsItself() async throws {
+        let shell = Process()
+        shell.executableURL = URL(fileURLWithPath: "/bin/zsh")
+        // `; true` keeps zsh from replacing itself with the command, as it does with a lone one.
+        shell.arguments = ["-c", "/bin/sleep 5; true"]
+        try shell.run()
+        defer { shell.terminate() }
+        // Wait for zsh to start the command.
+        var command: pid_t?
+        for _ in 0..<50 where command == nil {
+            try await Task.sleep(for: .milliseconds(20))
+            command = Self.children(of: shell.processIdentifier).first
+        }
+        let sleep = try #require(command)
+        #expect(Ownership.isCommand(sleep))
+        #expect(Ownership.owner(of: sleep) == Ownership.owner(of: shell.processIdentifier))
+        #expect(CommandName.of(sleep) == "sleep")
+        kill(sleep, SIGTERM)
+    }
+
+    private static func children(of parent: pid_t) -> [pid_t] {
+        var pids = [pid_t](repeating: 0, count: 4096)
+        let count = pids.withUnsafeMutableBytes { proc_listchildpids(parent, $0.baseAddress, Int32($0.count)) }
+        return Array(pids.prefix(Int(max(count, 0))))
+    }
 }
