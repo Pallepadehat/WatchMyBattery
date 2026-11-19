@@ -57,13 +57,14 @@ public enum HistoryExport {
         for hour in vitals.hours {
             let day = calendar.startOfDay(for: hour.start)
             let health = healthByDay.removeValue(forKey: day)
+            let all = hour.all
             let fields = [
                 iso(hour.start), String(hour.readings),
-                value(hour.temperature.mean, 1), value(hour.temperature.low, 1), value(hour.temperature.high, 1),
-                value(hour.voltage.mean, 3), value(hour.voltage.low, 3), value(hour.voltage.high, 3),
-                value(hour.charging.mean, 2), value(hour.discharging.mean, 2), value(hour.system.mean, 2), value(hour.system.high, 2),
-                value(hour.charger.mean, 2), value(hour.level.low, 0), value(hour.level.high, 0),
-                value(hour.readings > 0 ? Double(hour.pluggedIn) / Double(hour.readings) * 100 : nil, 0),
+                value(all.temperature.mean, 1), value(all.temperature.low, 1), value(all.temperature.high, 1),
+                value(all.voltage.mean, 3), value(all.voltage.low, 3), value(all.voltage.high, 3),
+                value(all.charging.mean, 2), value(all.discharging.mean, 2), value(all.system.mean, 2), value(all.system.high, 2),
+                value(all.charger.mean, 2), value(all.level.low, 0), value(all.level.high, 0),
+                value(hour.readings > 0 ? Double(hour.pluggedIn.readings) / Double(hour.readings) * 100 : nil, 0),
                 value(health?.maximumCapacity.map { $0 * 100 }, 1), health?.cycleCount.map(String.init) ?? "",
             ]
             lines.append(fields.map(escaped).joined(separator: ","))

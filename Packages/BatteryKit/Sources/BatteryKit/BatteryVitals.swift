@@ -71,6 +71,65 @@ public struct VitalsReading: Sendable, Equatable {
     }
 }
 
+/// Which readings to look at.
+public enum VitalsFilter: String, Sendable, CaseIterable, Identifiable {
+    case all
+    case onBattery
+    case pluggedIn
+
+    public var id: Self { self }
+}
+
+/// A set of readings in brief: the range and average of each vital sign.
+public struct VitalsStats: Codable, Sendable, Equatable {
+    public private(set) var readings = 0
+    public private(set) var temperature = ReadingStats()
+    public private(set) var voltage = ReadingStats()
+    /// Watts into the battery, while it charged.
+    public private(set) var charging = ReadingStats()
+    /// Watts out of it, as positive numbers, while it ran the Mac.
+    public private(set) var discharging = ReadingStats()
+    /// The whole Mac's draw.
+    public private(set) var system = ReadingStats()
+    /// What came from the charger, while plugged in.
+    public private(set) var charger = ReadingStats()
+    public private(set) var level = ReadingStats()
+    /// Readings with the battery at ``BatteryReadings/Warmth/warmFrom`` or above.
+    public private(set) var warm = 0
+
+    public init() {}
+
+    public var isEmpty: Bool { readings == 0 }
+
+    public mutating func add(_ reading: VitalsReading) {
+        readings += 1
+        temperature.add(reading.temperature)
+        voltage.add(reading.voltage)
+        if let watts = reading.batteryWatts {
+            if watts > Self.idleWatts { charging.add(watts) } else if watts < -Self.idleWatts { discharging.add(-watts) }
+        }
+        system.add(reading.systemWatts)
+        charger.add(reading.chargerWatts)
+        level.add(reading.percentage.map(Double.init))
+        if let celsius = reading.temperature, celsius >= BatteryReadings.Warmth.warmFrom { warm += 1 }
+    }
+
+    public mutating func merge(_ other: VitalsStats) {
+        readings += other.readings
+        temperature.merge(other.temperature)
+        voltage.merge(other.voltage)
+        charging.merge(other.charging)
+        discharging.merge(other.discharging)
+        system.merge(other.system)
+        charger.merge(other.charger)
+        level.merge(other.level)
+        warm += other.warm
+    }
+
+    /// A battery moving less than this is resting: neither charging nor running the Mac.
+    static let idleWatts = 0.1
+}
+
 /// The battery's vital signs over time: its temperature, voltage, charging and discharging, what the Mac drew and the
 /// charger gave, hour by hour, and its health (maximum capacity and charge cycles) day by day.
 ///
@@ -78,48 +137,37 @@ public struct VitalsReading: Sendable, Equatable {
 /// small rows whatever the reading rate. Hours are kept as long as the rest of the history; health days for good, as
 /// the wear of a battery shows over years, and a year of them is a few kilobytes.
 public struct BatteryVitals: Codable, Sendable, Equatable {
-    /// One hour's readings.
+    /// One hour's readings, on battery and plugged in apart, so either can be looked at alone.
     public struct Hour: Codable, Sendable, Equatable, Identifiable {
         public let start: Date
-        public var readings = 0
-        public var temperature = ReadingStats()
-        public var voltage = ReadingStats()
-        /// Watts into the battery, while it charged.
-        public var charging = ReadingStats()
-        /// Watts out of it, as positive numbers, while it ran the Mac.
-        public var discharging = ReadingStats()
-        /// The whole Mac's draw.
-        public var system = ReadingStats()
-        /// What came from the charger, while plugged in.
-        public var charger = ReadingStats()
-        public var level = ReadingStats()
-        /// Readings plugged in.
-        public var pluggedIn = 0
-        /// Readings with the battery at ``BatteryReadings/Warmth/warmFrom`` or above.
-        public var warm = 0
+        public var onBattery = VitalsStats()
+        public var pluggedIn = VitalsStats()
 
         public init(start: Date) {
             self.start = start
         }
 
         public var id: Date { start }
+        public var readings: Int { onBattery.readings + pluggedIn.readings }
 
-        mutating func add(_ reading: VitalsReading) {
-            readings += 1
-            temperature.add(reading.temperature)
-            voltage.add(reading.voltage)
-            if let watts = reading.batteryWatts {
-                if watts > Self.idleWatts { charging.add(watts) } else if watts < -Self.idleWatts { discharging.add(-watts) }
-            }
-            system.add(reading.systemWatts)
-            charger.add(reading.chargerWatts)
-            level.add(reading.percentage.map(Double.init))
-            if reading.isPluggedIn { pluggedIn += 1 }
-            if let celsius = reading.temperature, celsius >= BatteryReadings.Warmth.warmFrom { warm += 1 }
+        /// Every reading together.
+        public var all: VitalsStats {
+            var all = onBattery
+            all.merge(pluggedIn)
+            return all
         }
 
-        /// A battery moving less than this is resting: neither charging nor running the Mac.
-        static let idleWatts = 0.1
+        public func stats(_ filter: VitalsFilter) -> VitalsStats {
+            switch filter {
+            case .all: all
+            case .onBattery: onBattery
+            case .pluggedIn: pluggedIn
+            }
+        }
+
+        mutating func add(_ reading: VitalsReading) {
+            if reading.isPluggedIn { pluggedIn.add(reading) } else { onBattery.add(reading) }
+        }
     }
 
     /// The battery's health on one day.
@@ -208,8 +256,11 @@ public struct BatteryVitals: Codable, Sendable, Equatable {
 
     // MARK: - Reading
 
-    /// The vitals from `start` to `end`, in hours, days or weeks.
-    public func report(from start: Date, to end: Date, granularity: UsageReport.Granularity, calendar: Calendar = .current) -> VitalsReport {
+    /// The vitals from `start` to `end`, in hours, days or weeks, and by the hour of the day; only those on battery
+    /// or plugged in, if `filter` says so.
+    public func report(
+        from start: Date, to end: Date, granularity: UsageReport.Granularity, filter: VitalsFilter = .all, calendar: Calendar = .current
+    ) -> VitalsReport {
         let component: Calendar.Component =
             switch granularity {
             case .hour: .hour
@@ -223,21 +274,26 @@ public struct BatteryVitals: Codable, Sendable, Equatable {
             periods.append(VitalsReport.Period(start: cursor, end: next))
             cursor = next
         }
-        guard !periods.isEmpty else { return VitalsReport(granularity: granularity, periods: [], health: [], healthBefore: nil) }
+        guard !periods.isEmpty else {
+            return VitalsReport(granularity: granularity, filter: filter, periods: [], hoursOfDay: [], health: [], healthBefore: nil)
+        }
 
         var whole = VitalsReport.Period(start: periods[0].start, end: end)
+        var hoursOfDay = (0..<24).map { VitalsReport.HourOfDay(hour: $0) }
         var index = 0
         let first = BatteryHistory.partitionIndex(in: hours) { $0.start < periods[0].start }
         for hour in hours[first...] {
             guard hour.start < end else { break }
             while index < periods.count - 1, hour.start >= periods[index].end { index += 1 }
-            periods[index].add(hour)
-            whole.add(hour)
+            periods[index].add(hour, filter: filter)
+            whole.add(hour, filter: filter)
+            hoursOfDay[calendar.component(.hour, from: hour.start) % 24].stats.merge(hour.stats(filter))
         }
-        let rangeStart = periods[0].start
-        let inRange = health.filter { $0.day >= calendar.startOfDay(for: rangeStart) && $0.day < end }
-        let before = health.last { $0.day < calendar.startOfDay(for: rangeStart) }
-        var report = VitalsReport(granularity: granularity, periods: periods, health: inRange, healthBefore: before)
+        let rangeStart = calendar.startOfDay(for: periods[0].start)
+        let inRange = health.filter { $0.day >= rangeStart && $0.day < end }
+        let before = health.last { $0.day < rangeStart }
+        var report = VitalsReport(
+            granularity: granularity, filter: filter, periods: periods, hoursOfDay: hoursOfDay, health: inRange, healthBefore: before)
         report.whole = whole
         return report
     }
@@ -248,17 +304,13 @@ public struct VitalsReport: Sendable, Equatable {
     public struct Period: Sendable, Equatable, Identifiable {
         public let start: Date
         public let end: Date
-        public var readings = 0
-        public var temperature = ReadingStats()
-        public var voltage = ReadingStats()
-        public var charging = ReadingStats()
-        public var discharging = ReadingStats()
-        public var system = ReadingStats()
-        public var charger = ReadingStats()
-        public var level = ReadingStats()
-        public var pluggedIn = 0
-        public var warm = 0
-        /// Hours with readings, for how long something lasted: each reading stands for its share of its hour.
+        /// The readings the filter lets through.
+        public var stats = VitalsStats()
+        /// Every reading, and those plugged in, whatever the filter: for the share of time on the charger.
+        public var allReadings = 0
+        public var pluggedInReadings = 0
+        /// Roughly how long it was warm, and how long the filtered readings cover: each reading stands for its share
+        /// of its hour.
         public var warmSeconds = 0.0
         public var coveredSeconds = 0.0
 
@@ -269,28 +321,31 @@ public struct VitalsReport: Sendable, Equatable {
 
         public var id: Date { start }
         public var interval: DateInterval { DateInterval(start: start, end: max(start, end)) }
-        public var isEmpty: Bool { readings == 0 }
+        public var isEmpty: Bool { stats.isEmpty }
 
-        mutating func add(_ hour: BatteryVitals.Hour) {
-            readings += hour.readings
-            temperature.merge(hour.temperature)
-            voltage.merge(hour.voltage)
-            charging.merge(hour.charging)
-            discharging.merge(hour.discharging)
-            system.merge(hour.system)
-            charger.merge(hour.charger)
-            level.merge(hour.level)
-            pluggedIn += hour.pluggedIn
-            warm += hour.warm
-            if hour.readings > 0 {
-                coveredSeconds += 3600
-                warmSeconds += 3600 * Double(hour.warm) / Double(hour.readings)
-            }
+        mutating func add(_ hour: BatteryVitals.Hour, filter: VitalsFilter) {
+            let shown = hour.stats(filter)
+            stats.merge(shown)
+            allReadings += hour.readings
+            pluggedInReadings += hour.pluggedIn.readings
+            guard hour.readings > 0 else { return }
+            coveredSeconds += 3600 * Double(shown.readings) / Double(hour.readings)
+            warmSeconds += 3600 * Double(shown.warm) / Double(hour.readings)
         }
     }
 
+    /// One hour of the day (0–23) over the whole stretch: when in the day it runs warm, or draws the most.
+    public struct HourOfDay: Sendable, Equatable, Identifiable {
+        public let hour: Int
+        public var stats = VitalsStats()
+
+        public var id: Int { hour }
+    }
+
     public let granularity: UsageReport.Granularity
+    public let filter: VitalsFilter
     public let periods: [Period]
+    public let hoursOfDay: [HourOfDay]
     /// Health days in the stretch, oldest first.
     public let health: [BatteryVitals.HealthDay]
     /// The last health reading from before it, to say how much changed.
@@ -298,18 +353,40 @@ public struct VitalsReport: Sendable, Equatable {
     /// Everything in the stretch together.
     public internal(set) var whole: Period
 
-    init(granularity: UsageReport.Granularity, periods: [Period], health: [BatteryVitals.HealthDay], healthBefore: BatteryVitals.HealthDay?) {
+    init(
+        granularity: UsageReport.Granularity, filter: VitalsFilter, periods: [Period], hoursOfDay: [HourOfDay], health: [BatteryVitals.HealthDay],
+        healthBefore: BatteryVitals.HealthDay?
+    ) {
         self.granularity = granularity
+        self.filter = filter
         self.periods = periods
+        self.hoursOfDay = hoursOfDay
         self.health = health
         self.healthBefore = healthBefore
         whole = Period(start: periods.first?.start ?? .distantPast, end: periods.last?.end ?? .distantPast)
     }
 
-    public var isEmpty: Bool { whole.readings == 0 }
+    public var isEmpty: Bool { whole.isEmpty }
 
-    /// The share of the time on the charger, 0–1.
-    public var pluggedInShare: Double? { whole.readings > 0 ? Double(whole.pluggedIn) / Double(whole.readings) : nil }
+    /// The share of the time on the charger, 0–1, whatever the filter.
+    public var pluggedInShare: Double? { whole.allReadings > 0 ? Double(whole.pluggedInReadings) / Double(whole.allReadings) : nil }
+
+    /// The hour of the day the Mac draws the most on average, when one stands out: a fifth or more above the others.
+    public var busiestHour: Int? {
+        let means = hoursOfDay.compactMap { hour in hour.stats.system.mean.map { (hour.hour, $0) } }
+        guard means.count >= 6, let top = means.max(by: { $0.1 < $1.1 }) else { return nil }
+        let others = means.filter { $0.0 != top.0 }.map(\.1)
+        let average = others.reduce(0, +) / Double(others.count)
+        return average > 0 && top.1 >= average * 1.2 ? top.0 : nil
+    }
+
+    /// The hottest hour of the day on average, when one stands out: a degree or more above the day's average.
+    public var warmestHour: Int? {
+        let means = hoursOfDay.compactMap { hour in hour.stats.temperature.mean.map { (hour.hour, $0) } }
+        guard means.count >= 6, let top = means.max(by: { $0.1 < $1.1 }) else { return nil }
+        let average = means.map(\.1).reduce(0, +) / Double(means.count)
+        return top.1 - average >= 1 ? top.0 : nil
+    }
 
     /// How the maximum capacity moved over the stretch, in points of capacity (0–1): negative is wear.
     public var capacityChange: Double? {

@@ -49,14 +49,16 @@ struct BatteryVitalsTests {
         let nine = vitals.hours[0]
         #expect(nine.start == at(day: 0, hour: 9))
         #expect(nine.readings == 2)
-        #expect(nine.temperature.mean == 35)
-        #expect(nine.discharging.high == 12)
-        #expect(nine.charging.isEmpty)
-        #expect(nine.warm == 1)
+        #expect(nine.pluggedIn.isEmpty)
+        #expect(nine.all.temperature.mean == 35)
+        #expect(nine.all.discharging.high == 12)
+        #expect(nine.all.charging.isEmpty)
+        #expect(nine.all.warm == 1)
         let ten = vitals.hours[1]
-        #expect(ten.charging.mean == 30)
-        #expect(ten.charger.mean == 40)
-        #expect(ten.pluggedIn == 1)
+        #expect(ten.pluggedIn.charging.mean == 30)
+        #expect(ten.all.charger.mean == 40)
+        #expect(ten.pluggedIn.readings == 1)
+        #expect(ten.onBattery.isEmpty)
     }
 
     @Test func aReadingFromAnEarlierHourGoesInOrder() {
@@ -98,17 +100,62 @@ struct BatteryVitalsTests {
         }
         let report = vitals.report(from: monday, to: at(day: 7, hour: 0), granularity: .day, calendar: calendar)
         #expect(report.periods.count == 7)
-        #expect(report.periods[0].readings == 3)
-        #expect(report.periods[1].temperature.mean == 31)
+        #expect(report.periods[0].stats.readings == 3)
+        #expect(report.periods[1].stats.temperature.mean == 31)
         #expect(report.periods[3].isEmpty)
-        #expect(report.whole.readings == 9)
-        #expect(report.whole.temperature.low == 30)
-        #expect(report.whole.temperature.high == 32)
+        #expect(report.whole.stats.readings == 9)
+        #expect(report.whole.stats.temperature.low == 30)
+        #expect(report.whole.stats.temperature.high == 32)
         #expect(report.whole.coveredSeconds == 9 * 3600)
 
         let hourly = vitals.report(from: monday, to: at(day: 1, hour: 0), granularity: .hour, calendar: calendar)
         #expect(hourly.periods.count == 24)
-        #expect(hourly.periods[9].readings == 1)
+        #expect(hourly.periods[9].stats.readings == 1)
+    }
+
+    @Test func theFilterKeepsBatteryAndChargerApart() {
+        var vitals = BatteryVitals(retention: 30 * 24 * 3600, now: monday)
+        for hour in [9.0, 10, 11] {
+            vitals.record(VitalsReading(temperature: 30, systemWatts: 8), at: at(day: 0, hour: hour), calendar: calendar)
+        }
+        for hour in [9.5, 20, 21] {
+            vitals.record(VitalsReading(temperature: 38, systemWatts: 6, isPluggedIn: true), at: at(day: 0, hour: hour), calendar: calendar)
+        }
+        let end = at(day: 1, hour: 0)
+        let all = vitals.report(from: monday, to: end, granularity: .day, calendar: calendar)
+        let battery = vitals.report(from: monday, to: end, granularity: .day, filter: .onBattery, calendar: calendar)
+        let charger = vitals.report(from: monday, to: end, granularity: .day, filter: .pluggedIn, calendar: calendar)
+        #expect(all.whole.stats.readings == 6)
+        #expect(battery.whole.stats.temperature.mean == 30)
+        #expect(charger.whole.stats.temperature.mean == 38)
+        #expect(battery.whole.warmSeconds == 0)
+        // 9:00 was half plugged in and warm, and 20:00 and 21:00 wholly.
+        #expect(charger.whole.warmSeconds == 1800 + 2 * 3600)
+        // Time on the charger is the same whatever's shown.
+        #expect(battery.pluggedInShare == 0.5)
+        #expect(charger.pluggedInShare == 0.5)
+    }
+
+    @Test func hoursOfTheDayAddUpOverDays() {
+        var vitals = BatteryVitals(retention: 30 * 24 * 3600, now: monday)
+        for day in 0..<7 {
+            for hour in 0..<24 {
+                let warm = hour == 15 ? 6.0 : 0
+                vitals.record(VitalsReading(temperature: 30 + warm), at: at(day: day, hour: Double(hour) + 0.5), calendar: calendar)
+            }
+        }
+        let report = vitals.report(from: monday, to: at(day: 7, hour: 0), granularity: .day, calendar: calendar)
+        #expect(report.hoursOfDay.count == 24)
+        #expect(report.hoursOfDay[15].stats.readings == 7)
+        #expect(report.hoursOfDay[15].stats.temperature.mean == 36)
+        #expect(report.warmestHour == 15)
+        #expect(report.busiestHour == nil)
+    }
+
+    @Test func noHourIsWarmestWhenTheDayIsEven() {
+        var vitals = BatteryVitals(retention: 30 * 24 * 3600, now: monday)
+        for hour in 0..<24 { vitals.record(VitalsReading(temperature: 30), at: at(day: 0, hour: Double(hour)), calendar: calendar) }
+        #expect(vitals.report(from: monday, to: at(day: 1, hour: 0), granularity: .hour, calendar: calendar).warmestHour == nil)
     }
 
     @Test func healthChangeIsAgainstTheDayBefore() {
@@ -152,7 +199,7 @@ struct BatteryVitalsTests {
         let reopened = try VitalsStore(url: url, now: now)
         #expect(reopened.vitals.hours.count == 1)
         #expect(reopened.vitals.hours[0].readings == 2)
-        #expect(reopened.vitals.hours[0].temperature.mean == 32)
+        #expect(reopened.vitals.hours[0].all.temperature.mean == 32)
         #expect(reopened.vitals.health.first?.cycleCount == 300)
         reopened.removeAll()
         try reopened.save()

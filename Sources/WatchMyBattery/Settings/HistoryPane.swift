@@ -233,19 +233,36 @@ struct MetricItem {
     var symbol: String?
     var color: Color = .primary
     var help: Text?
+    /// How much it changed from before, beside its name: "↑0.8°".
+    var change: Text?
 }
 
 /// A row of figures like Screen Time's: small grey names over large numbers, split by hairlines. No boxes.
+///
+/// Each figure keeps its size, so when the row is wider than the pane (a narrow window, or the sidebar dragged wider)
+/// it goes onto two lines rather than running off the edge.
 struct MetricRow: View {
     let metrics: [MetricItem]
 
     var body: some View {
+        ViewThatFits(in: .horizontal) {
+            row(metrics.indices, spacing: 18)
+            row(metrics.indices, spacing: 12)
+            let half = (metrics.count + 1) / 2
+            VStack(alignment: .leading, spacing: 12) {
+                row(0..<half, spacing: 18)
+                row(half..<metrics.count, spacing: 18)
+            }
+        }
+    }
+
+    private func row(_ indices: Range<Int>, spacing: CGFloat) -> some View {
         HStack(alignment: .bottom, spacing: 0) {
-            ForEach(metrics.indices, id: \.self) { index in
-                if index > 0 {
+            ForEach(indices, id: \.self) { index in
+                if index > indices.lowerBound {
                     Divider()
                         .frame(height: 30)
-                        .padding(.horizontal, 18)
+                        .padding(.horizontal, spacing)
                 }
                 metric(metrics[index])
             }
@@ -254,9 +271,17 @@ struct MetricRow: View {
 
     private func metric(_ item: MetricItem) -> some View {
         VStack(alignment: .leading, spacing: 1) {
-            item.title
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                item.title
+                    .foregroundStyle(.secondary)
+                if let change = item.change {
+                    change
+                        .fontWeight(.semibold)
+                        .monospacedDigit()
+                        .transition(.opacity)
+                }
+            }
+            .font(.caption)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 if let symbol = item.symbol {
                     Image(systemName: symbol)

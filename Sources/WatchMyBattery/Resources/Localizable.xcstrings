@@ -20,18 +20,18 @@
         }
       }
     },
-    "%@  %@–%@, avg %@" : {
+    "%@  %@–%@, avg %@%@" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@  %2$@–%3$@, gns. %4$@"
+            "value" : "%1$@  %2$@–%3$@, gns. %4$@%5$@"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "%1$@  %2$@–%3$@, avg %4$@"
+            "value" : "%1$@  %2$@–%3$@, avg %4$@%5$@"
           }
         }
       }
@@ -46,12 +46,44 @@
         }
       }
     },
-    "%lld Days" : {
+    "%@ maximum capacity" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld dage"
+            "value" : "%@ maksimal kapacitet"
+          }
+        }
+      }
+    },
+    "%@ maximum capacity, %lld cycles" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ maksimal kapacitet, %2$lld cyklusser"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ maximum capacity, %2$lld cycles"
+          }
+        }
+      }
+    },
+    "%@%@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@%2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@%2$@"
           }
         }
       }
@@ -62,6 +94,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld d"
+          }
+        }
+      }
+    },
+    ", before %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", før %@"
           }
         }
       }
@@ -106,12 +148,12 @@
         }
       }
     },
-    "A full battery reads higher, an empty one lower. It drops a little under load and rises while charging." : {
+    "A full battery reads higher, an empty one lower. It drops a little under load and rises while charging. Over months, the voltage at the same charge level drifts a little lower as a battery wears." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Et fuldt batteri viser højere, et tomt lavere. Den falder lidt under belastning og stiger under opladning."
+            "value" : "Et fuldt batteri viser højere, et tomt lavere. Spændingen falder lidt under belastning og stiger under opladning. Over måneder glider spændingen ved samme opladningsniveau en smule ned, efterhånden som batteriet slides."
           }
         }
       }
@@ -146,6 +188,16 @@
         }
       }
     },
+    "All" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle"
+          }
+        }
+      }
+    },
     "Apple Account" : {
       "localizations" : {
         "da" : {
@@ -156,12 +208,74 @@
         }
       }
     },
+    "Average %@, up to %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gennemsnit %1$@, op til %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Average %1$@, up to %2$@"
+          }
+        }
+      }
+    },
+    "Back to Battery Health (⌘[)" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilbage til Batteriets tilstand (⌘[)"
+          }
+        }
+      }
+    },
     "Battery Vitals (CSV)…" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Batteriets målinger (CSV)…"
+          }
+        }
+      }
+    },
+    "Before" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Før"
+          }
+        }
+      }
+    },
+    "before %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "før %@"
+          }
+        }
+      }
+    },
+    "Between %@ and %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mellem %1$@ og %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Between %1$@ and %2$@"
           }
         }
       }
@@ -256,6 +370,16 @@
         }
       }
     },
+    "Compare with Before" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sammenlign med før"
+          }
+        }
+      }
+    },
     "Control Center" : {
       "localizations" : {
         "da" : {
@@ -292,6 +416,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aflader"
+          }
+        }
+      }
+    },
+    "Down to %@, on the charger %@ of the time" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ned til %1$@, på opladeren %2$@ af tiden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Down to %1$@, on the charger %2$@ of the time"
           }
         }
       }
@@ -362,12 +502,52 @@
         }
       }
     },
+    "Hour" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time"
+          }
+        }
+      }
+    },
+    "How low and high the charge went in each hour, day or week. Batteries last longest kept between about 20 and 80 percent; a charge limit (Settings › Charging) keeps the top end down for you." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hvor lavt og højt opladningen gik i hver time, dag eller uge. Batterier holder længst mellem cirka 20 og 80 procent; en opladningsgrænse (Indstillinger › Opladning) holder toppen nede for dig."
+          }
+        }
+      }
+    },
+    "Index" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indeks"
+          }
+        }
+      }
+    },
     "Keeping track of changes on disk, and freeing up space." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Holder styr på ændringer på disken og frigør plads."
+          }
+        }
+      }
+    },
+    "Line" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linje"
           }
         }
       }
@@ -462,6 +642,16 @@
         }
       }
     },
+    "No readings in this time yet." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen målinger i dette tidsrum endnu."
+          }
+        }
+      }
+    },
     "No readings yet." : {
       "localizations" : {
         "da" : {
@@ -482,12 +672,42 @@
         }
       }
     },
+    "On Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "På batteri"
+          }
+        }
+      }
+    },
     "On the Charger" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "På opladeren"
+          }
+        }
+      }
+    },
+    "Over Time" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Over tid"
+          }
+        }
+      }
+    },
+    "Plugged In" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilsluttet"
           }
         }
       }
@@ -542,22 +762,22 @@
         }
       }
     },
-    "Read every five minutes, plugged in or not, and kept as long as the history. Health is read once a day and kept for good, so you can see the battery wear over the years." : {
+    "Read every five minutes, plugged in or not, and kept as long as the history. Health is read once a day and kept for good." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Måles hvert femte minut, tilsluttet eller ej, og gemmes lige så længe som historikken. Tilstanden måles én gang om dagen og gemmes for altid, så du kan se batteriet slides over årene."
+            "value" : "Måles hvert femte minut, tilsluttet eller ej, og gemmes lige så længe som historikken. Tilstanden måles én gang om dagen og gemmes for altid."
           }
         }
       }
     },
-    "Readings show here a few minutes after they start." : {
+    "Readings" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Målingerne vises her få minutter efter, de er begyndt."
+            "value" : "Målinger"
           }
         }
       }
@@ -578,6 +798,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lige nu"
+          }
+        }
+      }
+    },
+    "Same" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uændret"
           }
         }
       }
@@ -642,12 +872,48 @@
         }
       }
     },
+    "The battery's maximum capacity against when it was new, and its charge cycles: a cycle is a full battery used, in one go or over several days. Read once a day from macOS's own figures, and kept for good, so you can see the battery wear over the years." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriets maksimale kapacitet i forhold til som nyt, og dets opladningscyklusser: en cyklus er et helt batteri brugt, på én gang eller over flere dage. Måles én gang om dagen ud fra macOS’ egne tal og gemmes for altid, så du kan se batteriet slides over årene."
+          }
+        }
+      }
+    },
+    "The battery's own temperature, from its sensors. Around 35 °C while charging is normal. From 38 °C, charging slows down and time spent this warm wears a battery faster; from 40 °C, macOS holds back charging. Keeping the Mac out of the sun and off soft surfaces while it charges helps." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriets egen temperatur, fra dets sensorer. Omkring 35 °C under opladning er normalt. Fra 38 °C går opladningen langsommere, og tid så varm slider batteriet hurtigere; fra 40 °C holder macOS opladningen tilbage. Det hjælper at holde Mac’en ude af solen og væk fra bløde underlag, mens den oplader."
+          }
+        }
+      }
+    },
     "The battery's own temperature. Around 35 °C while charging is normal." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Batteriets egen temperatur. Omkring 35 °C under opladning er normalt."
+          }
+        }
+      }
+    },
+    "The Mac drew %@ on average, up to %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac’en brugte %1$@ i gennemsnit, op til %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The Mac drew %1$@ on average, up to %2$@"
           }
         }
       }
@@ -672,12 +938,32 @@
         }
       }
     },
+    "The period before as a dashed line, and how much each number changed." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perioden før som en stiplet linje, og hvor meget hvert tal har ændret sig."
+          }
+        }
+      }
+    },
     "This Mac has no battery." : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Denne Mac har intet batteri."
+          }
+        }
+      }
+    },
+    "Through the day" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gennem dagen"
           }
         }
       }
@@ -702,6 +988,16 @@
         }
       }
     },
+    "Value" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Værdi"
+          }
+        }
+      }
+    },
     "Voltage" : {
       "localizations" : {
         "da" : {
@@ -718,6 +1014,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Varm"
+          }
+        }
+      }
+    },
+    "Warmest around %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Varmest omkring %@"
+          }
+        }
+      }
+    },
+    "What the whole Mac drew, and what came in from the charger. The difference, plugged in, is what charged the battery; when the Mac draws more than the charger gives, the battery makes up the rest." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hvad hele Mac’en brugte, og hvad der kom ind fra opladeren. Forskellen, når den er tilsluttet, er det, der oplader batteriet; når Mac’en bruger mere end opladeren giver, tager batteriet resten."
           }
         }
       }

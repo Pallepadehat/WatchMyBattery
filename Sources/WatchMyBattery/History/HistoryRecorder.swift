@@ -52,6 +52,7 @@ final class HistoryRecorder {
 
     static let interval: Duration = .seconds(5 * 60)
     private static let leeway: Duration = .seconds(60)
+    private static let firstVitalsDelay: Duration = .seconds(120)
     /// Level changes are saved at most this often; samples are saved as they come.
     private static let saveInterval: TimeInterval = 5 * 60
 
@@ -274,6 +275,9 @@ final class HistoryRecorder {
     private func startReadingVitals() {
         guard vitalsTask == nil else { return }
         vitalsTask = Task { [weak self] in
+            // Not right at launch, when everything else starts too (and the day's health read runs a process): a
+            // couple of minutes later, then every five.
+            try? await Task.sleep(for: Self.firstVitalsDelay, tolerance: Self.leeway)
             while !Task.isCancelled {
                 self?.readVitals()
                 try? await Task.sleep(for: Self.interval, tolerance: Self.leeway)

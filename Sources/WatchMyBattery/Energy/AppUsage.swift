@@ -21,9 +21,9 @@ struct AppUsage: Identifiable, Equatable {
     let tint: Color
     var watts: Double
     var kind: Kind = .app
-    /// For a program with no icon of its own: written in its slice ("cargo") when there's room, as its icon is borrowed
-    /// (its terminal's) or macOS's plain one for any program.
-    var label: String? = nil
+    /// A command run in a terminal (or an editor's terminal), shown with the icon of the app it runs in: its slice adds a
+    /// small terminal badge, so it doesn't read as that app.
+    var isCommand = false
     /// What it's doing, for a part of macOS ("Indexing files so Spotlight can find them."), or where a program runs
     /// ("Running in Ghostty.").
     var detail: String? = nil

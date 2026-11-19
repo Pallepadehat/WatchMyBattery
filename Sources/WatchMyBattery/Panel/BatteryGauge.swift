@@ -449,44 +449,17 @@ private struct AppSlice: View {
         .accessibilityAction(named: "Show Processes") { inspect(app) }
     }
 
-    /// Its icon; for a program without one of its own, its name where there's room, which says more than a borrowed
-    /// icon would.
-    @ViewBuilder private var glyph: some View {
-        if let label = app.label {
-            Group {
-                if Self.labelWidth(label) <= width - 8 {
-                    Text(verbatim: label)
-                        .font(Self.labelFont)
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                        .fixedSize()
-                        .shadow(color: .black.opacity(0.2), radius: 1, y: 0.5)
-                } else {
-                    Image(nsImage: app.icon)
-                        .resizable()
-                        .interpolation(.high)
-                        .frame(width: 24, height: 24)
-                }
+    /// Its icon, never its name: icons read at a glance in a slice this narrow. A command run in a terminal has the
+    /// icon of the app it runs in (Ghostty, Visual Studio Code), with a small terminal badge, as Finder badges an alias.
+    private var glyph: some View {
+        Image(nsImage: app.icon)
+            .resizable()
+            .interpolation(.high)
+            .frame(width: 24, height: 24)
+            .overlay(alignment: .bottomTrailing) {
+                if app.isCommand { TerminalBadge().offset(x: 4, y: 4) }
             }
-        } else {
-            Image(nsImage: app.icon)
-                .resizable()
-                .interpolation(.high)
-                .frame(width: 24, height: 24)
-        }
     }
-
-    private static let labelFont = Font.system(size: 10.5, weight: .semibold, design: .monospaced)
-
-    /// A monospaced name's width: every character is the same, so it's arithmetic, not a layout pass.
-    private static func labelWidth(_ label: String) -> CGFloat {
-        CGFloat(label.count) * characterWidth
-    }
-
-    private static let characterWidth: CGFloat = {
-        let font = NSFont.monospacedSystemFont(ofSize: 10.5, weight: .semibold)
-        return ("M" as NSString).size(withAttributes: [.font: font]).width
-    }()
 
     /// Starts the drag; `DragToQuitController` follows it from there and reports how it ended.
     private var dragToQuit: some Gesture {
@@ -506,6 +479,29 @@ private struct AppSlice: View {
                 withAnimation(.snappy(duration: 0.2)) { draggedApp = app.id }
                 focusedApp = app
             }
+    }
+}
+
+/// A tiny terminal window, for a command's slice: a dark rounded square with a prompt, like Terminal's icon.
+struct TerminalBadge: View {
+    var size: CGFloat = 13
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: size * 0.26, style: .continuous)
+            .fill(Color(white: 0.12))
+            .overlay {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: size * 0.46, weight: .heavy))
+                    .foregroundStyle(.white)
+                    .offset(x: -size * 0.12)
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: size * 0.26, style: .continuous)
+                    .strokeBorder(.white.opacity(0.85), lineWidth: 1)
+            }
+            .frame(width: size, height: size)
+            .shadow(color: .black.opacity(0.3), radius: 1, y: 0.5)
+            .accessibilityHidden(true)
     }
 }
 

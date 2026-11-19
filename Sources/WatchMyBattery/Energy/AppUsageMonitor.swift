@@ -201,7 +201,7 @@ final class AppUsageMonitor {
             guard info.kind != .macOS else { continue }
             return AppUsage(
                 id: pid, name: info.name, bundleIdentifier: info.bundleIdentifier, icon: info.icon, tint: info.tint, watts: watts,
-                kind: info.kind, label: info.label)
+                kind: info.kind, isCommand: info.isCommand)
         }
         return nil
     }
@@ -274,7 +274,7 @@ final class AppUsageMonitor {
             candidates.append(
                 AppUsage(
                     id: pid, name: info.name, bundleIdentifier: info.bundleIdentifier, icon: info.icon, tint: info.tint, watts: watts,
-                    kind: info.kind, label: info.label, detail: info.detail, members: [pid]))
+                    kind: info.kind, isCommand: info.isCommand, detail: info.detail, members: [pid]))
         }
         // The slice keeps the ID of the service's busiest process, so it stays the same slice from one sample to the next.
         for index in candidates.indices where candidates[index].members.count > 1 {
@@ -282,7 +282,7 @@ final class AppUsageMonitor {
             let first = candidates[index]
             candidates[index] = AppUsage(
                 id: members[0], name: first.name, bundleIdentifier: first.bundleIdentifier, icon: first.icon, tint: first.tint, watts: first.watts,
-                kind: first.kind, label: first.label, detail: first.detail, members: members)
+                kind: first.kind, isCommand: first.isCommand, detail: first.detail, members: members)
         }
         let next = Array(
             candidates.filter { $0.watts >= Self.minimumWatts }.sorted { $0.watts > $1.watts }.prefix(maximumApps))
@@ -444,7 +444,7 @@ struct AppInfoCache {
         let icon: NSImage
         let tint: Color
         var kind: AppUsage.Kind = .app
-        var label: String? = nil
+        var isCommand = false
         var detail: String? = nil
     }
 
@@ -490,7 +490,7 @@ struct AppInfoCache {
     /// A program of yours that isn't an app: a command typed in a terminal or sent to the background from one, wherever
     /// it lives, or one running by itself that isn't part of macOS (Docker's engine, a VM, `ollama serve`, a Homebrew
     /// service). One inside an app's bundle, or named like an installed app, takes that app's icon ("Docker"); others
-    /// get macOS's plain icon for a program, and their name written in their slice. Other users' processes, and
+    /// get the icon of the app they run in, with a terminal badge, or macOS's plain icon for a program. Other users' processes, and
     /// macOS's own that aren't a known service, stay in Display & System.
     private static func program(_ pid: pid_t) -> Info? {
         guard Self.owner(of: pid) == getuid(), let path = ProcessName.path(of: pid),
@@ -512,7 +512,7 @@ struct AppInfoCache {
         let hosted = host.flatMap { $0.processIdentifier != pid && $0.activationPolicy == .regular ? $0 : nil }
         return Info(
             name: name, bundleIdentifier: nil, icon: hosted?.icon ?? NSWorkspace.shared.icon(forFile: path), tint: ProgramTint.color(for: name),
-            kind: .program, label: name, detail: hosted?.localizedName.map { String(localized: "Running in \($0). Quit stops it, like Ctrl-C.") })
+            kind: .program, isCommand: hosted != nil, detail: hosted?.localizedName.map { String(localized: "Running in \($0). Quit stops it, like Ctrl-C.") })
     }
 
     private static func owner(of pid: pid_t) -> uid_t? {
