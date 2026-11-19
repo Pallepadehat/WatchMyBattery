@@ -14,6 +14,13 @@ struct EnergySamplingTests {
         return (ownEnergy() ?? 0) > (before ?? .max)
     }()
 
+    /// Running in a virtual machine, where macOS reports `kern.hv_vmm_present`.
+    static let isVirtual: Bool = {
+        var present: Int32 = 0
+        var size = MemoryLayout<Int32>.size
+        return sysctlbyname("kern.hv_vmm_present", &present, &size, nil, 0) == 0 && present == 1
+    }()
+
     @Test func firstSampleIsOnlyABaseline() async {
         let sampler = ProcessEnergySampler()
         let (joules, seconds) = await sampler.sampleEnergy()
@@ -22,8 +29,9 @@ struct EnergySamplingTests {
     }
 
     /// The GPU's energy and each process's GPU time, where the Mac reports them (Apple silicon does): readings that only
-    /// grow, and something to share between, as WindowServer always uses the GPU.
-    @Test func theGPUIsReadOnAppleSilicon() throws {
+    /// grow, and something to share between, as WindowServer always uses the GPU. Virtual Macs (CI runners) have no GPU
+    /// energy counter, so there's nothing to read there.
+    @Test(.enabled(if: !isVirtual)) func theGPUIsReadOnAppleSilicon() throws {
         #if arch(arm64)
             let counter = try #require(GPUEnergyCounter())
             let first = try #require(counter.joules())
