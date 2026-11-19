@@ -448,6 +448,7 @@ struct HistoryKeepRows: View {
             Menu("Export…") {
                 Button("Hours (CSV)…") { export(.csv) }
                 Button("Apps by Day (CSV)…") { export(.appsCSV) }
+                Button("Battery Vitals (CSV)…") { export(.vitalsCSV) }
                 Button("Everything (JSON)…") { export(.json) }
             }
             .fixedSize()

@@ -45,6 +45,7 @@
 
         private static func render(to folder: URL) {
             renderOnboarding(to: folder)
+            renderVitals(to: folder)
             let apps = sampleApps.enumerated().map { index, sample in
                 let icon = NSWorkspace.shared.icon(forFile: sample.path)
                 return AppUsage(
@@ -358,7 +359,7 @@
             return [
                 AppUsage(
                     id: 2001, name: "cargo", bundleIdentifier: nil, icon: terminal, tint: ProgramTint.color(for: "cargo"), watts: 3.1,
-                    kind: .program, label: "cargo", detail: "Running in Terminal. Quit stops it, like Ctrl-C."),
+                    kind: .program, isCommand: true, detail: "Running in Terminal. Quit stops it, like Ctrl-C."),
                 AppUsage(
                     id: 2002, name: String(localized: "Spotlight"), bundleIdentifier: nil, icon: spotlight,
                     tint: IconTint.color(of: spotlight), watts: 1.6, kind: .macOS,
@@ -368,8 +369,44 @@
                     kind: .program),
                 AppUsage(
                     id: 2005, name: "postgres", bundleIdentifier: nil, icon: program, tint: ProgramTint.color(for: "postgres"), watts: 0.6,
-                    kind: .program, label: "postgres"),
+                    kind: .program),
             ]
+        }
+
+        /// Settings › Battery Health, with months of made-up vitals, in dark and light: its list (also narrow), temperature
+        /// over a month compared with the month before, power through the day on battery only (also narrow, over time),
+        /// and a year of health.
+        private static func renderVitals(to folder: URL) {
+            let states: [(name: String, page: VitalsPage?, days: Int, compares: Bool, filter: VitalsFilter, throughTheDay: Bool)] = [
+                ("list", nil, 7, false, .all, false), ("narrow", nil, 7, false, .all, false), ("narrowpower", .power, 30, true, .all, false),
+                ("temperature", .temperature, 30, true, .all, false),
+                ("power", .power, 30, false, .onBattery, true), ("health", .health, 365, false, .all, false),
+            ]
+            for scheme in [ColorScheme.dark, .light] {
+                for state in states {
+                    let model = AppModel(settings: previewSettings(), history: HistoryRecorder(storeURL: nil, legacyFileURL: nil))
+                    model.settings.historyRetention = .year
+                    UserDefaults.standard.set(state.days, forKey: "vitalsPeriodDays")
+                    UserDefaults.standard.set(state.compares, forKey: "vitalsCompares")
+                    UserDefaults.standard.set(state.filter.rawValue, forKey: "vitalsFilter")
+                    model.history.preview(vitals: PretendHistory.makeVitals())
+                    model.battery.preview(
+                        BatterySnapshot(percentage: 81, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 35 * 60),
+                        health: BatteryHealth(condition: .normal, maximumCapacity: 0.94, cycleCount: 296),
+                        readings: BatteryReadings(temperature: 34.2, voltage: 12.71, current: 2.35))
+                    let view = VitalsPane(model: model, page: state.page, throughTheDay: state.throughTheDay)
+                        .formStyle(.grouped)
+                        // "narrow" is the pane with the sidebar dragged as wide as it goes.
+                        .frame(width: state.name.hasPrefix("narrow") ? 450 : 530, height: state.page == nil ? 760 : 1000)
+                        .environment(\.colorScheme, scheme)
+                    saveInWindow(
+                        view, scheme: scheme, scrolledBy: 0,
+                        to: folder.appending(path: "vitals-\(state.name)-\(scheme == .dark ? "dark" : "light").png"))
+                }
+            }
+            UserDefaults.standard.removeObject(forKey: "vitalsPeriodDays")
+            UserDefaults.standard.removeObject(forKey: "vitalsCompares")
+            UserDefaults.standard.removeObject(forKey: "vitalsFilter")
         }
 
         private static func renderOnboarding(to folder: URL) {

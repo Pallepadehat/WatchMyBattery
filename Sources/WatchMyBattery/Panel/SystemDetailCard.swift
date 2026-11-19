@@ -12,11 +12,10 @@ struct SystemDetailCard: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "sun.max.fill")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: 26, height: 26)
-                .background(Color.gray.opacity(0.75), in: .rect(cornerRadius: 6, style: .continuous))
+            Image(nsImage: SystemIcons.displays)
+                .resizable()
+                .interpolation(.high)
+                .frame(width: 28, height: 28)
             VStack(alignment: .leading, spacing: 6) {
                 VStack(alignment: .leading, spacing: 1) {
                     Text("Display & System")
@@ -47,9 +46,9 @@ struct SystemDetailCard: View {
     }
 
     private func rows(_ breakdown: SystemBreakdown) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 3) {
             row(
-                Text("Screen & hardware"), watts: breakdown.hardwareWatts, estimated: false, emphasised: true,
+                Text("Screen & hardware"), icon: SystemIcons.displays, watts: breakdown.hardwareWatts, estimated: false, emphasised: true,
                 help:
                     "The screen's backlight, Wi‑Fi, memory, storage and the rest of the hardware: macOS reports them together, not one by one. A dimmer screen makes this smaller."
             )
@@ -59,7 +58,9 @@ struct SystemDetailCard: View {
                     .foregroundStyle(.tertiary)
                     .padding(.top, 4)
                 ForEach(breakdown.processes) { process in
-                    row(Text(verbatim: process.name), watts: process.watts, estimated: process.isEstimated, emphasised: false, help: nil)
+                    row(
+                        Text(verbatim: process.name), icon: SystemIcons.icon(forProcessNamed: process.name), watts: process.watts,
+                        estimated: process.isEstimated, emphasised: false, help: nil)
                 }
             }
         }
@@ -67,8 +68,12 @@ struct SystemDetailCard: View {
         .animation(.snappy(duration: 0.3), value: breakdown.processes.map(\.pid))
     }
 
-    private func row(_ title: Text, watts: Double, estimated: Bool, emphasised: Bool, help: LocalizedStringKey?) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
+    private func row(_ title: Text, icon: NSImage, watts: Double, estimated: Bool, emphasised: Bool, help: LocalizedStringKey?) -> some View {
+        HStack(spacing: 6) {
+            Image(nsImage: icon)
+                .resizable()
+                .interpolation(.high)
+                .frame(width: 14, height: 14)
             title
                 .fontWeight(emphasised ? .medium : .regular)
                 .lineLimit(1)

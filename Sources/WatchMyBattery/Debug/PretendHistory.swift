@@ -121,6 +121,56 @@
         }
 
         /// A tiny repeatable random number generator: 0..<1.
+        /// Vitals to go with ``make(days:now:)``: on battery at a desk through the working day, warm while charging in the
+        /// evening, resting on the charger at night, and a battery wearing a little as the cycles add up.
+        static func makeVitals(days: Int = 120, now: Date = Date()) -> BatteryVitals {
+            var vitals = BatteryVitals(retention: 366 * 24 * 3600, now: now)
+            let calendar = Calendar.current
+            let today = calendar.startOfDay(for: now)
+            var random = SplitMix(seed: 4711)
+            var level = 100.0
+            for dayIndex in 0..<days {
+                guard let day = calendar.date(byAdding: .day, value: dayIndex - days + 1, to: today) else { continue }
+                let isWeekend = calendar.isDateInWeekend(day)
+                let worn = Double(dayIndex) / Double(days)
+                for hour in 0..<24 {
+                    for minute in [5, 25, 45] {
+                        guard let date = calendar.date(byAdding: .minute, value: hour * 60 + minute, to: day), date <= now else { continue }
+                        let onBattery = isWeekend ? (11...16).contains(hour) : (9...17).contains(hour)
+                        let charging = !onBattery && level < 99
+                        let busy = onBattery ? 6 + random.next() * (isWeekend ? 5 : 9) : 4 + random.next() * 3
+                        let batteryWatts: Double
+                        let charger: Double?
+                        if onBattery {
+                            batteryWatts = -busy
+                            charger = nil
+                            level = max(level - busy / 3, 8)
+                        } else if charging {
+                            let rate = level < 80 ? 45 + random.next() * 15 : 12 + random.next() * 6
+                            batteryWatts = rate
+                            charger = rate + busy
+                            level = min(level + rate / 4.5, 100)
+                        } else {
+                            batteryWatts = 0
+                            charger = busy
+                        }
+                        let temperature =
+                            28 + (onBattery ? busy * 0.45 : 0) + (charging ? max(batteryWatts - 10, 0) * 0.17 : 0) + random.next() * 1.5
+                            + (isWeekend ? -0.5 : 0)
+                        let reading = VitalsReading(
+                            temperature: temperature, voltage: 11.4 + level / 100 * 1.6 + (charging ? 0.15 : 0) - random.next() * 0.05,
+                            batteryWatts: batteryWatts, systemWatts: busy, chargerWatts: charger, percentage: Int(level.rounded()),
+                            isPluggedIn: !onBattery)
+                        vitals.record(reading, at: date, calendar: calendar)
+                    }
+                }
+                let health = BatteryHealth(
+                    condition: .normal, maximumCapacity: ((0.97 - worn * 0.03) * 100).rounded() / 100, cycleCount: 212 + dayIndex * 7 / 10)
+                vitals.record(health: health, at: day.addingTimeInterval(9 * 3600), calendar: calendar)
+            }
+            return vitals
+        }
+
         private struct SplitMix {
             var state: UInt64
             init(seed: UInt64) { state = seed }

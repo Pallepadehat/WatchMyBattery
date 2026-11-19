@@ -682,7 +682,7 @@ enum AppLook {
         } else {
             // A part of macOS, a program that isn't an app, or an app that's since gone: the same icon the panel gives it.
             if let service = MacOSServices.all.first(where: { $0.name == app.name }) {
-                let icon = NSWorkspace.shared.icon(forFile: service.iconPath)
+                let icon = service.icon
                 look = Look(icon: icon, tint: IconTint.color(of: icon, for: app.key))
             } else if let icon = InstalledApps.icon(forCommand: app.name) {
                 look = Look(icon: icon, tint: IconTint.color(of: icon, for: app.key))

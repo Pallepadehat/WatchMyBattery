@@ -1,23 +1,36 @@
 import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// The parts of macOS that are worth a slice of their own, by the processes that do their work: Spotlight's indexers,
-/// iCloud's sync, Photos' analysis. Each gets the icon of the app it belongs with, so it looks like itself.
+/// iCloud's sync, Photos' analysis. Each gets the icon of the app it belongs with, or of its pane in System Settings, so
+/// it looks like itself.
 ///
 /// macOS has hundreds of processes; only those that do something you'd recognise, and that can use real power, are
 /// here. The rest stay in Display & System, where they're listed by name.
 enum MacOSServices {
     struct Service {
         let name: String
-        let iconPath: String
+        /// Where its icon is: the first of these that's on this Mac, as System Settings' panes move between versions.
+        let iconPaths: [String]
         let detail: String
         /// Process names; a trailing `*` matches the start.
         let processes: [String]
+
+        init(name: String, iconPath: String..., detail: String, processes: [String]) {
+            self.name = name
+            iconPaths = iconPath
+            self.detail = detail
+            self.processes = processes
+        }
+
+        @MainActor var icon: NSImage { SystemIcons.icon(at: iconPaths) }
     }
 
     static let all: [Service] = [
         Service(
             name: String(localized: "Spotlight"), iconPath: "/System/Library/CoreServices/Spotlight.app",
+            "/System/Library/ExtensionKit/Extensions/SpotlightPreferenceExtension.appex",
             detail: String(localized: "Indexing files so Spotlight can find them. It settles once it's caught up."),
             processes: ["mds", "mds_stores", "mdworker", "mdworker_shared", "mdsync", "mdbulkimport", "corespotlightd", "spotlightknowledged"]),
         Service(
@@ -47,12 +60,42 @@ enum MacOSServices {
                 "knowledgeconstructiond",
             ]),
         Service(
-            name: String(localized: "Sound"), iconPath: "/System/Applications/Utilities/Audio MIDI Setup.app",
-            detail: String(localized: "Playing and processing sound."), processes: ["coreaudiod", "audiomxd", "audioaccessoryd"]),
+            name: String(localized: "Sound"), iconPath: "/System/Library/ExtensionKit/Extensions/Sound.appex",
+            "/System/Applications/Utilities/Audio MIDI Setup.app",
+            detail: String(localized: "Playing and processing sound."), processes: ["coreaudiod", "audiomxd"]),
         Service(
-            name: String(localized: "Wi‑Fi & Network"), iconPath: "/System/Library/CoreServices/WiFiAgent.app",
+            name: String(localized: "Wi‑Fi & Network"), iconPath: "/System/Library/ExtensionKit/Extensions/Wi-Fi.appex",
+            "/System/Library/ExtensionKit/Extensions/Network.appex",
             detail: String(localized: "Wi‑Fi, network connections and downloads in the background."),
             processes: ["airportd", "wifid", "wifip2pd", "com.apple.DriverKit-AppleBCMWLAN", "mDNSResponder", "nsurlsessiond", "configd", "symptomsd"]),
+        Service(
+            name: String(localized: "Bluetooth"), iconPath: "/System/Library/ExtensionKit/Extensions/Bluetooth.appex",
+            detail: String(localized: "Talking to your Bluetooth keyboard, mouse, headphones and other devices."),
+            processes: ["bluetoothd", "bluetoothuserd", "BTLEServer", "BTLEServerAgent", "audioaccessoryd"]),
+        Service(
+            name: String(localized: "AirDrop & Handoff"), iconPath: "/System/Library/ExtensionKit/Extensions/Sharing.appex",
+            "/System/Library/ExtensionKit/Extensions/GeneralSettings.appex",
+            detail: String(localized: "Finding your other devices nearby for AirDrop, Handoff, AirPlay and Universal Clipboard."),
+            processes: ["sharingd", "rapportd", "useractivityd", "AirPlayXPCHelper", "AirPlayUIAgent", "companiond"]),
+        Service(
+            name: String(localized: "Notifications"), iconPath: "/System/Library/ExtensionKit/Extensions/NotificationsSettings.appex",
+            detail: String(localized: "Showing notifications and keeping Notification Center up to date."),
+            processes: ["usernoted", "NotificationCenter", "UserNotificationCenter"]),
+        Service(
+            name: String(localized: "Apple Account"), iconPath: "/System/Library/ExtensionKit/Extensions/AppleIDSettings.appex",
+            detail: String(localized: "Signing in to Apple services and keeping your account's devices and settings in step."),
+            processes: ["akd", "accountsd", "AppleIDSettings", "familycircled", "findmydeviced", "FindMyWidgetIntentsMac"]),
+        Service(
+            name: String(localized: "Storage"), iconPath: "/System/Library/ExtensionKit/Extensions/Storage.appex",
+            "/System/Library/ExtensionKit/Extensions/StartupDisk.appex",
+            detail: String(localized: "Keeping track of changes on disk, and freeing up space."),
+            processes: ["fseventsd", "deleted", "deleted_helper", "diskarbitrationd", "storagekitd", "apfsd", "revisiond", "kernelmanagerd"]),
+        Service(
+            name: String(localized: "Printing"), iconPath: "/System/Library/ExtensionKit/Extensions/PrinterScannerSettings.appex",
+            detail: String(localized: "Printing and looking for printers."), processes: ["cupsd", "printtool", "PrinterProxy"]),
+        Service(
+            name: String(localized: "Control Center"), iconPath: "/System/Library/ExtensionKit/Extensions/ControlCenterSettings.appex",
+            detail: String(localized: "The menu bar's Control Center and its controls."), processes: ["ControlCenter"]),
         Service(
             name: String(localized: "Messages & FaceTime"), iconPath: "/System/Applications/Messages.app",
             detail: String(localized: "Messages, FaceTime and notifications arriving in the background."),
@@ -62,7 +105,8 @@ enum MacOSServices {
             detail: String(localized: "Logging, and reports about crashes and hangs."),
             processes: ["logd", "diagnosticd", "ReportCrash", "spindump", "sysdiagnose*", "analyticsd", "osanalyticshelper", "tailspind"]),
         Service(
-            name: String(localized: "Security Checks"), iconPath: "/System/Library/CoreServices/Applications/Keychain Access.app",
+            name: String(localized: "Security Checks"), iconPath: "/System/Library/ExtensionKit/Extensions/SecurityPrivacyExtension.appex",
+            "/System/Library/CoreServices/Applications/Keychain Access.app",
             detail: String(localized: "Checking apps and files are safe to open, such as scanning new apps."),
             processes: ["XProtect*", "syspolicyd", "trustd", "securityd", "amfid", "MRT"]),
         Service(
@@ -88,6 +132,35 @@ enum MacOSServices {
     private static let prefixed: [(prefix: String, service: Service)] = all.flatMap { service in
         service.processes.filter { $0.hasSuffix("*") }.map { (String($0.dropLast()), service) }
     }
+}
+
+/// macOS's own icons: System Settings' panes (which follow light and dark mode), loaded once each.
+@MainActor
+enum SystemIcons {
+    private static let settings = "/System/Library/ExtensionKit/Extensions/"
+
+    /// Displays, for Display & System.
+    static var displays: NSImage { icon(at: [settings + "DisplaysExt.appex"]) }
+    /// General, for a part of macOS that isn't one of ``MacOSServices``.
+    static var general: NSImage { icon(at: [settings + "GeneralSettings.appex"]) }
+
+    /// A macOS process's icon: its service's, or General's.
+    static func icon(forProcessNamed name: String) -> NSImage {
+        MacOSServices.service(forProcessNamed: name)?.icon ?? general
+    }
+
+    /// The first of `paths` that's on this Mac, or macOS's icon for a program.
+    static func icon(at paths: [String]) -> NSImage {
+        let key = paths.joined(separator: "|")
+        if let icon = cache[key] { return icon }
+        let icon =
+            paths.first { FileManager.default.fileExists(atPath: $0) }.map { NSWorkspace.shared.icon(forFile: $0) }
+            ?? NSWorkspace.shared.icon(for: .unixExecutable)
+        cache[key] = icon
+        return icon
+    }
+
+    private static var cache: [String: NSImage] = [:]
 }
 
 /// Real icons for programs that aren't apps, from the apps installed on this Mac: `ollama` gets Ollama's, `docker`

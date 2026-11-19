@@ -180,6 +180,14 @@ See the [changelog](CHANGELOG.md).
 - [x] What comes in from the charger, in the Charger row and behind the charger card
 - [x] "The charger can't keep up" only when the Mac uses about all of it
 
+## 0.4.5: battery health
+
+See the [changelog](CHANGELOG.md).
+
+- [x] Settings › Battery Health: temperature, charge level, power, voltage, maximum capacity and cycles over time ([#42](https://github.com/Pallepadehat/WatchMyBattery/issues/42))
+- [x] System Settings' own icons for macOS's services and Display & System, and more of macOS by name
+- [x] Settings › History's weekly chart scales to weeks that use several charges
+
 ## 0.5.0: everywhere
 
 **Widgets and Shortcuts**
@@ -190,7 +198,7 @@ See the [changelog](CHANGELOG.md).
 
 **Battery care**
 
-- [ ] Battery health over time: maximum capacity and cycle count, month by month ([#42](https://github.com/Pallepadehat/WatchMyBattery/issues/42))
+- [x] Battery health over time: maximum capacity and cycle count, month by month ([#42](https://github.com/Pallepadehat/WatchMyBattery/issues/42)), in 0.4.5
 - [ ] A weekly summary: battery time used, the apps that used the most, and how it compares with last week ([#43](https://github.com/Pallepadehat/WatchMyBattery/issues/43))
 - [ ] Rules for low battery: turn on Low Power Mode or quit chosen apps at a level you pick ([#44](https://github.com/Pallepadehat/WatchMyBattery/issues/44))
 
