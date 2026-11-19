@@ -185,6 +185,14 @@ struct BatteryVitalsTests {
         #expect(HistoryExport.suggestedFileName(.vitalsCSV, now: monday).contains("Battery Vitals"))
     }
 
+    @Test func oneHealthReadingHasNoChange() {
+        var vitals = BatteryVitals(now: monday)
+        vitals.record(health: BatteryHealth(condition: nil, maximumCapacity: 0.95, cycleCount: 104), at: at(day: 3, hour: 9), calendar: calendar)
+        let report = vitals.report(from: monday, to: at(day: 7, hour: 0), granularity: .day, calendar: calendar)
+        #expect(report.capacityChange == nil)
+        #expect(report.cyclesAdded == nil)
+    }
+
     @MainActor @Test func theStoreKeepsWhatWasRecorded() throws {
         let url = FileManager.default.temporaryDirectory.appending(path: "vitals-\(UUID().uuidString).store")
         defer { HistoryStore.removeFiles(at: url) }

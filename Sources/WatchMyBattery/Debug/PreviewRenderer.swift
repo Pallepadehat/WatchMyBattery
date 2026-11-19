@@ -380,6 +380,8 @@
             let states: [(name: String, page: VitalsPage?, days: Int, compares: Bool, filter: VitalsFilter, throughTheDay: Bool)] = [
                 ("list", nil, 7, false, .all, false), ("narrow", nil, 7, false, .all, false), ("narrowpower", .power, 30, true, .all, false),
                 ("temperature", .temperature, 30, true, .all, false),
+                // Just started: a few readings close together, and one health reading. Nothing should read "30–30".
+                ("fresh", .temperature, 7, true, .all, false), ("freshlist", nil, 7, false, .all, false),
                 ("power", .power, 30, false, .onBattery, true), ("health", .health, 365, false, .all, false),
             ]
             for scheme in [ColorScheme.dark, .light] {
@@ -389,7 +391,7 @@
                     UserDefaults.standard.set(state.days, forKey: "vitalsPeriodDays")
                     UserDefaults.standard.set(state.compares, forKey: "vitalsCompares")
                     UserDefaults.standard.set(state.filter.rawValue, forKey: "vitalsFilter")
-                    model.history.preview(vitals: PretendHistory.makeVitals())
+                    model.history.preview(vitals: state.name.hasPrefix("fresh") ? freshVitals() : PretendHistory.makeVitals())
                     model.battery.preview(
                         BatterySnapshot(percentage: 81, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 35 * 60),
                         health: BatteryHealth(condition: .normal, maximumCapacity: 0.94, cycleCount: 296),
@@ -407,6 +409,18 @@
             UserDefaults.standard.removeObject(forKey: "vitalsPeriodDays")
             UserDefaults.standard.removeObject(forKey: "vitalsCompares")
             UserDefaults.standard.removeObject(forKey: "vitalsFilter")
+        }
+
+        /// An hour of readings from a Mac on the charger, between 29.6 and 30.4 °C, and today's health.
+        private static func freshVitals(now: Date = Date()) -> BatteryVitals {
+            var vitals = BatteryVitals(retention: 366 * 24 * 3600, now: now)
+            for (minutes, celsius) in [(55.0, 29.6), (40, 30.0), (25, 30.4), (10, 29.8)] {
+                vitals.record(
+                    VitalsReading(temperature: celsius, voltage: 12.68, batteryWatts: 0, systemWatts: 11, chargerWatts: 11, percentage: 88, isPluggedIn: true),
+                    at: now.addingTimeInterval(-minutes * 60))
+            }
+            vitals.record(health: BatteryHealth(condition: .normal, maximumCapacity: 0.88, cycleCount: 569), at: now)
+            return vitals
         }
 
         private static func renderOnboarding(to folder: URL) {

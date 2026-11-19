@@ -152,16 +152,27 @@ struct VitalsPane: View {
         switch page {
         case .temperature:
             guard let mean = whole.temperature.mean, let high = whole.temperature.high else { return nil }
+            if VitalsText.readsTheSame(mean, high, { VitalsText.temperature($0) }) {
+                return String(localized: "Around \(VitalsText.temperature(mean))")
+            }
             return String(localized: "Average \(VitalsText.temperature(mean)), up to \(VitalsText.temperature(high))")
         case .level:
-            guard let low = whole.level.low, let share = report.pluggedInShare else { return nil }
-            return String(localized: "Down to \(VitalsText.percent(low / 100)), on the charger \(VitalsText.percent(share)) of the time")
+            guard let low = whole.level.low, let high = whole.level.high, let share = report.pluggedInShare else { return nil }
+            let charger = VitalsText.percent(share)
+            if VitalsText.readsTheSame(low, high, { VitalsText.percent($0 / 100) }) {
+                return String(localized: "Stayed at \(VitalsText.percent(low / 100)), on the charger \(charger) of the time")
+            }
+            return String(localized: "Down to \(VitalsText.percent(low / 100)), on the charger \(charger) of the time")
         case .power:
             guard let mean = whole.system.mean, let high = whole.system.high else { return nil }
+            if VitalsText.readsTheSame(mean, high, { VitalsText.watts($0) }) {
+                return String(localized: "The Mac drew about \(VitalsText.watts(mean))")
+            }
             return String(localized: "The Mac drew \(VitalsText.watts(mean)) on average, up to \(VitalsText.watts(high))")
         case .voltage:
             guard let low = whole.voltage.low, let high = whole.voltage.high else { return nil }
-            return String(localized: "Between \(VitalsText.volts(low)) and \(VitalsText.volts(high))")
+            guard let spread = VitalsText.spread(low, high, digits: 2) else { return String(localized: "Steady at \(VitalsText.volts(low))") }
+            return String(localized: "Between \(spread) V")
         case .health:
             let latest = report.health.last ?? report.healthBefore
             guard let capacity = latest?.maximumCapacity else { return nil }
@@ -192,18 +203,17 @@ struct VitalsPane: View {
             MetricItem(
                 title: Text("Temperature"), value: readings?.temperature.map { VitalsText.temperature($0) } ?? "–",
                 color: warmthColor(readings?.warmth), help: Text("The battery's own temperature. Around 35 °C while charging is normal.")),
-            MetricItem(title: Text("Voltage"), value: readings?.voltage.map(VitalsText.volts) ?? "–"),
+            MetricItem(title: Text("Voltage"), value: readings?.voltage.map { VitalsText.volts($0) } ?? "–"),
         ]
         if let watts = readings?.batteryWatts, abs(watts) >= 0.1 {
             metrics.append(
                 MetricItem(
-                    title: watts > 0 ? Text("Charging") : Text("Discharging"), value: VitalsText.watts(abs(watts)),
-                    symbol: watts > 0 ? "arrow.down" : "arrow.up", color: watts > 0 ? .green : .primary,
+                    title: watts > 0 ? Text("Charging") : Text("Discharging"), value: VitalsText.watts(abs(watts)), color: watts > 0 ? .green : .primary,
                     help: Text("What's going into the battery, or coming out of it.")))
         } else {
             metrics.append(MetricItem(title: Text("Battery"), value: String(localized: "Resting"), help: Text("Neither charging nor running the Mac.")))
         }
-        metrics.append(MetricItem(title: Text("Maximum Capacity"), value: health?.maximumCapacity.map(VitalsText.percent) ?? "–"))
+        metrics.append(MetricItem(title: Text("Maximum Capacity"), value: health?.maximumCapacity.map { VitalsText.percent($0) } ?? "–"))
         metrics.append(MetricItem(title: Text("Cycles"), value: health?.cycleCount?.formatted() ?? "–"))
         return metrics
     }
@@ -312,84 +322,118 @@ struct VitalsPane: View {
         let before = previous?.whole.stats
         switch page {
         case .temperature:
-            MetricRow(metrics: [
-                MetricItem(
-                    title: Text("Average"), value: whole.temperature.mean.map { VitalsText.temperature($0, digits: 1) } ?? "–",
-                    change: VitalsChange.text(
-                        whole.temperature.mean.map(VitalsText.displayTemperature), before?.temperature.mean.map(VitalsText.displayTemperature),
-                        suffix: "°", digits: 1, higherIsWorse: true)),
-                MetricItem(
-                    title: Text("Range"),
-                    value: whole.temperature.low.flatMap { low in whole.temperature.high.map { VitalsText.range(low, $0, VitalsText.temperatureNumber) } }
-                        ?? "–", unit: Text(VitalsText.temperatureUnitSymbol)),
-                MetricItem(
-                    title: Text("Time Warm"), value: report.whole.coveredSeconds > 0 ? HistoryText.duration(report.whole.warmSeconds) : "–",
-                    color: report.whole.warmSeconds >= 3600 ? .orange : .primary,
-                    help: Text("About how long the battery was at 38 °C or above, where charging slows down and wear adds up."),
-                    change: previous.flatMap { VitalsChange.duration(report.whole.warmSeconds, $0.whole.warmSeconds) }),
-            ])
+            let warm = report.whole.warmSeconds
+            MetricRow(
+                metrics: [
+                    whole.temperature.mean.map { mean in
+                        MetricItem(
+                            title: Text("Average"), value: VitalsText.temperature(mean, digits: 1),
+                            change: VitalsChange.text(
+                                VitalsText.displayTemperature(mean), before?.temperature.mean.map(VitalsText.displayTemperature), suffix: "°", digits: 1,
+                                higherIsWorse: true))
+                    },
+                    whole.temperature.low.flatMap { low in
+                        whole.temperature.high.flatMap {
+                            VitalsText.spread(VitalsText.displayTemperature(low), VitalsText.displayTemperature($0)).map {
+                                MetricItem(title: Text("Range"), value: $0, unit: Text(VitalsText.temperatureUnitSymbol))
+                            }
+                        }
+                    },
+                    report.whole.coveredSeconds > 0
+                        ? MetricItem(
+                            title: Text("Time Warm"), value: warm >= 60 ? HistoryText.duration(warm) : String(localized: "None"),
+                            color: warm >= 3600 ? .orange : .primary,
+                            help: Text("About how long the battery was at 38 °C or above, where charging slows down and wear adds up."),
+                            change: previous.flatMap { before in
+                                warm >= 60 || before.whole.warmSeconds >= 60 ? VitalsChange.duration(warm, before.whole.warmSeconds) : nil
+                            }) : nil,
+                ].compactMap { $0 })
             Divider()
             switch temperatureMode {
             case .overTime:
                 RangeChart(
                     report: report, previous: previous, stats: \.temperature, tint: page.color, convert: VitalsText.displayTemperature,
-                    format: { VitalsText.temperature($0, converted: false) }, threshold: VitalsText.displayTemperature(BatteryReadings.Warmth.warmFrom),
-                    height: 190)
+                    format: { VitalsText.temperature($0, digits: $1, converted: false) },
+                    threshold: VitalsText.displayTemperature(BatteryReadings.Warmth.warmFrom), height: 190)
             case .throughTheDay:
                 HourOfDayChart(
                     report: report, previous: previous, stats: \.temperature, tint: page.color, convert: VitalsText.displayTemperature,
-                    format: { VitalsText.temperature($0, converted: false) }, threshold: VitalsText.displayTemperature(BatteryReadings.Warmth.warmFrom),
+                    format: { VitalsText.temperature($0, digits: $1, converted: false) },
+                    threshold: VitalsText.displayTemperature(BatteryReadings.Warmth.warmFrom),
                     summary: report.warmestHour.map { Text("Warmest around \(HistoryText.hourOfDay($0))") })
             }
         case .level:
-            MetricRow(metrics: [
-                MetricItem(
-                    title: Text("Lowest"), value: whole.level.low.map { VitalsText.percent($0 / 100) } ?? "–",
-                    change: VitalsChange.text(whole.level.low, before?.level.low, suffix: "%", digits: 0, higherIsWorse: false)),
-                MetricItem(
-                    title: Text("Average"), value: whole.level.mean.map { VitalsText.percent($0 / 100) } ?? "–",
-                    change: VitalsChange.text(whole.level.mean, before?.level.mean, suffix: "%", digits: 0, higherIsWorse: nil)),
-                MetricItem(
-                    title: Text("On the Charger"), value: report.pluggedInShare.map(VitalsText.percent) ?? "–", unit: Text("of the time"),
-                    change: VitalsChange.text(
-                        report.pluggedInShare.map { $0 * 100 }, previous?.pluggedInShare.map { $0 * 100 }, suffix: "%", digits: 0, higherIsWorse: nil)),
-            ])
+            MetricRow(
+                metrics: [
+                    whole.level.low.map { low in
+                        MetricItem(
+                            title: Text("Lowest"), value: VitalsText.percent(low / 100),
+                            change: VitalsChange.text(low, before?.level.low, suffix: "%", digits: 0, higherIsWorse: false))
+                    },
+                    whole.level.high.flatMap { high in
+                        whole.level.low.map { VitalsText.readsTheSame($0, high) { VitalsText.percent($0 / 100) } } == true
+                            ? nil : MetricItem(title: Text("Highest"), value: VitalsText.percent(high / 100))
+                    },
+                    whole.level.mean.map { mean in
+                        MetricItem(
+                            title: Text("Average"), value: VitalsText.percent(mean / 100),
+                            change: VitalsChange.text(mean, before?.level.mean, suffix: "%", digits: 0, higherIsWorse: nil))
+                    },
+                    report.pluggedInShare.map { share in
+                        MetricItem(
+                            title: Text("On the Charger"), value: VitalsText.percent(share), unit: Text("of the time"),
+                            change: VitalsChange.text(share * 100, previous?.pluggedInShare.map { $0 * 100 }, suffix: "%", digits: 0, higherIsWorse: nil))
+                    },
+                ].compactMap { $0 })
             Divider()
             RangeChart(
-                report: report, previous: previous, stats: \.level, tint: page.color, convert: { $0 }, format: { VitalsText.percent($0 / 100) },
+                report: report, previous: previous, stats: \.level, tint: page.color, convert: { $0 }, format: { VitalsText.percent($0 / 100, digits: $1) },
                 domain: 0...100, height: 190)
         case .power:
-            MetricRow(metrics: [
-                MetricItem(
-                    title: Text("Mac Average"), value: whole.system.mean.map(VitalsText.watts) ?? "–",
-                    change: VitalsChange.text(whole.system.mean, before?.system.mean, suffix: " W", digits: 1, higherIsWorse: true)),
-                MetricItem(
-                    title: Text("Mac Peak"), value: whole.system.high.map(VitalsText.watts) ?? "–",
-                    change: VitalsChange.text(whole.system.high, before?.system.high, suffix: " W", digits: 0, higherIsWorse: true)),
-                MetricItem(title: Text("Charging Average"), value: whole.charging.mean.map(VitalsText.watts) ?? "–"),
-                MetricItem(title: Text("Charger Peak"), value: whole.charger.high.map(VitalsText.watts) ?? "–"),
-            ])
+            MetricRow(
+                metrics: [
+                    whole.system.mean.map { mean in
+                        MetricItem(
+                            title: Text("Mac Average"), value: VitalsText.watts(mean),
+                            change: VitalsChange.text(mean, before?.system.mean, suffix: " W", digits: 1, higherIsWorse: true))
+                    },
+                    whole.system.high.flatMap { high in
+                        whole.system.mean.map { VitalsText.readsTheSame($0, high) { VitalsText.watts($0) } } == true
+                            ? nil
+                            : MetricItem(
+                                title: Text("Mac Peak"), value: VitalsText.watts(high),
+                                change: VitalsChange.text(high, before?.system.high, suffix: " W", digits: 0, higherIsWorse: true))
+                    },
+                    whole.charging.mean.map { MetricItem(title: Text("Charging Average"), value: VitalsText.watts($0)) },
+                    whole.charger.high.map { MetricItem(title: Text("Charger Peak"), value: VitalsText.watts($0)) },
+                ].compactMap { $0 })
             Divider()
             switch powerMode {
             case .overTime:
                 PowerChart(report: report, previous: previous)
             case .throughTheDay:
                 HourOfDayChart(
-                    report: report, previous: previous, stats: \.system, tint: page.color, convert: { $0 }, format: VitalsText.watts,
+                    report: report, previous: previous, stats: \.system, tint: page.color, convert: { $0 }, format: { VitalsText.watts($0, digits: $1) },
                     summary: report.busiestHour.map { Text("Busiest around \(HistoryText.hourOfDay($0))") })
             }
         case .voltage:
-            MetricRow(metrics: [
-                MetricItem(
-                    title: Text("Average"), value: whole.voltage.mean.map(VitalsText.volts) ?? "–",
-                    change: VitalsChange.text(whole.voltage.mean, before?.voltage.mean, suffix: " V", digits: 2, higherIsWorse: nil)),
-                MetricItem(
-                    title: Text("Range"),
-                    value: whole.voltage.low.flatMap { low in whole.voltage.high.map { VitalsText.range(low, $0, VitalsText.voltsNumber) } } ?? "–",
-                    unit: Text(verbatim: "V")),
-            ])
+            MetricRow(
+                metrics: [
+                    whole.voltage.mean.map { mean in
+                        MetricItem(
+                            title: Text("Average"), value: VitalsText.volts(mean),
+                            change: VitalsChange.text(mean, before?.voltage.mean, suffix: " V", digits: 2, higherIsWorse: nil))
+                    },
+                    whole.voltage.low.flatMap { low in
+                        whole.voltage.high.flatMap { VitalsText.spread(low, $0, digits: 2) }.map {
+                            MetricItem(title: Text("Range"), value: $0, unit: Text(verbatim: "V"))
+                        }
+                    },
+                ].compactMap { $0 })
             Divider()
-            RangeChart(report: report, previous: previous, stats: \.voltage, tint: page.color, convert: { $0 }, format: VitalsText.volts, height: 190)
+            RangeChart(
+                report: report, previous: previous, stats: \.voltage, tint: page.color, convert: { $0 }, format: { VitalsText.volts($0, digits: $1) },
+                height: 190)
         case .health:
             MetricRow(metrics: healthMetrics(report))
             if report.granularity != .hour {
@@ -400,11 +444,11 @@ struct VitalsPane: View {
     }
 
     private func healthMetrics(_ report: VitalsReport) -> [MetricItem] {
-        let latest = report.health.last
+        let latest = report.health.last ?? report.healthBefore
         var metrics = [
-            MetricItem(title: Text("Maximum Capacity"), value: latest?.maximumCapacity.map(VitalsText.percent) ?? "–"),
-            MetricItem(title: Text("Cycles"), value: latest?.cycleCount?.formatted() ?? "–"),
-        ]
+            latest?.maximumCapacity.map { MetricItem(title: Text("Maximum Capacity"), value: VitalsText.percent($0)) },
+            latest?.cycleCount.map { MetricItem(title: Text("Cycles"), value: $0.formatted()) },
+        ].compactMap { $0 }
         if let change = report.capacityChange {
             let points = (abs(change) * 100).formatted(.number.precision(.fractionLength(0...1)))
             metrics.append(
@@ -682,6 +726,21 @@ private enum VitalsAxis {
         return previous.periods[index]
     }
 
+    /// About three round values within `domain` (steps of 1, 2, 2.5 or 5 times a power of ten), and the decimals they
+    /// need to read apart.
+    static func ticks(in domain: ClosedRange<Double>, count: Int = 3) -> (values: [Double], digits: Int) {
+        let span = domain.upperBound - domain.lowerBound
+        guard span > 0, span.isFinite else { return ([domain.lowerBound], 0) }
+        let raw = span / Double(count)
+        let magnitude = pow(10, floor(log10(raw)))
+        let step = [1, 2, 2.5, 5, 10].map { $0 * magnitude }.first { $0 >= raw } ?? 10 * magnitude
+        let first = (domain.lowerBound / step).rounded(.up) * step
+        let values = stride(from: first, through: domain.upperBound + step * 0.001, by: step).map { ($0 / step).rounded() * step }
+        var digits = 0
+        while digits < 4, abs((step * pow(10, Double(digits))).rounded() - step * pow(10, Double(digits))) > 1e-6 { digits += 1 }
+        return (values, digits)
+    }
+
     static let beforeStyle = StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [3, 3])
     static let beforeName = String(localized: "Before")
 }
@@ -704,8 +763,8 @@ private struct RangeChart: View {
     let tint: Color
     /// From what's recorded to what's shown (°C to °F, say).
     let convert: (Double) -> Double
-    /// A shown value, as text.
-    let format: (Double) -> String
+    /// A shown value, as text, with at least this many decimals.
+    let format: (Double, Int) -> String
     var threshold: Double?
     var domain: ClosedRange<Double>?
     var height: CGFloat = 130
@@ -761,11 +820,11 @@ private struct RangeChart: View {
                 }
             }
             .chartYAxis {
-                AxisMarks(position: .trailing, values: .automatic(desiredCount: 3)) { value in
+                AxisMarks(position: .trailing, values: ticks.values) { value in
                     AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5)).foregroundStyle(.quaternary)
                     AxisValueLabel {
                         if let number = value.as(Double.self) {
-                            Text(format(number))
+                            Text(format(number, ticks.digits))
                                 .foregroundStyle(Color.secondary)
                         }
                     }
@@ -795,20 +854,25 @@ private struct RangeChart: View {
 
     private var span: Double { yDomain.upperBound - yDomain.lowerBound }
 
+    /// Round steps for the axis, and the decimals they need, which captions use too, so nothing reads as two of the same.
+    private var ticks: (values: [Double], digits: Int) { VitalsAxis.ticks(in: yDomain) }
+
     private func caption(_ index: Int?) -> Text? {
         guard let index else { return nil }
         let period = report.periods[index]
         let values = period.stats[keyPath: stats]
         let name = Text(VitalsAxis.name(of: period, granularity: report.granularity)).foregroundStyle(.primary)
-        let before = VitalsAxis.before(previous, at: index)?.stats[keyPath: stats].mean.map { String(localized: ", before \(format(convert($0)))") } ?? ""
+        let before =
+            VitalsAxis.before(previous, at: index)?.stats[keyPath: stats].mean.map { String(localized: ", before \(format(convert($0), ticks.digits))") } ?? ""
         guard let low = values.low, let high = values.high, let mean = values.mean else { return Text("\(name)  no readings") }
-        return Text("\(name)  \(format(convert(low)))–\(format(convert(high))), avg \(format(convert(mean)))\(before)")
+        return Text(
+            "\(name)  \(format(convert(low), ticks.digits))–\(format(convert(high), ticks.digits)), avg \(format(convert(mean), ticks.digits))\(before)")
     }
 
     private var accessibilityValue: String {
         let whole = report.whole.stats[keyPath: stats]
         guard let low = whole.low, let high = whole.high else { return String(localized: "No readings yet.") }
-        return String(localized: "From \(format(convert(low))) to \(format(convert(high))).")
+        return String(localized: "From \(format(convert(low), ticks.digits)) to \(format(convert(high), ticks.digits)).")
     }
 }
 
@@ -820,7 +884,8 @@ private struct HourOfDayChart: View {
     let stats: KeyPath<VitalsStats, ReadingStats>
     let tint: Color
     let convert: (Double) -> Double
-    let format: (Double) -> String
+    /// A shown value, as text, with at least this many decimals.
+    let format: (Double, Int) -> String
     var threshold: Double?
     /// What the chart says, when the pointer isn't on it.
     var summary: Text?
@@ -881,11 +946,11 @@ private struct HourOfDayChart: View {
                 }
             }
             .chartYAxis {
-                AxisMarks(position: .trailing, values: .automatic(desiredCount: 3)) { value in
+                AxisMarks(position: .trailing, values: ticks.values) { value in
                     AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5)).foregroundStyle(.quaternary)
                     AxisValueLabel {
                         if let number = value.as(Double.self) {
-                            Text(format(number))
+                            Text(format(number, ticks.digits))
                                 .foregroundStyle(Color.secondary)
                         }
                     }
@@ -914,13 +979,17 @@ private struct HourOfDayChart: View {
 
     private var span: Double { yDomain.upperBound - yDomain.lowerBound }
 
+    /// Round steps for the axis, and the decimals they need, which captions use too, so nothing reads as two of the same.
+    private var ticks: (values: [Double], digits: Int) { VitalsAxis.ticks(in: yDomain) }
+
     private func caption(_ hour: Int) -> Text {
         let values = report.hoursOfDay[hour].stats[keyPath: stats]
         let name = Text(HistoryText.hourOfDay(hour)).foregroundStyle(.primary)
         let before =
-            previous.flatMap { $0.hoursOfDay[hour].stats[keyPath: stats].mean }.map { String(localized: ", before \(format(convert($0)))") } ?? ""
+            previous.flatMap { $0.hoursOfDay[hour].stats[keyPath: stats].mean }.map { String(localized: ", before \(format(convert($0), ticks.digits))") } ?? ""
         guard let low = values.low, let high = values.high, let mean = values.mean else { return Text("\(name)  no readings") }
-        return Text("\(name)  \(format(convert(low)))–\(format(convert(high))), avg \(format(convert(mean)))\(before)")
+        return Text(
+            "\(name)  \(format(convert(low), ticks.digits))–\(format(convert(high), ticks.digits)), avg \(format(convert(mean), ticks.digits))\(before)")
     }
 }
 
@@ -1043,11 +1112,12 @@ private struct HealthChart: View {
                 }
             }
             .chartYAxis {
-                AxisMarks(position: .trailing, values: .automatic(desiredCount: 3)) { value in
+                let ticks = VitalsAxis.ticks(in: yDomain)
+                AxisMarks(position: .trailing, values: ticks.values) { value in
                     AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5)).foregroundStyle(.quaternary)
                     AxisValueLabel {
                         if let percent = value.as(Double.self) {
-                            Text(VitalsText.percent(percent / 100))
+                            Text(VitalsText.percent(percent / 100, digits: ticks.digits))
                                 .foregroundStyle(Color.secondary)
                         }
                     }
@@ -1078,7 +1148,7 @@ private struct HealthChart: View {
 
     private func caption(_ day: BatteryVitals.HealthDay) -> Text {
         let name = Text(day.day.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))).foregroundStyle(.primary)
-        let capacity = day.maximumCapacity.map(VitalsText.percent) ?? "–"
+        let capacity = day.maximumCapacity.map { VitalsText.percent($0) } ?? "–"
         if let cycles = day.cycleCount { return Text("\(name)  \(capacity), \(cycles) cycles") }
         return Text("\(name)  \(capacity)")
     }
@@ -1140,21 +1210,32 @@ enum VitalsText {
         temperatureNumber(converted ? displayTemperature(value) : value, digits: digits) + "°"
     }
 
-    static func temperatureNumber(_ value: Double) -> String { temperatureNumber(displayTemperature(value), digits: 0) }
-
     private static func temperatureNumber(_ value: Double, digits: Int) -> String {
         value.formatted(.number.precision(.fractionLength(digits)))
     }
 
-    static func volts(_ volts: Double) -> String { voltsNumber(volts) + " V" }
-    static func voltsNumber(_ volts: Double) -> String { volts.formatted(.number.precision(.fractionLength(2))) }
+    static func volts(_ volts: Double, digits: Int = 2) -> String { number(volts, digits: max(digits, 2)) + " V" }
 
-    static func watts(_ watts: Double) -> String {
-        watts.formatted(.number.precision(.fractionLength(watts < 10 && watts != 0 ? 1 : 0))) + " W"
+    /// "7.3 W" under 10 W, "15 W" above, with more digits if asked.
+    static func watts(_ watts: Double, digits: Int = 0) -> String {
+        number(watts, digits: max(digits, watts < 10 && watts != 0 ? 1 : 0)) + " W"
     }
 
-    static func percent(_ fraction: Double) -> String { fraction.formatted(.percent.precision(.fractionLength(0))) }
+    static func percent(_ fraction: Double, digits: Int = 0) -> String { fraction.formatted(.percent.precision(.fractionLength(digits))) }
 
-    /// "28–36".
-    static func range(_ low: Double, _ high: Double, _ number: (Double) -> String) -> String { "\(number(low))–\(number(high))" }
+    static func number(_ value: Double, digits: Int) -> String { value.formatted(.number.precision(.fractionLength(digits))) }
+
+    /// "28–36", with a decimal more when whole numbers would read as one value ("29.6–30.4"); `nil` when even then
+    /// there's no spread to show.
+    static func spread(_ low: Double, _ high: Double, digits: Int = 0) -> String? {
+        for places in [digits, digits + 1] {
+            let from = number(low, digits: places)
+            let to = number(high, digits: places)
+            if from != to { return "\(from)–\(to)" }
+        }
+        return nil
+    }
+
+    /// Two values that read the same once rounded: there's no point showing both.
+    static func readsTheSame(_ a: Double, _ b: Double, _ text: (Double) -> String) -> Bool { text(a) == text(b) }
 }

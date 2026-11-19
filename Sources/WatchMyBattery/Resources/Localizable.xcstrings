@@ -208,6 +208,16 @@
         }
       }
     },
+    "Around %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omkring %@"
+          }
+        }
+      }
+    },
     "Average %@, up to %@" : {
       "localizations" : {
         "da" : {
@@ -264,18 +274,12 @@
         }
       }
     },
-    "Between %@ and %@" : {
+    "Between %@ V" : {
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mellem %1$@ og %2$@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Between %1$@ and %2$@"
+            "value" : "Mellem %@ V"
           }
         }
       }
@@ -842,6 +846,32 @@
         }
       }
     },
+    "Stayed at %@, on the charger %@ of the time" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blev på %1$@, på opladeren %2$@ af tiden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Stayed at %1$@, on the charger %2$@ of the time"
+          }
+        }
+      }
+    },
+    "Steady at %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stabil på %@"
+          }
+        }
+      }
+    },
     "Storage" : {
       "localizations" : {
         "da" : {
@@ -924,6 +954,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mac’en brugte %@ i gennemsnit."
+          }
+        }
+      }
+    },
+    "The Mac drew about %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac’en brugte omkring %@"
           }
         }
       }
