@@ -10,8 +10,13 @@ public enum ChargingNote: Sendable, Equatable {
     case pausedWhileHot(temperature: Double)
     /// Charging, but held back while the battery is this warm.
     case slowedByHeat(temperature: Double)
-    /// The charger can't keep up with the Mac, so the battery isn't charging, or is even running down.
-    case adapterTooWeak(adapterWatts: Int?, systemWatts: Double?)
+    /// The charger can't keep up with the Mac: the Mac draws about all it can give, so the battery isn't charging, or
+    /// is even running down.
+    case adapterTooWeak(adapterWatts: Int, systemWatts: Double)
+    /// Running down on the charger although the Mac draws much less than it's rated for: the charger, the cable or
+    /// the port isn't giving its full power (or another app is draining the battery on purpose). `chargerWatts` is
+    /// what's actually coming in, when the battery controller says.
+    case notGettingFullPower(adapterWatts: Int?, chargerWatts: Double?)
     /// Charging, but slowly: the Mac itself takes most of what the charger gives.
     case chargingSlowly(adapterWatts: Int, systemWatts: Double)
     /// Just short of where it charges to: macOS lets a charged battery drift down a little before topping it up, so it
@@ -23,9 +28,11 @@ public enum ChargingNote: Sendable, Equatable {
     /// - Parameters:
     ///   - adapter: the connected charger, when there is one.
     ///   - systemWatts: what the whole Mac draws right now, when it's being measured.
+    ///   - chargerWatts: what the Mac is getting from the charger right now, when it's being measured.
     ///   - readings: the battery controller's readings, for its temperature and which way current flows.
     public static func evaluate(
-        snapshot: BatterySnapshot, adapter: PowerAdapter?, systemWatts: Double?, readings: BatteryReadings?
+        snapshot: BatterySnapshot, adapter: PowerAdapter?, systemWatts: Double?, chargerWatts: Double? = nil,
+        readings: BatteryReadings?
     ) -> ChargingNote? {
         guard snapshot.hasBattery, snapshot.isPluggedIn else { return nil }
         let temperature = readings?.temperature
@@ -36,16 +43,21 @@ public enum ChargingNote: Sendable, Equatable {
         case .notCharging:
             // Held there on purpose, and the charge bar says by whom.
             if snapshot.hasChargeLimit && snapshot.isAtTarget { return nil }
-            // Current flowing out of the battery is proof the charger isn't enough, whatever else is going on.
-            if isRunningFromBattery(readings) {
-                return .adapterTooWeak(adapterWatts: adapterWatts, systemWatts: systemWatts)
+            // Running down on the charger is worth saying whatever else is going on, but why decides what to say: a Mac
+            // drawing all the charger can give, or a charger that isn't giving what it should. Only the first is the
+            // charger being too small.
+            if isRunningFromBattery(readings, systemWatts: systemWatts, chargerWatts: chargerWatts) {
+                if let adapterWatts, let systemWatts, isOverloaded(adapterWatts: adapterWatts, systemWatts: systemWatts, share: overloadedShare) {
+                    return .adapterTooWeak(adapterWatts: adapterWatts, systemWatts: systemWatts)
+                }
+                return .notGettingFullPower(adapterWatts: adapterWatts, chargerWatts: chargerWatts)
             }
             // Just short of the target, not charging is simply how macOS tops up, however busy or warm the Mac is.
             if snapshot.percentage >= snapshot.chargeTarget - restingMargin {
                 return .restingNearTarget(target: snapshot.chargeTarget)
             }
             if isHot, let temperature { return .pausedWhileHot(temperature: temperature) }
-            if isOverloaded(adapterWatts: adapterWatts, systemWatts: systemWatts, share: overloadedShare) {
+            if let adapterWatts, let systemWatts, isOverloaded(adapterWatts: adapterWatts, systemWatts: systemWatts, share: overloadedShare) {
                 return .adapterTooWeak(adapterWatts: adapterWatts, systemWatts: systemWatts)
             }
             return nil
@@ -79,13 +91,20 @@ public enum ChargingNote: Sendable, Equatable {
     /// macOS tops up a full battery once it's drifted down about this far.
     static let restingMargin = 5
 
-    private static func isRunningFromBattery(_ readings: BatteryReadings?) -> Bool {
+    /// The Mac taking this many more watts than come in from the charger is the battery making up the difference,
+    /// beyond what's just the two readings being taken a moment apart.
+    static let shortfallWatts = 1.0
+
+    /// Whether the battery is supplying part of the Mac's power while it's plugged in. What comes in from the
+    /// charger against what the Mac draws says so best: both are measured by the same controller at the same time.
+    /// Without them, current flowing out of the battery does.
+    private static func isRunningFromBattery(_ readings: BatteryReadings?, systemWatts: Double?, chargerWatts: Double?) -> Bool {
+        if let systemWatts, let chargerWatts { return systemWatts - chargerWatts >= shortfallWatts }
         guard let current = readings?.current else { return false }
         return current <= dischargingCurrent
     }
 
-    private static func isOverloaded(adapterWatts: Int?, systemWatts: Double?, share: Double) -> Bool {
-        guard let adapterWatts, let systemWatts, adapterWatts > 0 else { return false }
-        return systemWatts >= Double(adapterWatts) * share
+    private static func isOverloaded(adapterWatts: Int, systemWatts: Double, share: Double) -> Bool {
+        adapterWatts > 0 && systemWatts >= Double(adapterWatts) * share
     }
 }

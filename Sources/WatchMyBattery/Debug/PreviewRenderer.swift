@@ -45,6 +45,7 @@
 
         private static func render(to folder: URL) {
             renderOnboarding(to: folder)
+            renderVitals(to: folder)
             let apps = sampleApps.enumerated().map { index, sample in
                 let icon = NSWorkspace.shared.icon(forFile: sample.path)
                 return AppUsage(
@@ -78,14 +79,24 @@
                 ("slowcharger", BatterySnapshot(percentage: 47, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 3 * 3600)),
                 ("hot", BatterySnapshot(percentage: 62, powerSource: .powerAdapter, chargeState: .notCharging, timeRemaining: nil)),
                 ("nearlyfull", BatterySnapshot(percentage: 97, powerSource: .powerAdapter, chargeState: .notCharging, timeRemaining: nil)),
+                // 0.4.4: commands and background programs get slices of their own.
+                ("tools", BatterySnapshot(percentage: 58, powerSource: .battery, chargeState: .discharging, timeRemaining: 3 * 3600 + 10 * 60)),
+                ("toolsspotlight", BatterySnapshot(percentage: 58, powerSource: .battery, chargeState: .discharging, timeRemaining: 3 * 3600 + 10 * 60)),
+                ("toolssystem", BatterySnapshot(percentage: 58, powerSource: .battery, chargeState: .discharging, timeRemaining: 3 * 3600 + 10 * 60)),
+                // 0.4.4: a big charger giving the Mac too little, so the battery makes up the rest.
+                ("underpowered", BatterySnapshot(percentage: 95, powerSource: .powerAdapter, chargeState: .notCharging, timeRemaining: nil)),
+                // 0.4.3: an app's history opened in the last day, and a day picked in the last ten.
+                ("historyapp", BatterySnapshot(percentage: 64, powerSource: .battery, chargeState: .discharging, timeRemaining: 4 * 3600 + 50 * 60)),
+                ("historyday", BatterySnapshot(percentage: 64, powerSource: .battery, chargeState: .discharging, timeRemaining: 4 * 3600 + 50 * 60)),
             ]
-            /// The charger in each 0.4.0 state, and what the Mac draws from it.
-            let chargers: [String: (adapter: PowerAdapter, systemWatts: Double)] = [
-                "weakcharger": (PowerAdapter(watts: 30, name: "30W USB-C Power Adapter"), 34),
-                "slowcharger": (PowerAdapter(watts: 30, name: "30W USB-C Power Adapter"), 24),
-                "hot": (PowerAdapter(watts: 96, name: "96W USB-C Power Adapter"), 14),
-                "nearlyfull": (PowerAdapter(watts: 96, name: "96W USB-C Power Adapter"), 9),
-                "charging": (PowerAdapter(watts: 70, name: "70W USB-C Power Adapter"), 14),
+            /// The charger in each 0.4.0 state, what the Mac draws, and what comes in from the charger.
+            let chargers: [String: (adapter: PowerAdapter, systemWatts: Double, chargerWatts: Double)] = [
+                "weakcharger": (PowerAdapter(watts: 30, name: "30W USB-C Power Adapter"), 34, 29),
+                "slowcharger": (PowerAdapter(watts: 30, name: "30W USB-C Power Adapter"), 24, 29),
+                "hot": (PowerAdapter(watts: 96, name: "96W USB-C Power Adapter"), 14, 14),
+                "nearlyfull": (PowerAdapter(watts: 96, name: "96W USB-C Power Adapter"), 9, 9),
+                "charging": (PowerAdapter(watts: 70, name: "70W USB-C Power Adapter"), 14, 42),
+                "underpowered": (PowerAdapter(watts: 100, name: "100W USB-C Power Adapter"), 6.6, 4.5),
             ]
 
             let health = BatteryHealth(condition: .normal, maximumCapacity: 0.88, cycleCount: 564)
@@ -100,15 +111,27 @@
                         snapshot, health: name == "low" ? BatteryHealth(condition: .serviceRecommended, maximumCapacity: 0.74, cycleCount: 1012) : health,
                         readings: BatteryReadings(
                             temperature: name == "hot" ? 42.3 : name == "charging" ? 36.4 : 29.6, voltage: 12.41,
-                            current: snapshot.isCharging ? 2.35 : name == "weakcharger" ? -0.4 : snapshot.isPluggedIn ? 0 : -1.12),
+                            current: snapshot.isCharging ? 2.35 : name == "weakcharger" || name == "underpowered" ? -0.4 : snapshot.isPluggedIn ? 0 : -1.12),
                         adapter: charger?.adapter)
                     model.chargeLimit.preview(limit: name == "limit" ? 85 : name == "charging" ? 100 : 80)
+                    let tools = Self.sampleTools()
                     model.usage.preview(
-                        apps: Array(apps.prefix(model.settings.maximumApps)), systemWatts: charger?.systemWatts ?? 14,
+                        apps: Array((name.hasPrefix("tools") ? tools + apps : apps).prefix(model.settings.maximumApps)),
+                        systemWatts: charger?.systemWatts ?? 14,
+                        chargerWatts: charger?.chargerWatts,
                         refusal: name == "half" ? QuitRefusal(id: apps[1].id, name: apps[1].name, icon: apps[1].icon) : nil)
                     let history = sampleHistory(apps: sampleApps.map(\.path), now: snapshot)
                     model.history.preview(history, profile: sampleProfile(history: history))
                     if name == "tendays" { model.settings.historyRange = .tenDays }
+                    HistorySection.previewState = (nil, nil)
+                    if name == "historyapp" || name == "historyday" {
+                        let made = PretendHistory.make(days: 30)
+                        model.history.preview(made.history, profile: made.profile)
+                        let calendar = Calendar.current
+                        let day = calendar.date(byAdding: .day, value: -2, to: calendar.startOfDay(for: Date()))
+                        if name == "historyday" { model.settings.historyRange = .tenDays }
+                        HistorySection.previewState = (name == "historyday" ? day : nil, "com.apple.dt.Xcode")
+                    }
                     if name == "insights" { previewInsights(model.insights, history: history) }
                     if name == "discharging" || name == "charging" || name == "short" { model.accessories.preview(AccessoryMonitor.samples) }
                     if name == "short" {
@@ -157,6 +180,24 @@
                                 ProcessEnergy(pid: 2002, name: "swift-frontend", watts: 0.5, isApp: false),
                                 ProcessEnergy(pid: 2003, name: "com.apple.dt.SKAgent", watts: 0.2, isApp: false),
                             ])
+                    }
+                    if name == "toolsspotlight" {
+                        model.usage.preview(
+                            inspecting: 2002,
+                            processes: [
+                                ProcessEnergy(pid: 2002, name: "mds_stores", watts: 0.9, isApp: true, isEstimated: true),
+                                ProcessEnergy(pid: 2003, name: "mdworker_shared", watts: 0.5, isApp: true),
+                                ProcessEnergy(pid: 2006, name: "mds", watts: 0.2, isApp: true, isEstimated: true),
+                            ])
+                    }
+                    if name == "toolssystem" {
+                        model.usage.preview(
+                            system: SystemBreakdown(
+                                processes: [
+                                    ProcessEnergy(pid: 398, name: "runningboardd", watts: 0.21, isApp: true, isEstimated: true),
+                                    ProcessEnergy(pid: 325, name: "launchd", watts: 0.06, isApp: true, isEstimated: true),
+                                    ProcessEnergy(pid: 330, name: "fseventsd", watts: 0.04, isApp: true, isEstimated: true),
+                                ], hardwareWatts: 5.4))
                     }
                     let view = BatteryPanelView(model: model, close: {})
                         .background(scheme == .dark ? Color(white: 0.16) : Color(white: 0.94))
@@ -306,6 +347,82 @@
         }
 
         /// Every step of the welcome tour, settled, in light and dark.
+        /// 0.4.4: what a busy developer's Mac shows: a command in a terminal, Spotlight indexing, Docker's engine and a
+        /// server with no icon of its own.
+        private static func sampleTools() -> [AppUsage] {
+            let terminal = NSWorkspace.shared.icon(forFile: "/System/Applications/Utilities/Terminal.app")
+            let program = NSWorkspace.shared.icon(forFile: "/bin/zsh")
+            let spotlight = NSWorkspace.shared.icon(forFile: "/System/Library/CoreServices/Spotlight.app")
+            // Docker's icon where it's installed; Xcode's otherwise, to show an app's icon on a program.
+            let docker = NSWorkspace.shared.icon(
+                forFile: FileManager.default.fileExists(atPath: "/Applications/Docker.app") ? "/Applications/Docker.app" : "/Applications/Xcode.app")
+            return [
+                AppUsage(
+                    id: 2001, name: "cargo", bundleIdentifier: nil, icon: terminal, tint: ProgramTint.color(for: "cargo"), watts: 3.1,
+                    kind: .program, isCommand: true, detail: "Running in Terminal. Quit stops it, like Ctrl-C."),
+                AppUsage(
+                    id: 2002, name: String(localized: "Spotlight"), bundleIdentifier: nil, icon: spotlight,
+                    tint: IconTint.color(of: spotlight), watts: 1.6, kind: .macOS,
+                    detail: MacOSServices.all.first?.detail, members: [2002, 2003]),
+                AppUsage(
+                    id: 2004, name: "Docker", bundleIdentifier: nil, icon: docker, tint: IconTint.color(of: docker), watts: 1.1,
+                    kind: .program),
+                AppUsage(
+                    id: 2005, name: "postgres", bundleIdentifier: nil, icon: program, tint: ProgramTint.color(for: "postgres"), watts: 0.6,
+                    kind: .program),
+            ]
+        }
+
+        /// Settings › Battery Health, with months of made-up vitals, in dark and light: its list (also narrow), temperature
+        /// over a month compared with the month before, power through the day on battery only (also narrow, over time),
+        /// and a year of health.
+        private static func renderVitals(to folder: URL) {
+            let states: [(name: String, page: VitalsPage?, days: Int, compares: Bool, filter: VitalsFilter, throughTheDay: Bool)] = [
+                ("list", nil, 7, false, .all, false), ("narrow", nil, 7, false, .all, false), ("narrowpower", .power, 30, true, .all, false),
+                ("temperature", .temperature, 30, true, .all, false),
+                // Just started: a few readings close together, and one health reading. Nothing should read "30–30".
+                ("fresh", .temperature, 7, true, .all, false), ("freshlist", nil, 7, false, .all, false),
+                ("power", .power, 30, false, .onBattery, true), ("health", .health, 365, false, .all, false),
+            ]
+            for scheme in [ColorScheme.dark, .light] {
+                for state in states {
+                    let model = AppModel(settings: previewSettings(), history: HistoryRecorder(storeURL: nil, legacyFileURL: nil))
+                    model.settings.historyRetention = .year
+                    UserDefaults.standard.set(state.days, forKey: "vitalsPeriodDays")
+                    UserDefaults.standard.set(state.compares, forKey: "vitalsCompares")
+                    UserDefaults.standard.set(state.filter.rawValue, forKey: "vitalsFilter")
+                    model.history.preview(vitals: state.name.hasPrefix("fresh") ? freshVitals() : PretendHistory.makeVitals())
+                    model.battery.preview(
+                        BatterySnapshot(percentage: 81, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 35 * 60),
+                        health: BatteryHealth(condition: .normal, maximumCapacity: 0.94, cycleCount: 296),
+                        readings: BatteryReadings(temperature: 34.2, voltage: 12.71, current: 2.35))
+                    let view = VitalsPane(model: model, page: state.page, throughTheDay: state.throughTheDay)
+                        .formStyle(.grouped)
+                        // "narrow" is the pane with the sidebar dragged as wide as it goes.
+                        .frame(width: state.name.hasPrefix("narrow") ? 450 : 530, height: state.page == nil ? 760 : 1000)
+                        .environment(\.colorScheme, scheme)
+                    saveInWindow(
+                        view, scheme: scheme, scrolledBy: 0,
+                        to: folder.appending(path: "vitals-\(state.name)-\(scheme == .dark ? "dark" : "light").png"))
+                }
+            }
+            UserDefaults.standard.removeObject(forKey: "vitalsPeriodDays")
+            UserDefaults.standard.removeObject(forKey: "vitalsCompares")
+            UserDefaults.standard.removeObject(forKey: "vitalsFilter")
+        }
+
+        /// An hour of readings from a Mac on the charger, between 29.6 and 30.4 °C, and today's health.
+        private static func freshVitals(now: Date = Date()) -> BatteryVitals {
+            var vitals = BatteryVitals(retention: 366 * 24 * 3600, now: now)
+            for (minutes, celsius) in [(55.0, 29.6), (40, 30.0), (25, 30.4), (10, 29.8)] {
+                vitals.record(
+                    VitalsReading(temperature: celsius, voltage: 12.68, batteryWatts: 0, systemWatts: 11, chargerWatts: 11, percentage: 88, isPluggedIn: true),
+                    at: now.addingTimeInterval(-minutes * 60))
+            }
+            vitals.record(health: BatteryHealth(condition: .normal, maximumCapacity: 0.88, cycleCount: 569), at: now)
+            return vitals
+        }
+
         private static func renderOnboarding(to folder: URL) {
             for scheme in [ColorScheme.dark, .light] {
                 for step in OnboardingView.Step.allCases {

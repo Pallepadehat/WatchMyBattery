@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 
 /// The panes of Settings, in the sidebar.
 enum SettingsPane: String, CaseIterable, Identifiable {
-    case general, menuBar, panel, charging, sleep, accessories, notifications, updates, about
+    case general, menuBar, panel, history, vitals, charging, sleep, accessories, notifications, updates, about
 
     var id: Self { self }
 
@@ -14,6 +14,8 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .general: String(localized: "General")
         case .menuBar: String(localized: "Menu Bar")
         case .panel: String(localized: "Panel")
+        case .history: String(localized: "History")
+        case .vitals: String(localized: "Battery Health")
         case .charging: String(localized: "Charging")
         case .sleep: String(localized: "Sleep")
         case .accessories: String(localized: "Accessories")
@@ -28,6 +30,8 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .general: "gearshape.fill"
         case .menuBar: "rectangle.topthird.inset.filled"
         case .panel: SettingIcon.battery
+        case .history: "chart.bar.xaxis"
+        case .vitals: "heart.text.square.fill"
         case .charging: "powerplug.fill"
         case .sleep: "moon.zzz.fill"
         case .accessories: "airpodspro"
@@ -42,6 +46,8 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .general: .gray
         case .menuBar: .blue
         case .panel: .green
+        case .history: .pink
+        case .vitals: .red
         case .charging: Color(red: 0.2, green: 0.74, blue: 0.62)
         case .sleep: .purple
         case .accessories: .cyan
@@ -67,7 +73,11 @@ struct SettingsView: View {
                 .padding(.vertical, 2)
                 .tag(pane)
             }
-            .navigationSplitViewColumnWidth(min: 180, ideal: 190, max: 220)
+            // One width, like System Settings' sidebar: dragging it wider only squeezed the pane, and the window can't
+            // grow to make up for it. Wide enough for the longest name ("Batteriets tilstand" in Danish).
+            .navigationSplitViewColumnWidth(Self.sidebarWidth)
+            // SwiftUI's fixed width can still be dragged; the split view's own limits can't.
+            .background(FixedSidebarWidth(width: Self.sidebarWidth))
             .toolbar(removing: .sidebarToggle)
         } detail: {
             let pane = model.settingsPane ?? .general
@@ -76,6 +86,8 @@ struct SettingsView: View {
                 case .general: GeneralPane(model: model)
                 case .menuBar: MenuBarPane(model: model)
                 case .panel: PanelPane(model: model)
+                case .history: HistoryPane(model: model)
+                case .vitals: VitalsPane(model: model)
                 case .charging: ChargingPane(model: model)
                 case .sleep: SleepPane(model: model)
                 case .accessories: AccessoriesPane(model: model)
@@ -97,6 +109,48 @@ struct SettingsView: View {
 
     /// The window's one size: wide enough for a row and its subtitle, tall enough for most panes without scrolling.
     static let size = CGSize(width: 720, height: 560)
+    static let sidebarWidth: CGFloat = 215
+}
+
+/// Holds the sidebar at one width, as System Settings does: finds the split view the sidebar is in and gives its item
+/// the same minimum and maximum, so the divider can't be dragged.
+private struct FixedSidebarWidth: NSViewRepresentable {
+    let width: CGFloat
+
+    func makeNSView(context: Context) -> Locker {
+        let view = Locker()
+        view.width = width
+        return view
+    }
+
+    func updateNSView(_ view: Locker, context: Context) {
+        view.width = width
+        view.lock()
+    }
+
+    final class Locker: NSView {
+        var width: CGFloat = 0
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            lock()
+            // SwiftUI sets the split view up as the window comes on screen; once more after it has.
+            DispatchQueue.main.async { [weak self] in self?.lock() }
+        }
+
+        func lock() {
+            var ancestor = superview
+            while let current = ancestor, !(current is NSSplitView) { ancestor = current.superview }
+            guard let split = ancestor as? NSSplitView, let controller = split.delegate as? NSSplitViewController,
+                let sidebar = controller.splitViewItems.first, width > 0
+            else { return }
+            guard sidebar.minimumThickness != width || sidebar.maximumThickness != width else { return }
+            sidebar.canCollapse = false
+            sidebar.minimumThickness = width
+            sidebar.maximumThickness = width
+            split.setPosition(width, ofDividerAt: 0)
+        }
+    }
 }
 
 /// Sets the title of the window it's in.
@@ -388,8 +442,6 @@ private struct PanelPane: View {
                     .foregroundStyle(.secondary)
             }
             Section {
-                HistoryRows(model: model)
-                HistoryKeepRows(model: model)
                 Toggle(isOn: $settings.showsInsights) {
                     SettingLabel("Insights", symbol: "lightbulb.fill", color: .yellow) {
                         Text("A line in the panel when the battery won't last through a meeting, the Mac uses more power than usual, or a new app uses a lot.")
@@ -397,7 +449,15 @@ private struct PanelPane: View {
                 }
                 .disabled(!settings.recordsHistory && !settings.warnsBeforeMeetings)
             } header: {
-                Text("History")
+                Text("Insights")
+            } footer: {
+                HStack(spacing: 4) {
+                    Text("Keeping, exporting and clearing the battery history is in")
+                    Button("History") { model.settingsPane = .history }
+                        .buttonStyle(.link)
+                }
+                .font(.callout)
+                .foregroundStyle(.secondary)
             }
         }
     }
@@ -844,7 +904,7 @@ private struct HiddenAppItem: View {
 // MARK: - History
 
 /// Keeping a history on or off, and clearing it.
-private struct HistoryRows: View {
+struct HistoryRows: View {
     let model: AppModel
     @State private var isConfirmingClear = false
 
@@ -853,7 +913,7 @@ private struct HistoryRows: View {
         Toggle(isOn: $settings.recordsHistory) {
             SettingLabel("Battery History", symbol: "chart.xyaxis.line", color: .green) {
                 Text(
-                    "The battery level and the apps that used it over the last 24 hours, and a summary of the last two weeks. Apps are measured every few minutes while on battery, and the history stays on this Mac."
+                    "The battery level and the apps that used it, hour by hour, for as long as you keep it. Apps are measured every few minutes while on battery, and the history stays on this Mac."
                 )
             }
         }

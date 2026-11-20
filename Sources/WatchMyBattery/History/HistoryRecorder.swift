@@ -17,16 +17,32 @@ import Observation
 ///
 /// It's all kept with SwiftData (``HistoryStore``), which writes only what
 /// changed: a row for each level change or sample, and the hour it touched.
+///
+/// The battery's vitals (``BatteryVitals``: its temperature, voltage, charging,
+/// what the Mac drew and the charger gave, and its health) are read every five
+/// minutes, plugged in or not, with the same leeway, into a store of their own
+/// (``VitalsStore``). A reading is a few registry reads; health, which takes
+/// `system_profiler`, is read once a day.
 @Observable
 final class HistoryRecorder {
     private(set) var history: BatteryHistory
     private(set) var profile: UsageProfile
+    /// Goes up whenever the profile changes, for views that work something out from it once and keep it (Settings ›
+    /// History), rather than comparing whole profiles.
+    private(set) var revision = 0
+    private(set) var vitals: BatteryVitals
+    /// Goes up whenever the vitals change, like ``revision``.
+    private(set) var vitalsRevision = 0
 
     /// Called after every energy sample, for the insights to take another look.
     @ObservationIgnored var didRecordSample: () -> Void = {}
 
     @ObservationIgnored private weak var model: AppModel?
     @ObservationIgnored private let store: HistoryStore
+    @ObservationIgnored private let vitalsStore: VitalsStore
+    @ObservationIgnored private let readingsReader = BatteryReadingsReader()
+    @ObservationIgnored private var vitalsTask: Task<Void, Never>?
+    @ObservationIgnored private var isReadingHealth = false
     @ObservationIgnored private let sampler = ProcessEnergySampler()
     @ObservationIgnored private let systemPower = SystemPowerReader()
     @ObservationIgnored private var appInfo = AppInfoCache()
@@ -36,6 +52,7 @@ final class HistoryRecorder {
 
     static let interval: Duration = .seconds(5 * 60)
     private static let leeway: Duration = .seconds(60)
+    private static let firstVitalsDelay: Duration = .seconds(120)
     /// Level changes are saved at most this often; samples are saved as they come.
     private static let saveInterval: TimeInterval = 5 * 60
 
@@ -43,18 +60,32 @@ final class HistoryRecorder {
         storeURL: URL? = HistoryRecorder.defaultStoreURL, legacyFileURL: URL? = HistoryRecorder.legacyFileURL,
         retention: TimeInterval = UsageProfile.retention
     ) {
-        // A made-up battery shouldn't end up in the real history.
-        let storeURL = LaunchOptions.pretendsCharging ? nil : storeURL
+        // A made-up battery (or history) shouldn't end up in the real history.
+        let storeURL = LaunchOptions.pretendsCharging || LaunchOptions.pretendsHistory ? nil : storeURL
         store = HistoryStore.open(at: storeURL, retention: retention) { error in
             Logger.app.error("Couldn't open the battery history, starting it over: \(error.localizedDescription, privacy: .public)")
         }
         if store.isOnDisk, let legacyFileURL { Self.importLegacy(from: legacyFileURL, into: store) }
         history = store.history
         profile = store.profile
+        let vitalsURL = storeURL == nil ? nil : Self.vitalsStoreURL
+        vitalsStore = VitalsStore.open(at: vitalsURL, retention: retention) { error in
+            Logger.app.error("Couldn't open the battery vitals, starting them over: \(error.localizedDescription, privacy: .public)")
+        }
+        vitals = vitalsStore.vitals
+        #if DEBUG
+            if LaunchOptions.pretendsHistory {
+                (history, profile) = PretendHistory.make()
+                vitals = PretendHistory.makeVitals()
+            }
+        #endif
     }
 
     /// `~/Library/Application Support/WatchMyBattery/History.store`, or in the folder of an isolated run.
     nonisolated static var defaultStoreURL: URL? { supportFolder?.appending(path: "History.store") }
+
+    /// `Vitals.store`, next to the history.
+    nonisolated static var vitalsStoreURL: URL? { supportFolder?.appending(path: "Vitals.store") }
 
     /// Where the history was kept before 0.2.5, as a property list.
     nonisolated static var legacyFileURL: URL? { supportFolder?.appending(path: "History.plist") }
@@ -85,17 +116,21 @@ final class HistoryRecorder {
 
     func start(model: AppModel) {
         self.model = model
+        // A made-up history stays as it was made.
+        guard !LaunchOptions.pretendsHistory else { return }
         observe()
     }
 
     /// Writes what hasn't been saved yet, before the app quits.
     func flush() {
         save(force: true)
+        saveVitals()
     }
 
     /// Forgets the whole history, on disk too.
     func clear() {
         store.removeAll()
+        vitalsStore.removeAll()
         detector.reset()
         // Start again from the current level.
         if let model { store.record(model.battery.snapshot) }
@@ -106,13 +141,14 @@ final class HistoryRecorder {
     /// Keeps the hourly history this long from now on (Settings › Panel). A shorter time lets the older hours go.
     func setRetention(_ retention: TimeInterval) {
         store.setRetention(retention)
+        vitalsStore.setRetention(retention)
         publish()
         save(force: true)
     }
 
     /// The history as a file, for a spreadsheet or a script.
     func export(_ format: HistoryExport.Format, sleeps: SleepLog) throws -> Data {
-        try HistoryExport.data(format, history: history, profile: profile, sleeps: sleeps)
+        try HistoryExport.data(format, history: history, profile: profile, sleeps: sleeps, vitals: vitals)
     }
 
     /// The "new app" notification went out for an app, so it isn't sent again.
@@ -131,8 +167,16 @@ final class HistoryRecorder {
 
     /// Hands the store's latest to observers, only where it changed, so the panel redraws only then.
     private func publish() {
+        guard !LaunchOptions.pretendsHistory else { return }
         if history != store.history { history = store.history }
-        if profile != store.profile { profile = store.profile }
+        if vitals != vitalsStore.vitals {
+            vitals = vitalsStore.vitals
+            vitalsRevision += 1
+        }
+        if profile != store.profile {
+            profile = store.profile
+            revision += 1
+        }
     }
 
     // MARK: - Watching the battery
@@ -146,8 +190,10 @@ final class HistoryRecorder {
         }
         guard isOn else {
             stopSampling(takingFinalSample: false)
+            stopReadingVitals()
             return
         }
+        if snapshot.hasBattery { startReadingVitals() } else { stopReadingVitals() }
         store.record(snapshot)
         publish()
         save(force: false)
@@ -224,6 +270,61 @@ final class HistoryRecorder {
         Task { await model.notifier.notifyRunaway(app, pid: pid, minutes: Int(detector.window / 60), timeGained: gained) }
     }
 
+    // MARK: - Vitals
+
+    private func startReadingVitals() {
+        guard vitalsTask == nil else { return }
+        vitalsTask = Task { [weak self] in
+            // Not right at launch, when everything else starts too (and the day's health read runs a process): a
+            // couple of minutes later, then every five.
+            try? await Task.sleep(for: Self.firstVitalsDelay, tolerance: Self.leeway)
+            while !Task.isCancelled {
+                self?.readVitals()
+                try? await Task.sleep(for: Self.interval, tolerance: Self.leeway)
+            }
+        }
+    }
+
+    private func stopReadingVitals() {
+        vitalsTask?.cancel()
+        vitalsTask = nil
+    }
+
+    private func readVitals() {
+        guard let model, !LaunchOptions.pretendsHistory else { return }
+        let snapshot = model.battery.snapshot
+        guard snapshot.hasBattery else { return }
+        let reading = VitalsReading(
+            readings: readingsReader.read(), flow: systemPower.currentFlow(), percentage: snapshot.percentage, isPluggedIn: snapshot.isPluggedIn)
+        vitalsStore.record(reading)
+        publish()
+        saveVitals()
+        readHealthIfNeeded()
+    }
+
+    /// Once a day: the maximum capacity and cycle count barely move from one day to the next.
+    private func readHealthIfNeeded() {
+        guard !isReadingHealth, vitals.healthDay(at: Calendar.current.startOfDay(for: Date())) == nil else { return }
+        isReadingHealth = true
+        Task { [weak self] in
+            let health = await BatteryHealthReader.read()
+            guard let self else { return }
+            isReadingHealth = false
+            guard let health else { return }
+            vitalsStore.record(health: health)
+            publish()
+            saveVitals()
+        }
+    }
+
+    private func saveVitals() {
+        do {
+            try vitalsStore.save()
+        } catch {
+            Logger.app.error("Couldn't save the battery vitals: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
     // MARK: - Saving
 
     /// Only what changed goes to disk, a few rows at a time, so it's done right here.
@@ -239,9 +340,15 @@ final class HistoryRecorder {
 
     #if DEBUG
         /// Shows a made-up history, for previews.
+        func preview(vitals: BatteryVitals) {
+            self.vitals = vitals
+            vitalsRevision += 1
+        }
+
         func preview(_ history: BatteryHistory, profile: UsageProfile = UsageProfile()) {
             self.history = history
             self.profile = profile
+            revision += 1
         }
     #endif
 }

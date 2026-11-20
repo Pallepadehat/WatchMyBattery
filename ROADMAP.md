@@ -160,6 +160,34 @@ Released. See the [changelog](CHANGELOG.md).
 - [x] Count This Mac: an opt-in, anonymous count of the Macs running WatchMyBattery, in the welcome tour and Settings, sent to a Worker of its own (`Server/stats`) rather than an analytics service
 - [x] Room under the last section in Settings
 
+## 0.4.3: in depth
+
+See the [changelog](CHANGELOG.md).
+
+- [x] Settings › History: battery used each day or week, from 7 days to a year, and every app that used it, ranked
+- [x] A page for each app: battery time, average draw, active days, its trend, and when in the day it's busiest
+- [x] In the panel: click a day in the 10-day chart for its apps, click an app for a closer look, and show more than three
+- [x] Export the apps by day as CSV
+
+## 0.4.4: better numbers
+
+See the [changelog](CHANGELOG.md).
+
+- [x] The GPU's energy in each app's power, shared out by GPU time
+- [x] Command-line tools and background programs (Docker, a VM, what you run in a terminal) as slices of their own
+- [x] macOS's own work by name (Spotlight, iCloud, Photos analysis…), measured from CPU time where the kernel won't show its energy
+- [x] Display & System taken apart, as far as macOS allows
+- [x] What comes in from the charger, in the Charger row and behind the charger card
+- [x] "The charger can't keep up" only when the Mac uses about all of it
+
+## 0.4.5: battery health
+
+See the [changelog](CHANGELOG.md).
+
+- [x] Settings › Battery Health: temperature, charge level, power, voltage, maximum capacity and cycles over time ([#42](https://github.com/Pallepadehat/WatchMyBattery/issues/42))
+- [x] System Settings' own icons for macOS's services and Display & System, and more of macOS by name
+- [x] Settings › History's weekly chart scales to weeks that use several charges
+
 ## 0.5.0: everywhere
 
 **Widgets and Shortcuts**
@@ -170,7 +198,7 @@ Released. See the [changelog](CHANGELOG.md).
 
 **Battery care**
 
-- [ ] Battery health over time: maximum capacity and cycle count, month by month ([#42](https://github.com/Pallepadehat/WatchMyBattery/issues/42))
+- [x] Battery health over time: maximum capacity and cycle count, month by month ([#42](https://github.com/Pallepadehat/WatchMyBattery/issues/42)), in 0.4.5
 - [ ] A weekly summary: battery time used, the apps that used the most, and how it compares with last week ([#43](https://github.com/Pallepadehat/WatchMyBattery/issues/43))
 - [ ] Rules for low battery: turn on Low Power Mode or quit chosen apps at a level you pick ([#44](https://github.com/Pallepadehat/WatchMyBattery/issues/44))
 

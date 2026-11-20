@@ -446,8 +446,10 @@ struct HistoryKeepRows: View {
 
         LabeledContent {
             Menu("Export…") {
-                Button("Spreadsheet (CSV)…") { export(.csv) }
-                Button("JSON…") { export(.json) }
+                Button("Hours (CSV)…") { export(.csv) }
+                Button("Apps by Day (CSV)…") { export(.appsCSV) }
+                Button("Battery Vitals (CSV)…") { export(.vitalsCSV) }
+                Button("Everything (JSON)…") { export(.json) }
             }
             .fixedSize()
             .disabled(model.history.history.isEmpty && model.history.profile.isEmpty)
@@ -457,7 +459,7 @@ struct HistoryKeepRows: View {
                     Label(exportFailure, systemImage: "exclamationmark.triangle.fill")
                         .labelStyle(InlineIconLabelStyle(color: .orange))
                 } else {
-                    Text("CSV has a row for every hour. JSON has everything, sleeps included.")
+                    Text("A row for every hour, or for every app each day, for a spreadsheet. JSON has everything, sleeps included.")
                 }
             }
         }
@@ -467,7 +469,7 @@ struct HistoryKeepRows: View {
         exportFailure = nil
         let panel = NSSavePanel()
         panel.nameFieldStringValue = HistoryExport.suggestedFileName(format)
-        panel.allowedContentTypes = [format == .csv ? .commaSeparatedText : .json]
+        panel.allowedContentTypes = [format == .json ? .json : .commaSeparatedText]
         panel.canCreateDirectories = true
         NSApp.activate()
         guard panel.runModal() == .OK, let url = panel.url else { return }
@@ -477,12 +479,5 @@ struct HistoryKeepRows: View {
         } catch {
             exportFailure = error.localizedDescription
         }
-    }
-}
-
-extension String {
-    /// "yesterday" → "Yesterday", for a relative date at the start of a line.
-    fileprivate var capitalizedFirst: String {
-        prefix(1).uppercased() + dropFirst()
     }
 }

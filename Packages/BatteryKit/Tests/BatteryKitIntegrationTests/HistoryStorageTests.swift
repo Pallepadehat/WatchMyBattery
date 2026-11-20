@@ -103,7 +103,7 @@ struct HistoryStorageTests {
 
         let loaded = BatteryHistory.load(from: file)
         #expect(loaded == history)
-        let ours = "name:Process \(Responsibility.responsiblePID(for: getpid()))"
+        let ours = "name:Process \(Ownership.owner(of: getpid()))"
         let top = loaded.appEnergy(since: Date().addingTimeInterval(-3600))
         #expect(top.contains { $0.id == ours }, "The busy process isn't among the apps that used the most")
         #expect(top.count <= BatteryHistory.appsPerSample)

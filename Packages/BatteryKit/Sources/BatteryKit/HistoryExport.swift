@@ -3,30 +3,73 @@ import Foundation
 /// The history, written out for a spreadsheet (CSV) or a script (JSON).
 ///
 /// CSV has one row per hour of the kept history (two weeks, or longer if chosen), which is what a spreadsheet
-/// does well with. JSON has everything: the hours, the last day's level readings and app samples, the sleeps, and
-/// the apps by name.
+/// does well with; the apps' CSV has a row for each app on each day it used the battery. JSON has everything: the
+/// hours, the last day's level readings and app samples, the sleeps, and the apps by name.
 public enum HistoryExport {
     public enum Format: String, Sendable, CaseIterable, Identifiable {
         case csv
+        /// A row for each app on each day.
+        case appsCSV = "apps-csv"
+        /// A row for each hour of the battery's vitals: temperature, voltage, power.
+        case vitalsCSV = "vitals-csv"
         case json
 
         public var id: Self { self }
-        public var fileExtension: String { rawValue }
+        public var fileExtension: String { self == .json ? "json" : "csv" }
     }
 
     public static func data(
-        _ format: Format, history: BatteryHistory, profile: UsageProfile, sleeps: SleepLog, now: Date = Date()
+        _ format: Format, history: BatteryHistory, profile: UsageProfile, sleeps: SleepLog, vitals: BatteryVitals = BatteryVitals(),
+        now: Date = Date()
     ) throws -> Data {
         switch format {
         case .csv: Data(csv(profile: profile).utf8)
+        case .appsCSV: Data(appsCSV(profile: profile).utf8)
+        case .vitalsCSV: Data(vitalsCSV(vitals).utf8)
         case .json: try json(history: history, profile: profile, sleeps: sleeps, now: now)
         }
     }
 
-    /// "WatchMyBattery History 2026-11-13.csv"
+    /// "WatchMyBattery History 2026-11-13.csv", or "WatchMyBattery Apps 2026-11-13.csv"
     public static func suggestedFileName(_ format: Format, now: Date = Date()) -> String {
         let day = now.formatted(.iso8601.year().month().day())
-        return "WatchMyBattery History \(day).\(format.fileExtension)"
+        let name =
+            switch format {
+            case .appsCSV: "Apps"
+            case .vitalsCSV: "Battery Vitals"
+            case .csv, .json: "History"
+            }
+        return "WatchMyBattery \(name) \(day).\(format.fileExtension)"
+    }
+
+    /// The vitals' hours, oldest first, then nothing else: health days have a column of their own, on the hour they
+    /// were read in (the first of their day).
+    public static func vitalsCSV(_ vitals: BatteryVitals, calendar: Calendar = .current) -> String {
+        var lines = [
+            [
+                "hour_start", "readings", "temperature_avg_c", "temperature_min_c", "temperature_max_c", "voltage_avg_v", "voltage_min_v",
+                "voltage_max_v", "charging_avg_w", "discharging_avg_w", "mac_draw_avg_w", "mac_draw_max_w", "charger_avg_w", "level_min_percent",
+                "level_max_percent", "plugged_in_percent", "maximum_capacity_percent", "cycle_count",
+            ].joined(separator: ",")
+        ]
+        var healthByDay = Dictionary(vitals.health.map { ($0.day, $0) }, uniquingKeysWith: { _, last in last })
+        func value(_ number: Double?, _ digits: Int) -> String { number.map { Self.number($0, digits: digits) } ?? "" }
+        for hour in vitals.hours {
+            let day = calendar.startOfDay(for: hour.start)
+            let health = healthByDay.removeValue(forKey: day)
+            let all = hour.all
+            let fields = [
+                iso(hour.start), String(hour.readings),
+                value(all.temperature.mean, 1), value(all.temperature.low, 1), value(all.temperature.high, 1),
+                value(all.voltage.mean, 3), value(all.voltage.low, 3), value(all.voltage.high, 3),
+                value(all.charging.mean, 2), value(all.discharging.mean, 2), value(all.system.mean, 2), value(all.system.high, 2),
+                value(all.charger.mean, 2), value(all.level.low, 0), value(all.level.high, 0),
+                value(hour.readings > 0 ? Double(hour.pluggedIn.readings) / Double(hour.readings) * 100 : nil, 0),
+                value(health?.maximumCapacity.map { $0 * 100 }, 1), health?.cycleCount.map(String.init) ?? "",
+            ]
+            lines.append(fields.map(escaped).joined(separator: ","))
+        }
+        return lines.joined(separator: "\n") + "\n"
     }
 
     // MARK: - CSV
@@ -52,6 +95,33 @@ public enum HistoryExport {
                 apps,
             ]
             lines.append(fields.map(escaped).joined(separator: ","))
+        }
+        return lines.joined(separator: "\n") + "\n"
+    }
+
+    /// Each app's energy each day, by `calendar`'s days, oldest day first and the hungriest app first within it. The
+    /// share is of what all the apps used that day; battery minutes are at that day's average power draw, when known.
+    public static func appsCSV(profile: UsageProfile, calendar: Calendar = .current) -> String {
+        var lines = [
+            ["day", "app", "bundle_identifier", "energy_wh", "share_percent", "battery_minutes"].joined(separator: ",")
+        ]
+        guard let first = profile.hours.first?.start, let last = profile.hours.last?.start else { return lines[0] + "\n" }
+        let report = profile.report(from: first, to: last.addingTimeInterval(3600), granularity: .day, calendar: calendar)
+        // The day as the calendar has it, not as it is in UTC.
+        let dayFormat = Date.ISO8601FormatStyle(timeZone: calendar.timeZone).year().month().day()
+        for period in report.periods where period.appJoules > 0 {
+            let day = profile.report(from: period.start, to: period.end, granularity: .day, calendar: calendar)
+            for app in day.apps {
+                let fields = [
+                    period.start.formatted(dayFormat),
+                    app.app.name,
+                    app.app.bundleIdentifier ?? "",
+                    number(app.joules / 3600, digits: 3),
+                    number(app.share * 100, digits: 1),
+                    app.batteryTime.map { number($0 / 60, digits: 1) } ?? "",
+                ]
+                lines.append(fields.map(escaped).joined(separator: ","))
+            }
         }
         return lines.joined(separator: "\n") + "\n"
     }

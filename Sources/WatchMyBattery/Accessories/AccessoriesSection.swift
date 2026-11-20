@@ -200,7 +200,7 @@ private struct Spinner: View {
     }
 }
 
-/// One part's level: a small ring, which part it is, and the percentage.
+/// One part's level: a small ring, which part it is, the percentage, and a bolt while it charges.
 private struct PartLevel: View {
     let part: Accessory.Part
     let symbols: AccessorySymbols
@@ -211,13 +211,6 @@ private struct PartLevel: View {
         HStack(spacing: 4) {
             LevelRing(level: part.level, color: AccessoryColor.of(part), lineWidth: 2.4)
                 .frame(width: 13, height: 13)
-                .overlay {
-                    if part.isCharging {
-                        Image(systemName: "bolt.fill")
-                            .font(.system(size: 6.5, weight: .black))
-                            .foregroundStyle(AccessoryColor.green)
-                    }
-                }
             if showsRole {
                 roleLabel
                     .foregroundStyle(.tertiary)
@@ -227,6 +220,15 @@ private struct PartLevel: View {
                 .monospacedDigit()
                 .foregroundStyle(part.isLow ? AnyShapeStyle(AccessoryColor.red) : AnyShapeStyle(.secondary))
                 .contentTransition(.numericText(value: part.level))
+            // Beside the number, like macOS's own battery lists: inside a 13-point ring of the same green, a bolt read
+            // as one green blob.
+            if part.isCharging {
+                Image(systemName: "bolt.fill")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(AccessoryColor.green)
+                    .padding(.leading, -1)
+                    .transition(.scale.combined(with: .opacity))
+            }
         }
         .help(part.spokenDescription)
     }

@@ -8,6 +8,10 @@ import SwiftUI
 struct AppDetailCard: View {
     let app: AppUsage
     let processes: [ProcessEnergy]
+    /// The battery time it cost over the last 24 hours, from the history; `nil` when it used none, or there's no history.
+    var lastDay: TimeInterval?
+    /// Opens its history in Settings; `nil` without a history.
+    var openHistory: (() -> Void)?
     let quit: () -> Void
     let forceQuit: () -> Void
     let close: () -> Void
@@ -23,12 +27,29 @@ struct AppDetailCard: View {
                 .resizable()
                 .interpolation(.high)
                 .frame(width: 26, height: 26)
+                .overlay(alignment: .bottomTrailing) {
+                    if app.isCommand { TerminalBadge(size: 13).offset(x: 4, y: 4) }
+                }
             VStack(alignment: .leading, spacing: 6) {
-                Text(app.name)
-                    .font(.system(size: 12, weight: .semibold))
-                    .lineLimit(1)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(app.name)
+                        .font(.system(size: 12, weight: .semibold))
+                        .lineLimit(1)
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
                 processList
-                actions
+                if let lastDay, let cost = HistoryText.cost(lastDay) {
+                    Text("Used \(cost) of battery in the last 24 hours")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                if app.canQuit { actions }
             }
             Spacer(minLength: 0)
             DismissButton(action: close)
@@ -38,6 +59,15 @@ struct AppDetailCard: View {
         .onChange(of: app.id) { isConfirmingForceQuit = false }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(app.name)
+    }
+
+    /// What it is, under its name: what a part of macOS is doing, or that a program runs outside any app.
+    private var subtitle: String? {
+        switch app.kind {
+        case .app: nil
+        case .program: app.detail ?? String(localized: "A program running outside any app. Quit stops it, like Ctrl-C.")
+        case .macOS: app.detail ?? String(localized: "Part of macOS. It can't be quit, and calms down by itself.")
+        }
     }
 
     @ViewBuilder private var processList: some View {
@@ -55,7 +85,7 @@ struct AppDetailCard: View {
                             .fixedSize(horizontal: false, vertical: true)
                             .help(process.name)
                         Spacer(minLength: 6)
-                        Text(Self.watts(process.watts))
+                        Text(Self.watts(process.watts, estimated: process.isEstimated))
                             .monospacedDigit()
                             .foregroundStyle(.secondary)
                             .contentTransition(.numericText())
@@ -68,7 +98,7 @@ struct AppDetailCard: View {
                         Text("\(rest.count) more")
                             .foregroundStyle(.tertiary)
                         Spacer(minLength: 6)
-                        Text(Self.watts(rest.reduce(0) { $0 + $1.watts }))
+                        Text(Self.watts(rest.reduce(0) { $0 + $1.watts }, estimated: rest.contains(where: \.isEstimated)))
                             .monospacedDigit()
                             .foregroundStyle(.tertiary)
                     }
@@ -98,7 +128,11 @@ struct AppDetailCard: View {
     }
 
     @ViewBuilder private var showAndQuit: some View {
-        Button("Show") { NSRunningApplication(processIdentifier: app.id)?.activate() }
+        if app.isApp { Button("Show") { NSRunningApplication(processIdentifier: app.id)?.activate() } }
+        if let openHistory {
+            Button("History", action: openHistory)
+                .help("Its battery use day by day, in Settings.")
+        }
         Button("Quit", action: quit)
     }
 
@@ -115,8 +149,10 @@ struct AppDetailCard: View {
 
     /// "1.4 W", for a process here and an app's slice on the adapter. "0.0 W" would read as nothing at all; it's
     /// using something, just not much.
-    static func watts(_ watts: Double) -> String {
+    /// "≈ 0.4 W" for one worked out from CPU time, as macOS doesn't show its energy.
+    static func watts(_ watts: Double, estimated: Bool = false) -> String {
         guard watts >= 0.05 else { return "<" + (0.1).formatted(.number.precision(.fractionLength(1))) + " W" }
-        return watts.formatted(.number.precision(.fractionLength(1))) + " W"
+        let text = watts.formatted(.number.precision(.fractionLength(1))) + " W"
+        return estimated ? "≈ " + text : text
     }
 }

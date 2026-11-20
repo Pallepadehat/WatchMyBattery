@@ -1,10 +1,12 @@
 import BatteryKit
 import SwiftUI
 
-/// "Charger  96 W": what the connected charger can give, as one of the panel's detail rows, with a warning when it
-/// can't keep up with the Mac.
+/// "Charger  12 W of 96 W": what the Mac is getting from the connected charger, out of what it can give, as one of the
+/// panel's detail rows, with a warning when something's wrong with it.
 struct ChargerRow: View {
     let adapter: PowerAdapter
+    /// What's coming in right now, while the panel measures it.
+    var chargerWatts: Double? = nil
     let note: ChargingNote?
 
     var body: some View {
@@ -18,12 +20,17 @@ struct ChargerRow: View {
                     .foregroundStyle(.orange)
                     .transition(.scale.combined(with: .opacity))
             }
+            if let incoming {
+                Text(incoming)
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+            }
             Text(value)
                 .monospacedDigit()
         }
         .font(.system(size: 12))
         .lineLimit(1)
-        .help(adapter.name ?? String(localized: "The charger the Mac is plugged into."))
+        .help(help)
         .accessibilityElement(children: .combine)
     }
 
@@ -33,9 +40,21 @@ struct ChargerRow: View {
         return adapter.name ?? ""
     }
 
+    /// "12 W of": what's in use of what the charger can give. Only beside the charger's own watts, which it qualifies.
+    private var incoming: String? {
+        guard let chargerWatts, adapter.watts != nil else { return nil }
+        return String(localized: "\(PowerFormat.watts(chargerWatts)) of", comment: "Before a charger's watts: \"12 W of\" 96 W")
+    }
+
+    private var help: String {
+        let name = adapter.name ?? String(localized: "The charger the Mac is plugged into.")
+        guard let chargerWatts else { return name }
+        return name + "\n" + String(localized: "Your Mac is getting \(PowerFormat.watts(chargerWatts)) from it right now, for itself and its battery.")
+    }
+
     private var isStruggling: Bool {
         switch note {
-        case .adapterTooWeak, .chargingSlowly: true
+        case .adapterTooWeak, .chargingSlowly, .notGettingFullPower: true
         default: false
         }
     }
@@ -72,7 +91,7 @@ struct ChargingNoteCard: View {
     private var symbol: String {
         switch note {
         case .pausedWhileHot, .slowedByHeat: "thermometer.high"
-        case .adapterTooWeak: "powerplug.fill"
+        case .adapterTooWeak, .notGettingFullPower: "powerplug.fill"
         case .chargingSlowly: "tortoise.fill"
         case .restingNearTarget: "leaf.fill"
         }
@@ -81,7 +100,7 @@ struct ChargingNoteCard: View {
     private var tint: Color {
         switch note {
         case .pausedWhileHot: .red
-        case .slowedByHeat, .adapterTooWeak: .orange
+        case .slowedByHeat, .adapterTooWeak, .notGettingFullPower: .orange
         case .chargingSlowly: .yellow
         case .restingNearTarget: ChargeTrack.green
         }
@@ -92,6 +111,7 @@ struct ChargingNoteCard: View {
         case .pausedWhileHot: String(localized: "Charging paused while the battery cools")
         case .slowedByHeat: String(localized: "Charging slowly while the battery is warm")
         case .adapterTooWeak: String(localized: "The charger can't keep up")
+        case .notGettingFullPower: String(localized: "Running on battery while plugged in")
         case .chargingSlowly: String(localized: "Charging slowly")
         case .restingNearTarget(let target) where target >= 100: String(localized: "Nearly full")
         case .restingNearTarget(let target): String(localized: "Holding near \(Self.percent(target))")
@@ -107,15 +127,31 @@ struct ChargingNoteCard: View {
             )
         case .slowedByHeat(let temperature):
             String(localized: "It's \(BatteryReadingsRows.format(temperature: temperature)), so macOS charges more gently until it cools down.")
-        case .adapterTooWeak(let adapterWatts?, let systemWatts?):
+        case .adapterTooWeak(let adapterWatts, let systemWatts):
             String(
                 localized:
-                    "Your Mac is using about \(PowerFormat.watts(systemWatts)), more than the \(adapterWatts) W charger gives, so the battery isn't charging. A more powerful charger, or quitting busy apps, helps."
+                    "Your Mac is using about \(PowerFormat.watts(systemWatts)), about all the \(adapterWatts) W charger can give, so there's none left for the battery. A more powerful charger, or quitting busy apps, helps."
             )
-        case .adapterTooWeak(let adapterWatts?, nil):
-            String(localized: "The \(adapterWatts) W charger isn't giving enough for your Mac and its battery right now. A more powerful charger helps.")
-        case .adapterTooWeak:
-            String(localized: "The battery is running down even though your Mac is plugged in. A more powerful charger helps.")
+        case .notGettingFullPower(let adapterWatts?, let chargerWatts?) where chargerWatts < 1:
+            String(
+                localized:
+                    "Your Mac isn't taking power from the \(adapterWatts) W charger right now. If another battery app is set to discharge it, that's why; otherwise, try plugging the charger in again."
+            )
+        case .notGettingFullPower(_, let chargerWatts?) where chargerWatts < 1:
+            String(
+                localized:
+                    "Your Mac isn't taking power from the charger right now. If another battery app is set to discharge it, that's why; otherwise, try plugging the charger in again."
+            )
+        case .notGettingFullPower(let adapterWatts?, let chargerWatts?):
+            String(
+                localized:
+                    "Your Mac is only getting \(PowerFormat.watts(chargerWatts)) from the \(adapterWatts) W charger, so the battery makes up the rest. Another cable or port, or plugging the charger straight into the Mac, usually helps."
+            )
+        case .notGettingFullPower:
+            String(
+                localized:
+                    "The battery is running down, though your Mac isn't using more than the charger should give. Another cable or port, or plugging the charger straight into the Mac, usually helps."
+            )
         case .chargingSlowly(let adapterWatts, let systemWatts):
             String(
                 localized:

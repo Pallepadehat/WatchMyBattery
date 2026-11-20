@@ -52,10 +52,36 @@ import Testing
         let overloaded = ChargingNote.evaluate(
             snapshot: pluggedIn(50, .notCharging), adapter: PowerAdapter(watts: 30), systemWatts: 31, readings: nil)
         #expect(overloaded == .adapterTooWeak(adapterWatts: 30, systemWatts: 31))
-        // The battery is running down on the adapter, even with nothing else known.
+        // The battery is running down on the adapter, with nothing known about why: not blamed on the charger's size.
         let draining = ChargingNote.evaluate(
             snapshot: pluggedIn(50, .notCharging), adapter: nil, systemWatts: nil, readings: BatteryReadings(current: -1.2))
-        #expect(draining == .adapterTooWeak(adapterWatts: nil, systemWatts: nil))
+        #expect(draining == .notGettingFullPower(adapterWatts: nil, chargerWatts: nil))
+    }
+
+    @Test func aBigChargerIsNeverCalledTooWeakForALightLoad() {
+        // 0.4.3 said "about 6.6 W, more than the 100 W charger gives": running down at 6.6 W is the charger, cable or
+        // port not giving its power, not the charger being too small.
+        let note = ChargingNote.evaluate(
+            snapshot: pluggedIn(95, .notCharging), adapter: PowerAdapter(watts: 100), systemWatts: 6.6,
+            readings: BatteryReadings(temperature: 33, voltage: 12.65, current: -2.25))
+        #expect(note == .notGettingFullPower(adapterWatts: 100, chargerWatts: nil))
+        // With what comes in measured, that's said too.
+        let measured = ChargingNote.evaluate(
+            snapshot: pluggedIn(60, .notCharging), adapter: PowerAdapter(watts: 100), systemWatts: 25, chargerWatts: 15, readings: nil)
+        #expect(measured == .notGettingFullPower(adapterWatts: 100, chargerWatts: 15))
+    }
+
+    @Test func whatComesInOutweighsAStrayCurrentReading() {
+        // The charger covers everything the Mac draws, so a current reading saying otherwise is a moment out of date.
+        let covered = ChargingNote.evaluate(
+            snapshot: pluggedIn(95, .notCharging), adapter: PowerAdapter(watts: 100), systemWatts: 6.6, chargerWatts: 6.5,
+            readings: BatteryReadings(current: -2.25))
+        #expect(covered == .restingNearTarget(target: 100))
+        // And a shortfall shows even when the current reading hasn't caught up.
+        let short = ChargingNote.evaluate(
+            snapshot: pluggedIn(60, .notCharging), adapter: PowerAdapter(watts: 30), systemWatts: 32, chargerWatts: 28,
+            readings: BatteryReadings(current: 0))
+        #expect(short == .adapterTooWeak(adapterWatts: 30, systemWatts: 32))
     }
 
     @Test func aBusyChargerChargesSlowly() {

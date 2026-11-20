@@ -69,6 +69,14 @@ struct BatteryPanelView: View {
     /// Why charging is paused or slow, when there's something to say.
     private var chargingNote: ChargingNote? { model.chargingNote }
 
+    /// What an app cost the battery over the last day, from the history, for its card: `nil` when it used none.
+    private func lastDayCost(of app: AppUsage) -> TimeInterval? {
+        let key = BatteryHistory.AppIdentity(name: app.name, bundleIdentifier: app.bundleIdentifier).key
+        let history = model.history.history
+        let start = Date().addingTimeInterval(-BatteryHistory.retention)
+        return history.appEnergy(since: start).first { $0.id == key }?.batteryTime
+    }
+
     /// The gauge, the details and the sections: the part that scrolls when the screen is short.
     @ViewBuilder private var scrollingContent: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -92,7 +100,9 @@ struct BatteryPanelView: View {
                         withAnimation(.snappy(duration: 0.3)) {
                             model.usage.inspected = model.usage.inspected?.id == app.id ? nil : app
                         }
-                    }
+                    },
+                    isSystemInspected: model.usage.isInspectingSystem,
+                    inspectSystem: { withAnimation(.snappy(duration: 0.3)) { model.usage.isInspectingSystem.toggle() } }
                 )
                 .padding(.horizontal, Self.inset)
                 .padding(.top, 14)
@@ -100,9 +110,29 @@ struct BatteryPanelView: View {
                 if let app = inspectedApp {
                     AppDetailCard(
                         app: app, processes: model.usage.inspectedProcesses,
+                        lastDay: model.settings.recordsHistory ? lastDayCost(of: app) : nil,
+                        openHistory: model.settings.recordsHistory
+                            ? {
+                                close()
+                                model.openHistory(app: BatteryHistory.AppIdentity(name: app.name, bundleIdentifier: app.bundleIdentifier).key)
+                            } : nil,
                         quit: { quit(app, asking: model.settings.confirmsQuit) },
                         forceQuit: { withAnimation(.snappy) { model.usage.forceQuit(app.id) } },
                         close: { withAnimation(.snappy(duration: 0.3)) { model.usage.inspected = nil } }
+                    )
+                    .padding(.horizontal, 10)
+                    .padding(.top, 8)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+
+                if model.usage.isInspectingSystem {
+                    SystemDetailCard(
+                        breakdown: model.usage.systemBreakdown,
+                        openDisplaySettings: {
+                            close()
+                            SystemSettings.open(.displays)
+                        },
+                        close: { withAnimation(.snappy(duration: 0.3)) { model.usage.isInspectingSystem = false } }
                     )
                     .padding(.horizontal, 10)
                     .padding(.top, 8)
@@ -125,7 +155,7 @@ struct BatteryPanelView: View {
                             .frame(minHeight: Self.rowHeight)
                     }
                     if let adapter = model.battery.adapter {
-                        ChargerRow(adapter: adapter, note: chargingNote)
+                        ChargerRow(adapter: adapter, chargerWatts: model.usage.chargerWatts, note: chargingNote)
                             .frame(minHeight: Self.rowHeight)
                             .transition(.opacity)
                     }
@@ -217,7 +247,11 @@ struct BatteryPanelView: View {
                         .padding(.top, 10)
                     HistorySection(
                         recorder: model.history, snapshot: snapshot, usesColor: model.settings.usesColor, isVisible: model.isPanelOpen,
-                        isExpanded: $settings.showsHistory, range: $settings.historyRange
+                        isExpanded: $settings.showsHistory, range: $settings.historyRange,
+                        openHistory: { key in
+                            close()
+                            model.openHistory(app: key)
+                        }
                     )
                     .padding(.horizontal, Self.inset)
                     .padding(.top, 8)
@@ -544,12 +578,16 @@ private struct RefusalNotice: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text("\(refusal.name) didn't quit")
                     .font(.system(size: 12, weight: .semibold))
-                Text("It may be asking what to do with unsaved changes, or have stopped responding.")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                Text(
+                    refusal.isApp
+                        ? "It may be asking what to do with unsaved changes, or have stopped responding."
+                        : "It may be finishing what it was doing, or ignoring the request to stop."
+                )
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 12) {
-                    Button("Show \(refusal.name)", action: show)
+                    if refusal.isApp { Button("Show \(refusal.name)", action: show) }
                     if isConfirmingForceQuit {
                         Button("Force Quit, Losing Unsaved Changes", action: forceQuit)
                             .foregroundStyle(.red)

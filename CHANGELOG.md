@@ -4,6 +4,81 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-11-20
+
+The battery's own history: how warm it runs, how deep it goes, what it takes and gives, and how it wears.
+
+### Added
+
+- 🌡️ **Settings › Battery Health**, a pane of its own, laid out like System Settings. The battery right now (temperature, voltage, charging or discharging, maximum capacity and cycles), then a row for each vital sign with a line about it and a sparkline, over 24 hours, 7 days, … up to a year. Each row opens a page of its own:
+  - **Temperature**: the lowest to the highest each hour, day or week, with the average marked and 38 °C (where charging slows and wear adds up) drawn in. How long it ran warm.
+  - **Charge level**: how low and high it went, the average, and how much of the time it sat on the charger.
+  - **Power**: what the Mac drew, and what came in from the charger, with averages and peaks.
+  - **Voltage**, the same way.
+  - **Health**: maximum capacity and charge cycles day by day, and how much each changed over the period. Kept for good, so you can watch the battery wear over the years.
+  - **Through the Day**: temperature and power at each hour of the day, over the whole period, so you can see when the battery runs warm or the Mac works hardest.
+  - **Only on battery, or only plugged in**: every chart and number for just those readings.
+  - **Compare with before**: the period before as a dashed line in each chart, and how much each number changed beside it (orange where it got worse, green where it got better).
+  - Hover over any chart for its numbers. **Battery Vitals (CSV)** exports a row an hour.
+- Read every five minutes, plugged in or not, while the history is on; a reading is a few registry reads. Health is read once a day.
+- 🍎 **More of macOS by name**: Bluetooth, AirDrop & Handoff, Notifications, Apple Account, Storage, Printing and Control Center get slices of their own when they're busy.
+
+### Changed
+
+- 🖥️ **A command run in a terminal shows as an icon, not its name**: the icon of the app it runs in (Visual Studio Code, Ghostty, Terminal…) with a small terminal badge, in its slice and its card.
+- **System Settings' own icons** for macOS's work: Wi‑Fi & Network, Sound, Security Checks and the new ones now show the icon of their pane in System Settings, in light and dark. Display & System shows the Displays icon, and its card shows an icon beside every process.
+- `ps`, which measures macOS's own processes every few seconds while the panel's open, is started directly rather than through Foundation's `Process`, which cost several times what `ps` itself does.
+- Settings' sidebar has one width, like System Settings', and can't be dragged: dragging it wider squeezed the pane until it ran off the window.
+- Rows of figures in Settings › History and Battery Health go onto two lines when the pane is narrow (with the sidebar dragged wider, say), instead of running off its edge.
+- Settings › History's weekly chart (over a year) scales to weeks that use several charges, instead of cutting them off at 100%.
+
+### Fixed
+
+- **The charging bolt on AirPods and other accessories** sat inside their small level ring, in the same green, and read as one green blob. It's now beside the percentage, like macOS's own battery lists.
+- **Numbers that said nothing**: a range like "30–30 °C" (29.6° and 30.4°, rounded) now shows its decimal, or isn't shown when there's no spread at all; summaries say "around 30°" rather than "average 30°, up to 30°"; figures with nothing to show (charging, on battery) are left out; and a health change needs two days to compare.
+
+## [0.4.4] - 2026-11-19
+
+Better numbers, and more of them: the GPU counts, so do your command-line tools and macOS's own work, and the charger card says what's really going on.
+
+### Changed
+
+- 🎮 **Apps that use the GPU are measured properly.** The kernel's energy counter, which the panel used for each app, covers the CPU only, so an app keeping the GPU busy (a game, a video call, a browser full of animations) looked almost free: a GPU running flat out at 14 W showed as 0.003 W. Now the GPU's own energy is read too, and shared out by how long the GPU worked for each app. The slices, the time each app costs, the history and the runaway alerts all include it. No permission needed; Intel Macs measure the CPU, as before.
+- 🐳 **Command-line tools and background programs get slices of their own.** Before, only apps with a Dock icon or a menu bar item did: Docker's engine, a VM, `ollama serve` or a Homebrew service went into Display & System, and anything you ran in a terminal counted as Terminal (or iTerm, Ghostty, Visual Studio Code…). Now what you type at a shell prompt is its own slice, with everything it starts (`npm run dev` and its Node processes are one), named for what it runs (`claude-code`, not `node`). A program inside an app's bundle, or named like an app you've installed, gets that app's real icon (Docker, Ollama, OrbStack); a command gets the icon of the terminal it runs in, and its name in its slice when there's room; anything else gets macOS's own program icon. Quit sends it the signal Ctrl-C would; Force Quit, `kill -9`. They're in the history too.
+- 🍎 **macOS's own work, by name.** Spotlight indexing, iCloud syncing, Photos analysis, Time Machine, Software Update, the Window Server, Siri & Apple Intelligence and more get slices with Apple's own icons and a line about what they're doing, when they're busy. They can't be quit (they settle by themselves), so they can't be dragged out.
+- 🔎 **Every process counts, even the ones macOS won't show.** About a third of the Mac's processes (WindowServer, Spotlight's indexers, the kernel) belong to macOS or other users, and an app may not read their energy. Their CPU time is read instead, with `ps`, every few seconds, and turned into watts at the rate the processes that can be read use energy per second of CPU. Those figures are marked "≈" and are never allowed to add up to more than the Mac draws.
+- ☀️ **Click Display & System to see what's in it**: the macOS processes with no slice of their own, by name, and what's left, the screen and the rest of the hardware, which macOS only reports all together.
+- The battery shows four slices by default instead of three.
+- 🔌 **The Charger row shows what's coming in**: "12 W of 96 W", what the Mac is getting from the charger out of what it can give.
+- Apps drawing under 0.1 W no longer get a slice. A slice reading "<0.1 W" or "costs less than a minute" said nothing you could act on.
+
+### Fixed
+
+- **"The charger can't keep up" with a 100 W charger and a Mac using 6.6 W.** A battery running down while plugged in was always blamed on the charger being too small. Now the Mac's draw is compared with what actually comes in from the charger: the charger is only called too small when the Mac uses about all of it. Otherwise the card says the Mac is **running on battery while plugged in**, and how much it's getting from the charger. That points to the charger, the cable or the port not giving full power, or to another battery app discharging on purpose. A stray current reading no longer raises the card when the charger covers everything.
+
+## [0.4.3] - 2026-11-17
+
+Your history, in depth: every app, every day, as far back as you keep it.
+
+### Added
+
+- 📊 **Settings › History**, a pane of its own. Pick 7 days, 14 days, 30 days, 3 months or a year (as far back as the history is kept) and see:
+  - **The whole period at a glance**: time on battery, battery used (and how many full charges that is), an average day, and how many apps were measured.
+  - **Battery used each day**, or each week over a year. Click a bar for that day's (or week's) own apps.
+  - **Every app that used the battery**, ranked, with its share and the battery time it cost. Not just the top three.
+- 🔍 **A page for each app**: the battery time it cost, its average draw on battery, how many days it ran, and its **trend**, whether it's using more or less than the same length of time before. Then its use day by day, and **through the day**: its power draw at each hour, so you can see when it's busiest. With when it was first and last measured, and a switch to hide it from the battery.
+- 👆 **More history in the panel.**
+  - **Click a day** in the 10-day chart for that day's own apps, and its time on battery and battery used.
+  - **Click an app** under "Used the most battery" for a closer look: its use hour by hour (or day by day), its share of what apps used, how many days it ran and when it's busiest, with a link to its page in Settings.
+  - **Show More** lists up to eight apps instead of three, and **All History…** opens Settings › History.
+  - An app's card (click its slice) says what it used in the last 24 hours, with a **History** button.
+- 📄 **Apps by Day (CSV)**: a new export with a row for each app on each day, with its energy, its share and the battery time it cost, for a spreadsheet.
+
+### Changed
+
+- Keeping, exporting and clearing the history moved from Settings › Panel to Settings › History. Insights stay in Panel.
+- Battery time in the history reads "1h 10m" rather than "1:10", so a long one isn't mistaken for a time of day.
+
 ## [0.4.2] - 2026-11-16
 
 Say hi, if you like.
@@ -285,7 +360,10 @@ The first release.
 - Automatic updates with Sparkle, from EdDSA-signed releases.
 - One-command install, and build, packaging and release scripts.
 
-[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.5...HEAD
+[0.4.5]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.4...v0.4.5
+[0.4.4]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.3...v0.4.4
+[0.4.3]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.3.3...v0.4.0
