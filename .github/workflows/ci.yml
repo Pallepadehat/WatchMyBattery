@@ -54,7 +54,7 @@ jobs:
       - name: Run benchmarks
         working-directory: Packages/BatteryKit
         run: swift run -c release BatteryKitBenchmarks --quick --report-only --json benchmarks.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: benchmarks
           path: Packages/BatteryKit/benchmarks.json
