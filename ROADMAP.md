@@ -188,19 +188,24 @@ See the [changelog](CHANGELOG.md).
 - [x] System Settings' own icons for macOS's services and Display & System, and more of macOS by name
 - [x] Settings › History's weekly chart scales to weeks that use several charges
 
-## 0.5.0: everywhere
+## 0.5.0: everywhere ✅
+
+See the [changelog](CHANGELOG.md).
 
 **Widgets and Shortcuts**
 
-- [ ] A widget for the desktop and Notification Center: the battery, time left and the hungriest apps ([#39](https://github.com/Pallepadehat/WatchMyBattery/issues/39))
-- [ ] An accessories widget, with your AirPods and Magic devices ([#40](https://github.com/Pallepadehat/WatchMyBattery/issues/40))
-- [ ] Shortcuts automations: run a shortcut when the battery drops below a level or the charger is connected ([#41](https://github.com/Pallepadehat/WatchMyBattery/issues/41))
+- [x] A widget for the desktop and Notification Center: the battery, time left and the hungriest apps ([#39](https://github.com/Pallepadehat/WatchMyBattery/issues/39))
+- [x] An accessories widget, with your AirPods and Magic devices ([#40](https://github.com/Pallepadehat/WatchMyBattery/issues/40))
+- [x] Shortcuts automations: run a shortcut when the battery drops below a level or the charger is connected ([#41](https://github.com/Pallepadehat/WatchMyBattery/issues/41)), in Settings › Rules
+- [x] Low Power Mode and Battery controls for Control Center and the menu bar (macOS 26)
+- [x] Shortcuts actions for the forecast and Low Power Mode
 
 **Battery care**
 
 - [x] Battery health over time: maximum capacity and cycle count, month by month ([#42](https://github.com/Pallepadehat/WatchMyBattery/issues/42)), in 0.4.5
-- [ ] A weekly summary: battery time used, the apps that used the most, and how it compares with last week ([#43](https://github.com/Pallepadehat/WatchMyBattery/issues/43))
-- [ ] Rules for low battery: turn on Low Power Mode or quit chosen apps at a level you pick ([#44](https://github.com/Pallepadehat/WatchMyBattery/issues/44))
+- [x] A weekly summary: battery time used, the apps that used the most, and how it compares with last week ([#43](https://github.com/Pallepadehat/WatchMyBattery/issues/43))
+- [x] Rules for low battery: turn on Low Power Mode or quit chosen apps at a level you pick ([#44](https://github.com/Pallepadehat/WatchMyBattery/issues/44))
+- [x] A forecast: where the level is headed, and when it should reach 20%, from the current pace and your usual day
 
 ## Waiting on a Developer ID
 

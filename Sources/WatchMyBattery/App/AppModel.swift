@@ -20,6 +20,9 @@ final class AppModel {
     let powerDraw = PowerDrawMonitor()
     let chime = ChargingChime()
     let usageStats = UsageStats()
+    let rules = RuleRunner()
+    @ObservationIgnored let widgets = WidgetPublisher()
+    @ObservationIgnored let weeklySummary = WeeklySummaryScheduler()
 
     init(settings: AppSettings = AppSettings(), history: HistoryRecorder? = nil) {
         self.settings = settings
@@ -65,7 +68,11 @@ final class AppModel {
     @ObservationIgnored private lazy var settingsWindow = SettingsWindowController(model: self)
     @ObservationIgnored private lazy var onboardingWindow = OnboardingWindowController(model: self)
 
+    /// The running app's model, for Shortcuts actions that act on it (Low Power Mode, the forecast).
+    static weak var shared: AppModel?
+
     func start() {
+        Self.shared = self
         battery.start()
         updater.start()
         usageStats.start(settings: settings)
@@ -81,10 +88,24 @@ final class AppModel {
         accessories.start()
         chargeLimit.start(model: self)
         sleep.start(model: self)
+        rules.start(model: self)
+        weeklySummary.start(model: self)
         lowPowerMode.checkSupport()
         usage.excludedApps = Set(settings.excludedApps)
         GlobalHotkey.shared.action = { [weak self] in self?.togglePanel() }
         registerPanelShortcut()
+        widgets.start(model: self)
+    }
+
+    /// `watchmybattery://panel`, `watchmybattery://history` or `watchmybattery://settings/rules`: what the widgets
+    /// open when clicked, and a way in for scripts.
+    func open(_ url: URL) {
+        guard url.scheme == "watchmybattery" else { return }
+        switch url.host() {
+        case "history": openHistory()
+        case "settings": openSettings(SettingsPane(rawValue: url.pathComponents.dropFirst().first ?? ""))
+        default: showPanel()
+        }
     }
 
     /// Saves the panel's keyboard shortcut and starts listening for it; `nil` removes it.
@@ -222,6 +243,13 @@ final class AppModel {
         return ChargingNote.evaluate(
             snapshot: battery.snapshot, adapter: battery.adapter, systemWatts: usage.systemWatts, chargerWatts: usage.chargerWatts,
             readings: battery.readings)
+    }
+
+    /// Where the battery level is headed, on battery: for the panel's chart, the widgets and Shortcuts. Worked out when
+    /// asked, from the history already in memory, which takes microseconds.
+    var forecast: BatteryForecast? {
+        ForecastModel.forecast(
+            snapshot: battery.snapshot, profile: history.profile, history: history.history, lowLevel: BatteryIcon.lowPercentage)
     }
 
     /// The numbers behind the panel's estimates, for the current moment.

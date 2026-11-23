@@ -78,7 +78,8 @@ public final class AppleDeviceReader: @unchecked Sendable {
                 .phone
             }
         let name = values[Key.deviceName] as? String ?? (kind == .tablet ? "iPad" : "iPhone")
-        let isCharging = values[Key.isCharging] as? Bool ?? false
+        // Plugged in counts too: a phone holding at 80% isn't "charging", and over Wi‑Fi the flag is sometimes missing.
+        let isCharging = (values[Key.isCharging] as? Bool ?? false) || (values[Key.isPluggedIn] as? Bool ?? false)
         return Accessory(
             id: "device:" + id, name: name, kind: kind, parts: [Accessory.Part(role: .single, percentage: level, isCharging: isCharging)],
             vendorID: Accessory.appleVendorID)
@@ -90,6 +91,7 @@ public final class AppleDeviceReader: @unchecked Sendable {
         static let productType = "ProductType"
         static let batteryLevel = "BatteryCurrentCapacity"
         static let isCharging = "BatteryIsCharging"
+        static let isPluggedIn = "ExternalConnected"
         static let batteryDomain = "com.apple.mobile.battery"
     }
 
@@ -108,7 +110,7 @@ public final class AppleDeviceReader: @unchecked Sendable {
         for key in [Key.deviceName, Key.deviceClass, Key.productType] {
             values[key] = functions.copyValue(pointer, nil, key as CFString)?.takeRetainedValue()
         }
-        for key in [Key.batteryLevel, Key.isCharging] {
+        for key in [Key.batteryLevel, Key.isCharging, Key.isPluggedIn] {
             values[key] = functions.copyValue(pointer, Key.batteryDomain as CFString, key as CFString)?.takeRetainedValue()
         }
         return accessory(id: id, values: values)

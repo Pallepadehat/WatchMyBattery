@@ -46,6 +46,7 @@
         private static func render(to folder: URL) {
             renderOnboarding(to: folder)
             renderVitals(to: folder)
+            renderEverywhere(to: folder)
             let apps = sampleApps.enumerated().map { index, sample in
                 let icon = NSWorkspace.shared.icon(forFile: sample.path)
                 return AppUsage(
@@ -88,6 +89,8 @@
                 // 0.4.3: an app's history opened in the last day, and a day picked in the last ten.
                 ("historyapp", BatterySnapshot(percentage: 64, powerSource: .battery, chargeState: .discharging, timeRemaining: 4 * 3600 + 50 * 60)),
                 ("historyday", BatterySnapshot(percentage: 64, powerSource: .battery, chargeState: .discharging, timeRemaining: 4 * 3600 + 50 * 60)),
+                // 0.5.0: the forecast, from a month of history.
+                ("forecast", BatterySnapshot(percentage: 71, powerSource: .battery, chargeState: .discharging, timeRemaining: 6 * 3600 + 10 * 60)),
             ]
             /// The charger in each 0.4.0 state, what the Mac draws, and what comes in from the charger.
             let chargers: [String: (adapter: PowerAdapter, systemWatts: Double, chargerWatts: Double)] = [
@@ -124,6 +127,10 @@
                     model.history.preview(history, profile: sampleProfile(history: history))
                     if name == "tendays" { model.settings.historyRange = .tenDays }
                     HistorySection.previewState = (nil, nil)
+                    if name == "forecast" {
+                        let made = PretendHistory.make(days: 30)
+                        model.history.preview(made.history, profile: made.profile)
+                    }
                     if name == "historyapp" || name == "historyday" {
                         let made = PretendHistory.make(days: 30)
                         model.history.preview(made.history, profile: made.profile)
@@ -376,6 +383,34 @@
         /// Settings › Battery Health, with months of made-up vitals, in dark and light: its list (also narrow), temperature
         /// over a month compared with the month before, power through the day on battery only (also narrow, over time),
         /// and a year of health.
+        /// 0.5.0: Settings › Rules, empty and with rules, and Settings › History's week.
+        private static func renderEverywhere(to folder: URL) {
+            for scheme in [ColorScheme.dark, .light] {
+                let suffix = scheme == .dark ? "dark" : "light"
+                for filled in [false, true] {
+                    let model = AppModel(settings: previewSettings(), history: HistoryRecorder(storeURL: nil, legacyFileURL: nil))
+                    model.lowPowerMode.preview(isSupported: true)
+                    model.chargeLimit.preview(limit: 100)
+                    model.settings.rules =
+                        filled
+                        ? [
+                            BatteryRule(trigger: .dropsTo(20), actions: [.lowPowerMode(true), .quitApps(["com.apple.Music"]), .notify]),
+                            BatteryRule(trigger: .pluggedIn, actions: [.lowPowerMode(false)]),
+                            BatteryRule(trigger: .chargesTo(80), actions: [.runShortcut("Unplug Reminder")]),
+                            BatteryRule(isEnabled: false, trigger: .unplugged, actions: [.chargeLimit(80)]),
+                        ] : []
+                    let view = RulesPane(model: model).formStyle(.grouped).frame(width: 530, height: 560).environment(\.colorScheme, scheme)
+                    saveInWindow(view, scheme: scheme, scrolledBy: 0, to: folder.appending(path: "rules-\(filled ? "filled" : "empty")-\(suffix).png"))
+                }
+                let model = AppModel(settings: previewSettings(), history: HistoryRecorder(storeURL: nil, legacyFileURL: nil))
+                let made = PretendHistory.make(days: 30)
+                model.history.preview(made.history, profile: made.profile)
+                let view = Form { WeekSummarySection(model: model, open: { _ in }) }
+                    .formStyle(.grouped).frame(width: 530, height: 330).environment(\.colorScheme, scheme)
+                saveInWindow(view, scheme: scheme, scrolledBy: 0, to: folder.appending(path: "week-\(suffix).png"))
+            }
+        }
+
         private static func renderVitals(to folder: URL) {
             let states: [(name: String, page: VitalsPage?, days: Int, compares: Bool, filter: VitalsFilter, throughTheDay: Bool)] = [
                 ("list", nil, 7, false, .all, false), ("narrow", nil, 7, false, .all, false), ("narrowpower", .power, 30, true, .all, false),

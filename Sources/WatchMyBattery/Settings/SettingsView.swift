@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 
 /// The panes of Settings, in the sidebar.
 enum SettingsPane: String, CaseIterable, Identifiable {
-    case general, menuBar, panel, history, vitals, charging, sleep, accessories, notifications, updates, about
+    case general, menuBar, panel, history, vitals, charging, sleep, accessories, notifications, rules, updates, about
 
     var id: Self { self }
 
@@ -20,6 +20,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .sleep: String(localized: "Sleep")
         case .accessories: String(localized: "Accessories")
         case .notifications: String(localized: "Notifications")
+        case .rules: String(localized: "Rules")
         case .updates: String(localized: "Updates")
         case .about: String(localized: "About")
         }
@@ -36,6 +37,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .sleep: "moon.zzz.fill"
         case .accessories: "airpodspro"
         case .notifications: "bell.fill"
+        case .rules: "wand.and.stars"
         case .updates: "arrow.triangle.2.circlepath"
         case .about: "info"
         }
@@ -52,6 +54,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .sleep: .purple
         case .accessories: .cyan
         case .notifications: .red
+        case .rules: RulesPane.color
         case .updates: .indigo
         case .about: .orange
         }
@@ -92,6 +95,7 @@ struct SettingsView: View {
                 case .sleep: SleepPane(model: model)
                 case .accessories: AccessoriesPane(model: model)
                 case .notifications: NotificationsPane(model: model)
+                case .rules: RulesPane(model: model)
                 case .updates: UpdatesPane(model: model)
                 case .about: AboutPane(model: model)
                 }
@@ -448,6 +452,11 @@ private struct PanelPane: View {
                     }
                 }
                 .disabled(!settings.recordsHistory && !settings.warnsBeforeMeetings)
+                Toggle(isOn: $settings.showsForecast) {
+                    SettingLabel("Forecast", symbol: "chart.line.downtrend.xyaxis", color: .teal) {
+                        Text("On battery, the last 24 hours' chart goes on past now with where the level is headed, and when it should reach 20%.")
+                    }
+                }
             } header: {
                 Text("Insights")
             } footer: {

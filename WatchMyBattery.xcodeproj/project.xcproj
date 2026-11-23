@@ -27,12 +27,15 @@
     { "kind": "folder", "path": "Sources/WatchMyBattery", "target-membership": [ "WatchMyBattery" ] },
     { "kind": "folder", "path": "Sources/WatchMyBatteryHelper", "target-membership": [ "WatchMyBatteryHelper" ] },
     { "kind": "folder", "path": "Sources/Shared", "target-membership": [ "WatchMyBattery", "WatchMyBatteryHelper" ] },
+    { "kind": "folder", "path": "Sources/WatchMyBatteryWidgets", "target-membership": [ "WatchMyBatteryWidgets" ] },
+    { "kind": "folder", "path": "Sources/WidgetIntents", "target-membership": [ "WatchMyBattery", "WatchMyBatteryWidgets" ] },
     {
       "kind": "group",
       "name": "Products",
       "children": [
         { "path": "<PRODUCTS>/WatchMyBattery.app", "id": "C432364C30A339F000B1E421", "type": "wrapper.application", "index": false },
         { "path": "<PRODUCTS>/WatchMyBatteryHelper", "id": "C432364C30A339F000B1E422", "type": "compiled.mach-o.executable", "index": false, "target-membership": [ "WatchMyBattery/copy/EmbedHelper" ] },
+        { "path": "<PRODUCTS>/WatchMyBatteryWidgets.appex", "id": "C432364C30A339F000B1E423", "type": "wrapper.app-extension", "index": false, "target-membership": [ "WatchMyBattery/copy/EmbedExtensions" ] },
       ],
     }, {
       "kind": "group",
@@ -41,12 +44,52 @@
         { "path": "Signing.xcconfig" },
         { "path": "Info.plist" },
         { "path": "WatchMyBattery.entitlements" },
+        { "path": "WidgetsInfo.plist" },
+        { "path": "WatchMyBatteryWidgets.entitlements" },
         { "path": "com.pallepadehat.WatchMyBattery.helper.plist", "target-membership": [ "WatchMyBattery/copy/EmbedDaemon" ] },
       ],
     },
   ],
   "targets": [
     {
+      "name": "WatchMyBatteryWidgets",
+      "id": "C432364B30A339F000B1E423",
+      "product": "Products/WatchMyBatteryWidgets.appex",
+      "product-type": "app-extension",
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+      "package-product-members": [
+        {
+          "package": "BatteryKit",
+          "product-name": "BatteryKit",
+          "build-phase": { "build-phase": "frameworks" },
+        },
+      ],
+      "build-settings": {
+        "CODE_SIGN_ENTITLEMENTS": "Config/WatchMyBatteryWidgets.entitlements",
+        "ENABLE_APP_SANDBOX": "YES",
+        "ENABLE_HARDENED_RUNTIME": "YES",
+        "GENERATE_INFOPLIST_FILE": "YES",
+        "INFOPLIST_FILE": "Config/WidgetsInfo.plist",
+        "INFOPLIST_KEY_CFBundleDisplayName": "WatchMyBattery",
+        "INFOPLIST_KEY_NSHumanReadableCopyright": "© 2026 Patrick Jakobsen",
+        "LD_RUNPATH_SEARCH_PATHS": [
+          "$(inherited)",
+          "@executable_path/../Frameworks",
+          "@executable_path/../../../../Frameworks",
+        ],
+        "PRODUCT_BUNDLE_IDENTIFIER": "com.pallepadehat.WatchMyBattery.Widgets",
+        "PRODUCT_NAME": "$(TARGET_NAME)",
+        "SKIP_INSTALL": "YES",
+        "SWIFT_APPROACHABLE_CONCURRENCY": "YES",
+        "SWIFT_EMIT_LOC_STRINGS": "YES",
+        "SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY": "YES",
+        "SWIFT_VERSION": "6.0",
+      },
+    }, {
       "name": "WatchMyBatteryHelper",
       "id": "C432364B30A339F000B1E422",
       "product": "Products/WatchMyBatteryHelper",
@@ -71,6 +114,7 @@
       "product-type": "application",
       "dependencies": [
         "WatchMyBatteryHelper",
+        "WatchMyBatteryWidgets",
       ],
       "build-phases": [
         "compile-sources",
@@ -80,6 +124,10 @@
           "kind": "copy",
           "name": "EmbedHelper",
           "bundle-base-path": "executables-directory",
+        }, {
+          "kind": "copy",
+          "name": "EmbedExtensions",
+          "bundle-base-path": "plugins-directory",
         }, {
           "kind": "copy",
           "name": "EmbedDaemon",
@@ -103,7 +151,6 @@
         "ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME": "AccentColor",
         "CODE_SIGN_ENTITLEMENTS": "Config/WatchMyBattery.entitlements",
         "COMBINE_HIDPI_IMAGES": "YES",
-        "CURRENT_PROJECT_VERSION": "1",
         "ENABLE_APP_SANDBOX": "NO",
         "ENABLE_HARDENED_RUNTIME": "YES",
         "ENABLE_PREVIEWS": "YES",
@@ -117,7 +164,6 @@
           "$(inherited)",
           "@executable_path/../Frameworks",
         ],
-        "MARKETING_VERSION": "0.4.5",
         "PRODUCT_BUNDLE_IDENTIFIER": "com.pallepadehat.WatchMyBattery",
         "PRODUCT_NAME": "$(TARGET_NAME)",
         "STRING_CATALOG_GENERATE_SYMBOLS": "YES",
@@ -131,6 +177,8 @@
   ],
   "build-settings": {
     "ALWAYS_SEARCH_USER_PATHS": "NO",
+    "CURRENT_PROJECT_VERSION": "1",
+    "MARKETING_VERSION": "0.5.0",
     "ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS": "YES",
     "CLANG_ANALYZER_NONNULL": "YES",
     "CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION": "YES_AGGRESSIVE",

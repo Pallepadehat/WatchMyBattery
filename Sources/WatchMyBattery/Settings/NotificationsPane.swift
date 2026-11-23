@@ -17,6 +17,7 @@ struct NotificationsPane: View {
             Section {
                 MeetingWarningRows(model: model)
                 InsightRows(model: model)
+                WeeklySummaryRows(model: model)
             } header: {
                 Text("Insights")
             } footer: {
@@ -34,6 +35,24 @@ struct NotificationsPane: View {
                 AccessoryLowBatteryRows(model: model)
             }
         }
+    }
+}
+
+// MARK: - Weekly summary
+
+/// A notification on Monday morning with the week before at a glance.
+private struct WeeklySummaryRows: View {
+    let model: AppModel
+
+    var body: some View {
+        @Bindable var settings = model.settings
+        Toggle(isOn: $settings.notifiesWeeklySummary) {
+            SettingLabel("Weekly Summary", symbol: "calendar.badge.clock", color: .pink) {
+                Text("On Monday morning: last week's time on battery, how much it used compared with the week before, and the apps that used the most.")
+            }
+        }
+        .disabled(!settings.recordsHistory)
+        .requestsNotifications(whenOn: settings.notifiesWeeklySummary, from: model.notifier)
     }
 }
 

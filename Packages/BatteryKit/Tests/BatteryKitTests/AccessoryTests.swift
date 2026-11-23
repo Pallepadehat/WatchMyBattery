@@ -213,12 +213,28 @@ struct AccessoryLowBatteryAlertTests {
         #expect(alert.update(with: [mouse(12)], threshold: 20).isEmpty)
     }
 
-    @Test func chargingRearmsIt() {
+    @Test func chargingKeepsItQuietButDoesntRearmIt() {
         var alert = AccessoryLowBatteryAlert()
-        _ = alert.update(with: [mouse(15)], threshold: 20)
-        _ = alert.update(with: [mouse(16, charging: true)], threshold: 20)
-        #expect(alert.notified.isEmpty)
-        #expect(alert.update(with: [mouse(17)], threshold: 20).map(\.id) == ["mouse"])
+        #expect(alert.update(with: [mouse(15, charging: true)], threshold: 20).isEmpty)
+        #expect(alert.update(with: [mouse(15)], threshold: 20).map(\.id) == ["mouse"])
+        // Plugged in, unplugged, plugged in again while still low: one notification, not one each time.
+        for charging in [true, false, true, false, false] {
+            #expect(alert.update(with: [mouse(16, charging: charging)], threshold: 20).isEmpty)
+        }
+        // Charged up clearly past it, then low again: worth hearing about.
+        _ = alert.update(with: [mouse(60, charging: true)], threshold: 20)
+        #expect(alert.update(with: [mouse(19)], threshold: 20).map(\.id) == ["mouse"])
+    }
+
+    @Test func remembersWhatAnEarlierRunNotifiedAbout() {
+        var alert = AccessoryLowBatteryAlert(notified: ["mouse"])
+        #expect(alert.update(with: [mouse(12)], threshold: 20).isEmpty)
+    }
+
+    @Test func aPhonePluggedInCountsAsCharging() {
+        let phone = AppleDeviceReader.accessory(
+            id: "x", values: ["BatteryCurrentCapacity": 14, "BatteryIsCharging": false, "ExternalConnected": true, "DeviceClass": "iPhone"])
+        #expect(phone?.isChargingInUse == true)
     }
 
     @Test func aWobbleAroundTheThresholdDoesntNotifyTwice() {

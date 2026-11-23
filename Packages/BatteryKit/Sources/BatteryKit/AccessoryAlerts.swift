@@ -37,9 +37,10 @@ public struct AccessoryArrivals: Sendable {
 /// Decides when an accessory's battery has run low enough for a notification.
 ///
 /// Each accessory is notified about once, when its lowest earbud (or its only
-/// battery) reaches the threshold. Charging it, or its level climbing back
-/// clearly above the threshold, re-arms it. The case doesn't count, as it's
-/// there to charge the earbuds.
+/// battery) reaches the threshold, and not again until its level has climbed
+/// clearly above it. Charging only keeps it quiet: a phone that's plugged in
+/// and unplugged at 15%, or whose charging flag flickers, still had its say.
+/// The case doesn't count, as it's there to charge the earbuds.
 public struct AccessoryLowBatteryAlert: Sendable, Equatable {
     /// Accessories already notified about, until they charge.
     public private(set) var notified: Set<String> = []
@@ -47,16 +48,19 @@ public struct AccessoryLowBatteryAlert: Sendable, Equatable {
     /// notification, so a reading that wobbles around it doesn't notify twice.
     public static let rearmMargin = 5
 
-    public init() {}
+    /// `notified` is what an earlier run already notified about, so a relaunch doesn't repeat it.
+    public init(notified: Set<String> = []) {
+        self.notified = notified
+    }
 
     /// Feeds in the accessories now connected; returns those that just ran low.
     public mutating func update(with accessories: [Accessory], threshold: Int) -> [Accessory] {
         var low: [Accessory] = []
         for accessory in accessories {
             guard let level = accessory.lowestLevel else { continue }
-            if accessory.isChargingInUse || level > threshold + Self.rearmMargin {
+            if level > threshold + Self.rearmMargin {
                 notified.remove(accessory.id)
-            } else if level <= threshold, !notified.contains(accessory.id) {
+            } else if level <= threshold, !accessory.isChargingInUse, !notified.contains(accessory.id) {
                 notified.insert(accessory.id)
                 low.append(accessory)
             }

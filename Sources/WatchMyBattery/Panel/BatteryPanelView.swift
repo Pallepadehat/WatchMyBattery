@@ -247,7 +247,7 @@ struct BatteryPanelView: View {
                         .padding(.top, 10)
                     HistorySection(
                         recorder: model.history, snapshot: snapshot, usesColor: model.settings.usesColor, isVisible: model.isPanelOpen,
-                        isExpanded: $settings.showsHistory, range: $settings.historyRange,
+                        isExpanded: $settings.showsHistory, range: $settings.historyRange, showsForecast: settings.showsForecast,
                         openHistory: { key in
                             close()
                             model.openHistory(app: key)
