@@ -24,7 +24,7 @@ Debug builds understand a few launch arguments (set them in the scheme, or pass 
 | Flag | What it does |
 | --- | --- |
 | `--show-panel` | Opens the panel right away (Release builds too) |
-| `--show-settings` | Opens Settings; add `--settings-pane updates` (or `general`, `menuBar`, `panel`, `history`, `vitals`, `accessories`, `notifications`, `about`) for a pane, and `--history-app com.apple.Safari` (an app's bundle identifier) for that app's page in History |
+| `--show-settings` | Opens Settings; add `--settings-pane updates` (or `general`, `menuBar`, `panel`, `history`, `vitals`, `accessories`, `notifications`, `rules`, `about`) for a pane, and `--history-app com.apple.Safari` (an app's bundle identifier) for that app's page in History |
 | `--pretend-history` | Four months of made-up history, in memory, instead of the real one: for working on the panel's history, Settings › History and Settings › Battery Health. With `--isolated`, Settings keeps a year of it so every period shows |
 | `--pretend-charging` | Shows the battery charging at 62% from a 70 W charger, to see the charging animation on a full battery (Release builds only with `--isolated`) |
 | `--pretend-accessories` | Shows AirPods Pro, a Magic Keyboard running low, a Magic Mouse and a charging Magic Trackpad instead of what's connected (Release builds only with `--isolated`) |
@@ -42,6 +42,16 @@ To see which accessories the app finds, and from where, watch its log while you 
 ```sh
 /usr/bin/log stream --predicate 'subsystem == "com.pallepadehat.WatchMyBattery" AND eventMessage CONTAINS "Accessories"'
 ```
+
+## The widgets
+
+`WatchMyBatteryWidgets` is a WidgetKit extension inside the app. It reads what the app writes to the app group container, so it needs a build signed with your team (`Config/Local.xcconfig`); an ad hoc build's widgets show only the battery. To try them, run a team-signed build from `/Applications`, then add them from the desktop's **Edit Widgets…**. `--render-previews` doesn't draw them; WidgetKit does. To see what the app hands them:
+
+```sh
+cat ~/Library/Group\ Containers/*.com.pallepadehat.WatchMyBattery/WidgetState.json
+```
+
+The app also opens `watchmybattery://panel`, `watchmybattery://history` and `watchmybattery://settings/<pane>` links (`open watchmybattery://settings/rules`), which is what clicking a widget does.
 
 ## The Low Power Mode helper
 

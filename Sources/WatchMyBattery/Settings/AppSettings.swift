@@ -472,6 +472,26 @@ final class AppSettings {
         didSet { defaults.set(usageStatsSentAt, forKey: Key.usageStatsSentAt) }
     }
 
+    /// The panel's level chart goes on past now, to where the battery is headed (see ``BatteryForecast``).
+    var showsForecast: Bool {
+        didSet { defaults.set(showsForecast, forKey: Key.showsForecast) }
+    }
+
+    /// A notification on Monday morning summing up the week before.
+    var notifiesWeeklySummary: Bool {
+        didSet { defaults.set(notifiesWeeklySummary, forKey: Key.notifiesWeeklySummary) }
+    }
+
+    /// The start of the last week the summary went out for, so it goes out once a week.
+    var weeklySummarySentFor: Date? {
+        didSet { defaults.set(weeklySummarySentFor, forKey: Key.weeklySummarySentFor) }
+    }
+
+    /// What to do by itself when the battery or the charger changes (Settings › Rules).
+    var rules: [BatteryRule] {
+        didSet { defaults.set(BatteryRule.encode(rules), forKey: Key.rules) }
+    }
+
     /// A key combination that opens and closes the panel from any app; `nil` for none.
     var panelShortcut: Hotkey? {
         didSet {
@@ -554,6 +574,8 @@ final class AppSettings {
             Key.historyPeriod: HistoryPeriod.twoWeeks.rawValue,
             Key.showsDevices: true,
             Key.sharesUsageStats: false,
+            Key.showsForecast: true,
+            Key.notifiesWeeklySummary: false,
         ])
         menuBarIconStyle = MenuBarIconStyle(rawValue: defaults.string(forKey: Key.menuBarIconStyle) ?? "") ?? .battery
         // Up to 0.3.3, one "percentage style" said whether the percentage was hidden, inside the battery or beside it.
@@ -611,6 +633,10 @@ final class AppSettings {
         usageStatsID = defaults.string(forKey: Key.usageStatsID)
         usageStatsSentAt = defaults.object(forKey: Key.usageStatsSentAt) as? Date
         panelShortcut = defaults.data(forKey: Key.panelShortcut).flatMap { try? JSONDecoder().decode(Hotkey.self, from: $0) }
+        showsForecast = defaults.bool(forKey: Key.showsForecast)
+        notifiesWeeklySummary = defaults.bool(forKey: Key.notifiesWeeklySummary)
+        weeklySummarySentFor = defaults.object(forKey: Key.weeklySummarySentFor) as? Date
+        rules = BatteryRule.decode(defaults.data(forKey: Key.rules))
 
         if legacyStyle != nil {
             defaults.set(menuBarLabel.rawValue, forKey: Key.menuBarLabel)
@@ -684,5 +710,9 @@ final class AppSettings {
         static let sharesUsageStats = "sharesUsageStats"
         static let usageStatsID = "usageStatsID"
         static let usageStatsSentAt = "usageStatsSentAt"
+        static let showsForecast = "showsForecast"
+        static let notifiesWeeklySummary = "notifiesWeeklySummary"
+        static let weeklySummarySentFor = "weeklySummarySentFor"
+        static let rules = "rules"
     }
 }

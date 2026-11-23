@@ -100,6 +100,17 @@ enum Benchmarks {
             let profile = Fixtures.twoWeeks()
             return { blackHole(NewAppCheck.newApps(history: history, profile: profile, now: Fixtures.now)) }
         },
+        // 0.5.0: worked out each minute while the panel's history is open, and whenever the widgets' state is written.
+        Benchmark("forecast.compute", budget: .milliseconds(1)) {
+            let history = Fixtures.fullDay()
+            let profile = Fixtures.twoWeeks()
+            let snapshot = BatterySnapshot(percentage: 64, powerSource: .battery, chargeState: .discharging, timeRemaining: 4 * 3600)
+            return { blackHole(ForecastModel.forecast(snapshot: snapshot, profile: profile, history: history, now: Fixtures.now)) }
+        },
+        Benchmark("weeklySummary", budget: .milliseconds(5)) {
+            let profile = Fixtures.twoWeeks()
+            return { blackHole(profile.lastWeekSummary(now: Fixtures.now)) }
+        },
     ]
 
     // MARK: - The store: written every five minutes on battery, opened once at launch, on the main thread

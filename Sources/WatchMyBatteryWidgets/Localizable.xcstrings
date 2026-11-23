@@ -1,0 +1,408 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ around %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ omkring kl. %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ around %2$@"
+          }
+        }
+      }
+    },
+    "%@ left" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ tilbage"
+          }
+        }
+      }
+    },
+    "%@ to full" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ til fuld"
+          }
+        }
+      }
+    },
+    "%@ used today" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ brugt i dag"
+          }
+        }
+      }
+    },
+    "%@, %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "Apps show up here once they've been measured on battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps vises her, når de er blevet målt på batteri."
+          }
+        }
+      }
+    },
+    "Batteries" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batterier"
+          }
+        }
+      }
+    },
+    "Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteri"
+          }
+        }
+      }
+    },
+    "Charged" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opladet"
+          }
+        }
+      }
+    },
+    "Charging" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplader"
+          }
+        }
+      }
+    },
+    "Empty" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tom"
+          }
+        }
+      }
+    },
+    "End" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slut"
+          }
+        }
+      }
+    },
+    "Expected" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forventet"
+          }
+        }
+      }
+    },
+    "Held at %@" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Holdt på %@"
+          }
+        }
+      }
+    },
+    "Level" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niveau"
+          }
+        }
+      }
+    },
+    "Low Power" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømspare"
+          }
+        }
+      }
+    },
+    "Low Power Mode" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømsparetilstand"
+          }
+        }
+      }
+    },
+    "Low Power Mode is on" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strømsparetilstand er slået til"
+          }
+        }
+      }
+    },
+    "Not Charging" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oplader ikke"
+          }
+        }
+      }
+    },
+    "Now" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nu"
+          }
+        }
+      }
+    },
+    "Off" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fra"
+          }
+        }
+      }
+    },
+    "On" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Til"
+          }
+        }
+      }
+    },
+    "On battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "På batteri"
+          }
+        }
+      }
+    },
+    "On Battery" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "På batteri"
+          }
+        }
+      }
+    },
+    "Open Battery Panel" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbn batteripanelet"
+          }
+        }
+      }
+    },
+    "Open WatchMyBattery to see the apps using the most battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbn WatchMyBattery for at se de apps, der bruger mest batteri."
+          }
+        }
+      }
+    },
+    "Opens WatchMyBattery's panel under the menu bar." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbner WatchMyBatterys panel under menulinjen."
+          }
+        }
+      }
+    },
+    "Plugged in" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilsluttet"
+          }
+        }
+      }
+    },
+    "Set Low Power Mode" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indstil strømsparetilstand"
+          }
+        }
+      }
+    },
+    "Start" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
+          }
+        }
+      }
+    },
+    "This Mac" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denne Mac"
+          }
+        }
+      }
+    },
+    "This Mac doesn't have a battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denne Mac har ikke et batteri."
+          }
+        }
+      }
+    },
+    "Time" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tid"
+          }
+        }
+      }
+    },
+    "Turns Low Power Mode on or off, through WatchMyBattery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slår strømsparetilstand til eller fra via WatchMyBattery."
+          }
+        }
+      }
+    },
+    "Used the most" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brugte mest"
+          }
+        }
+      }
+    },
+    "Used the most, last 24 hours" : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brugte mest, seneste 24 timer"
+          }
+        }
+      }
+    },
+    "Your battery's level and time left, the apps using it the most, and where it's headed." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriets niveau og tid tilbage, de apps, der bruger mest, og hvor det er på vej hen."
+          }
+        }
+      }
+    },
+    "Your battery's level and time left. Click it for WatchMyBattery's panel." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batteriets niveau og tid tilbage. Klik for WatchMyBatterys panel."
+          }
+        }
+      }
+    },
+    "Your Mac, AirPods and Magic accessories, each with its battery." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Din Mac, dine AirPods og Magic-tilbehør, hver med sit batteri."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

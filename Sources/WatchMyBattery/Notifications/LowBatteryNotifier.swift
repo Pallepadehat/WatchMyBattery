@@ -23,7 +23,7 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
     @ObservationIgnored private var alert = LowBatteryAlert()
     @ObservationIgnored private let center = UNUserNotificationCenter.current()
     @ObservationIgnored private var wasEnabled = false
-    @ObservationIgnored private var accessoryAlert = AccessoryLowBatteryAlert()
+    @ObservationIgnored private var accessoryAlert = AccessoryLowBatteryAlert(notified: LowBatteryNotifier.savedAccessoriesNotified)
     @ObservationIgnored private var chargedAlert = ChargeLevelAlert()
     /// Every kind of notification's buttons; macOS takes them all at once.
     @ObservationIgnored private var categories: [String: UNNotificationCategory] = [:]
@@ -33,6 +33,9 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
     private static let meetingID = "meeting"
     private static let quitActionID = "quit"
     private static let lowPowerModeActionID = "lowPowerMode"
+    /// What clicking a notification opens, when it's not the panel.
+    nonisolated private static let opensKey = "opens"
+    nonisolated private static let opensHistory = "history"
 
     func start(model: AppModel) {
         self.model = model
@@ -179,16 +182,33 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
     private func observeAccessories() {
         guard let model else { return }
         let (low, enabled) = withObservationTracking {
+            // Only what was just read: a phone's level kept from a while ago (from before a relaunch, say) may be long
+            // out of date, and it's been plugged in since.
+            let current = model.accessories.accessories.filter { model.accessories.staleReadDate(of: $0) == nil }
             // Followed even while off, so turning it on with an accessory already low doesn't notify right away.
-            (
-                accessoryAlert.update(with: model.accessories.accessories, threshold: model.settings.accessoryLowBatteryLevel),
+            return (
+                accessoryAlert.update(with: current, threshold: model.settings.accessoryLowBatteryLevel),
                 model.settings.notifiesWhenAccessoryLow
             )
         } onChange: { [weak self] in
             Task { @MainActor in self?.observeAccessories() }
         }
+        Self.saveAccessoriesNotified(accessoryAlert.notified)
         guard enabled else { return }
         for accessory in low { Task { await notify(accessory) } }
+    }
+
+    private static let accessoriesNotifiedKey = "accessoriesNotifiedLow"
+
+    /// The accessories already notified about, kept across launches so a relaunch doesn't tell you again.
+    private static var savedAccessoriesNotified: Set<String> {
+        guard !LaunchOptions.isIsolated else { return [] }
+        return Set(UserDefaults.standard.stringArray(forKey: accessoriesNotifiedKey) ?? [])
+    }
+
+    private static func saveAccessoriesNotified(_ notified: Set<String>) {
+        guard !LaunchOptions.isIsolated, notified != savedAccessoriesNotified else { return }
+        UserDefaults.standard.set(notified.sorted(), forKey: accessoriesNotifiedKey)
     }
 
     /// "AirPods Pro at 15%": the lowest earbud, or the only battery.
@@ -210,6 +230,30 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
         content.sound = .default
         // One per accessory: if it's reported again later, the new one replaces the old.
         await send(UNNotificationRequest(identifier: "accessory-\(accessory.id)", content: content, trigger: nil), kind: "accessory")
+    }
+
+    // MARK: - Rules
+
+    /// "Battery at 20%: Turned on Low Power Mode. Quit Docker." A rule ran, and this is what it did.
+    func notifyRuleRan(_ rule: BatteryRule, did done: [String]) async {
+        let content = UNMutableNotificationContent()
+        content.title = RuleText.notificationTitle(for: rule.trigger)
+        content.body = done.isEmpty ? String(localized: "Your rule ran.") : done.joined(separator: " ")
+        content.sound = .default
+        // One per rule: the next time it runs replaces this one.
+        await send(UNNotificationRequest(identifier: "rule-\(rule.id.uuidString)", content: content, trigger: nil), kind: "rule")
+    }
+
+    // MARK: - Weekly summary
+
+    /// "Last week: 14 hours on battery": the week before, at a glance. Clicking it opens Settings › History.
+    func notifyWeeklySummary(_ summary: WeeklySummary) async {
+        let content = UNMutableNotificationContent()
+        content.title = WeeklySummaryText.notificationTitle(summary)
+        content.body = WeeklySummaryText.notificationBody(summary)
+        content.userInfo = [Self.opensKey: Self.opensHistory]
+        content.sound = .default
+        await send(UNNotificationRequest(identifier: "weeklySummary", content: content, trigger: nil), kind: "weekly summary")
     }
 
     // MARK: - Runaway apps
@@ -312,6 +356,7 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
         let pid = (info["pid"] as? Int).map { pid_t($0) }
         let bundleIdentifier = info["bundleIdentifier"] as? String
         let action = response.actionIdentifier
+        let opens = info[Self.opensKey] as? String
         await MainActor.run {
             if action == Self.quitActionID, let pid {
                 // Check it's still the same app: process IDs get reused.
@@ -321,6 +366,8 @@ final class LowBatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
                 app.terminate()
             } else if action == Self.lowPowerModeActionID {
                 model?.setLowPowerMode(true)
+            } else if action == UNNotificationDefaultActionIdentifier, opens == Self.opensHistory {
+                model?.openHistory()
             } else if action == UNNotificationDefaultActionIdentifier {
                 model?.showPanel()
             }

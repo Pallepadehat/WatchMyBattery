@@ -6,5 +6,11 @@
 	     user first, and only once the warning is turned on in Settings › Notifications. -->
 	<key>com.apple.security.personal-information.calendars</key>
 	<true/>
+	<!-- The container shared with the widgets (WidgetPublisher writes their state there). The team's prefix, rather
+	     than "group.", needs no provisioning profile on macOS. -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>$(TeamIdentifierPrefix)com.pallepadehat.WatchMyBattery</string>
+	</array>
 </dict>
 </plist>
