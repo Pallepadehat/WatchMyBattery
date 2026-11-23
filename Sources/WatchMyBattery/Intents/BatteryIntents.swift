@@ -71,12 +71,66 @@ struct GetHungriestAppIntent: AppIntent {
     }
 }
 
+/// When the battery should run low, from the forecast the panel draws.
+struct GetForecastIntent: AppIntent {
+    static let title: LocalizedStringResource = "Get Battery Forecast"
+    static let description = IntentDescription(
+        "Gets when the battery should reach 20%, at the pace the Mac is going now and the way the battery usually goes later in the day. Empty while plugged in, or when it won't get that low in the next 12 hours.",
+        categoryName: "Battery")
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ReturnsValue<Date?> & ProvidesDialog {
+        let snapshot = PowerSourceReader.read()
+        guard snapshot.hasBattery else { throw BatteryIntentError.noBattery }
+        let forecast =
+            AppModel.shared?.forecast
+            ?? ForecastModel.forecast(snapshot: snapshot, profile: UsageProfile(), history: BatteryHistory(), lowLevel: BatteryIcon.lowPercentage)
+        guard snapshot.chargeState == .discharging else {
+            return .result(value: nil, dialog: "The Mac is plugged in.")
+        }
+        guard let forecast, let low = forecast.reachesLow ?? forecast.runsOut else {
+            return .result(value: nil, dialog: "The battery should last at least another 12 hours.")
+        }
+        let time = low.formatted(date: .omitted, time: .shortened)
+        let dialog: IntentDialog =
+            forecast.reachesLow != nil ? "The battery should reach 20% around \(time)." : "The battery should run out around \(time)."
+        return .result(value: low, dialog: dialog)
+    }
+}
+
+/// Turns Low Power Mode on or off, as the panel's switch does.
+struct SetLowPowerModeIntent: AppIntent {
+    static let title: LocalizedStringResource = "Set Low Power Mode"
+    static let description = IntentDescription(
+        "Turns Low Power Mode on or off. The first time, macOS asks you to allow WatchMyBattery's helper in System Settings › Login Items.",
+        categoryName: "Battery")
+
+    @Parameter(title: "Low Power Mode", default: true)
+    var isOn: Bool
+
+    static var parameterSummary: some ParameterSummary {
+        Summary("Turn Low Power Mode \(\.$isOn)")
+    }
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        guard let model = AppModel.shared else { throw BatteryIntentError.notRunning }
+        guard model.lowPowerMode.isSupported else { throw BatteryIntentError.noLowPowerMode }
+        model.setLowPowerMode(isOn)
+        return .result(dialog: isOn ? "Turning on Low Power Mode." : "Turning off Low Power Mode.")
+    }
+}
+
 enum BatteryIntentError: Error, CustomLocalizedStringResourceConvertible {
     case noBattery
+    case notRunning
+    case noLowPowerMode
 
     var localizedStringResource: LocalizedStringResource {
         switch self {
         case .noBattery: "This Mac doesn't have a battery."
+        case .notRunning: "WatchMyBattery isn't running."
+        case .noLowPowerMode: "This Mac can't switch Low Power Mode."
         }
     }
 }
@@ -108,5 +162,20 @@ struct WatchMyBatteryShortcuts: AppShortcutsProvider {
             ],
             shortTitle: "Hungriest App",
             systemImageName: "bolt.fill")
+        AppShortcut(
+            intent: GetForecastIntent(),
+            phrases: [
+                "When will my battery run low in \(.applicationName)",
+                "Get the battery forecast in \(.applicationName)",
+            ],
+            shortTitle: "Forecast",
+            systemImageName: "chart.line.downtrend.xyaxis")
+        AppShortcut(
+            intent: SetLowPowerModeIntent(),
+            phrases: [
+                "Set Low Power Mode in \(.applicationName)"
+            ],
+            shortTitle: "Low Power Mode",
+            systemImageName: "leaf.fill")
     }
 }

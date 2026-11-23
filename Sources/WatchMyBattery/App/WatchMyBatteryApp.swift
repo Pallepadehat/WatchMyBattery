@@ -81,6 +81,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         model.stop()
     }
 
+    /// A `watchmybattery://` link: from a widget, or a script.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        // Once the menu bar has placed the icon, when the link is what launched the app.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { urls.forEach(self.model.open) }
+    }
+
     /// Opening the app again (from Finder or Spotlight) shows the panel, since there's no window to bring forward.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         statusItem?.showPanel()

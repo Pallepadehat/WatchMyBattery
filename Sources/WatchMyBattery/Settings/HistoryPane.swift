@@ -61,6 +61,8 @@ private struct HistoryOverview: View {
         let period = settings.historyPeriod.limited(to: settings.historyRetention)
         Form {
             if settings.recordsHistory {
+                WeekSummarySection(model: model, open: open)
+
                 Section {
                     if let report {
                         VStack(alignment: .leading, spacing: 14) {

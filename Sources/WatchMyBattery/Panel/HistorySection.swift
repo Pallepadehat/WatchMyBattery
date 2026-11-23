@@ -20,6 +20,8 @@ struct HistorySection: View {
     let isVisible: Bool
     @Binding var isExpanded: Bool
     @Binding var range: HistoryRange
+    /// The level chart goes on past now, to where the battery is headed.
+    var showsForecast = true
     /// Opens Settings › History, at an app's own history when its key is given.
     let openHistory: (String?) -> Void
 
@@ -86,12 +88,19 @@ struct HistorySection: View {
 extension HistorySection {
     @ViewBuilder private var lastDay: some View {
         let history = recorder.history
+        let forecast =
+            showsForecast
+            ? ForecastModel.forecast(snapshot: snapshot, profile: recorder.profile, history: history, now: now, lowLevel: BatteryIcon.lowPercentage)
+            : nil
         LevelChart(
             buckets: history.levelBuckets(endingAt: now, current: snapshot), start: start, now: now, current: snapshot,
-            usesColor: usesColor)
+            usesColor: usesColor, forecast: forecast)
 
         if let stretch = history.sinceUnplugged(snapshot, now: now) {
             SinceUnpluggedRow(stretch: stretch)
+        }
+        if let forecast, forecast.reachesLow != nil || forecast.runsOut != nil {
+            ForecastRow(forecast: forecast)
         }
 
         appList(
@@ -175,9 +184,12 @@ private struct LevelChart: View {
     /// Only the slices with a level: before history begins there's nothing to draw.
     let filled: [BatteryHistory.LevelBucket]
     let start: Date
+    let end: Date
     let now: Date
     let current: BatterySnapshot
     let usesColor: Bool
+    /// Where the level is headed, up to the chart's end.
+    let forecast: [BatteryForecast.Point]
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -185,19 +197,44 @@ private struct LevelChart: View {
     /// Room between bars, as a share of each slot.
     private static let gap = 0.28
 
-    init(buckets: [BatteryHistory.LevelBucket], start: Date, now: Date, current: BatterySnapshot, usesColor: Bool) {
-        filled = buckets.filter { $0.percentage != nil }
+    /// With a forecast, the chart's last quarter is the hours ahead: 18 hours back, 6 ahead.
+    static let forecastSpan: TimeInterval = 6 * 3600
+
+    init(
+        buckets: [BatteryHistory.LevelBucket], start: Date, now: Date, current: BatterySnapshot, usesColor: Bool, forecast: BatteryForecast?
+    ) {
+        let shift = forecast == nil ? 0 : Self.forecastSpan
+        let start = start.addingTimeInterval(shift)
+        let end = now.addingTimeInterval(shift)
+        filled = buckets.filter { $0.percentage != nil && $0.start >= start }
         self.start = start
+        self.end = end
         self.now = now
         self.current = current
         self.usesColor = usesColor
+        self.forecast = forecast.map { Self.clip($0.points, to: end) } ?? []
+    }
+
+    /// The points up to `end`, with one at `end` itself between the two either side, so the line stops at the edge.
+    private static func clip(_ points: [BatteryForecast.Point], to end: Date) -> [BatteryForecast.Point] {
+        guard let after = points.firstIndex(where: { $0.date > end }) else { return points }
+        guard after > 0 else { return [] }
+        let a = points[after - 1]
+        let b = points[after]
+        let share = end.timeIntervalSince(a.date) / b.date.timeIntervalSince(a.date)
+        return Array(points[..<after]) + [BatteryForecast.Point(date: end, percentage: a.percentage + (b.percentage - a.percentage) * share)]
     }
 
     var body: some View {
-        Chart(filled) { bucket in
-            bar(bucket)
+        Chart {
+            ForEach(filled) { bucket in
+                bar(bucket)
+            }
+            if !forecast.isEmpty {
+                forecastMarks
+            }
         }
-        .chartXScale(domain: start...now)
+        .chartXScale(domain: start...end)
         .chartYScale(domain: 0...100)
         .chartXAxis {
             AxisMarks(values: .stride(by: .hour, count: 6)) { _ in
@@ -229,8 +266,33 @@ private struct LevelChart: View {
         // About iPhone's proportions across the panel's width, so the bars read at a glance.
         .frame(height: 128)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Battery level, last 24 hours")
+        .accessibilityLabel(forecast.isEmpty ? "Battery level, last 24 hours" : "Battery level, and where it's headed")
         .accessibilityValue(accessibilitySummary)
+    }
+
+    /// The hours ahead: a soft band under a dashed line from now, the way the level should go, and a hairline at now.
+    @ChartContentBuilder private var forecastMarks: some ChartContent {
+        RuleMark(x: .value("Now", now))
+            .lineStyle(StrokeStyle(lineWidth: 1))
+            .foregroundStyle(Color.secondary.opacity(0.35))
+        ForEach(forecast) { point in
+            AreaMark(x: .value("Time", point.date), y: .value("Expected", point.percentage), series: .value("Series", "forecast"))
+                .interpolationMethod(.monotone)
+                .foregroundStyle(
+                    LinearGradient(colors: [forecastColor.opacity(0.22), forecastColor.opacity(0.02)], startPoint: .top, endPoint: .bottom))
+        }
+        ForEach(forecast) { point in
+            LineMark(x: .value("Time", point.date), y: .value("Expected", point.percentage), series: .value("Series", "forecast line"))
+                .interpolationMethod(.monotone)
+                .lineStyle(StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [3, 3]))
+                .foregroundStyle(forecastColor)
+        }
+    }
+
+    /// The bars' grey, or red when the line ends up low.
+    private var forecastColor: Color {
+        guard usesColor, let last = forecast.last, last.percentage <= Double(BatteryIcon.lowPercentage) else { return .secondary }
+        return Self.red
     }
 
     /// One half hour: a bar from empty up to the level, a little narrower than its slot.
@@ -437,6 +499,58 @@ private struct SinceUnpluggedRow: View {
             parts.append(String(localized: "\(rate) an hour"))
         }
         return parts.joined(separator: " · ")
+    }
+}
+
+/// "Forecast · 20% around 16:40": when the battery should run low, at the pace it's going and how it usually goes later
+/// in the day, as the chart's dashed line shows.
+private struct ForecastRow: View {
+    let forecast: BatteryForecast
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text("Forecast")
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 8)
+            // Both times when they fit on the line; otherwise the first, the one that matters sooner.
+            ViewThatFits(in: .horizontal) {
+                Text(details(includingEmpty: true))
+                Text(details(includingEmpty: false))
+            }
+            .monospacedDigit()
+            .lineLimit(1)
+        }
+        .font(.system(size: 12))
+        .help(help)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func details(includingEmpty: Bool) -> String {
+        let low = (Double(forecast.lowLevel) / 100).formatted(.percent.precision(.fractionLength(0)))
+        var parts: [String] = []
+        if let reachesLow = forecast.reachesLow {
+            parts.append(String(localized: "\(low) around \(Self.time(reachesLow))"))
+        }
+        if let runsOut = forecast.runsOut, includingEmpty || parts.isEmpty {
+            parts.append(String(localized: "empty around \(Self.time(runsOut))"))
+        }
+        return parts.joined(separator: " · ")
+    }
+
+    /// "16:40", or "Tue 08:10" when it's not today.
+    static func time(_ date: Date) -> String {
+        Calendar.current.isDateInToday(date)
+            ? date.formatted(date: .omitted, time: .shortened)
+            : date.formatted(.dateTime.weekday(.abbreviated).hour().minute())
+    }
+
+    private var help: Text {
+        switch forecast.basis {
+        case .usualDay:
+            Text("At the pace your Mac is going now, then the way the battery usually goes at these hours. A guess, not a promise: it moves with what you do.")
+        case .currentPace:
+            Text("At the pace your Mac is going now. Once there's a few days of history, it also counts how the battery usually goes later in the day.")
+        }
     }
 }
 

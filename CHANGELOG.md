@@ -4,6 +4,36 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-23
+
+Everywhere: on your desktop, in Control Center, ahead of time and on autopilot. Where the battery's headed, what your week looked like, widgets, and rules that look after the battery for you.
+
+### Added
+
+- 🔮 **A forecast.** On battery, the panel's last 24 hours chart goes on past now: a dashed line to where the level is headed over the next six hours, red when it ends up low, and a **Forecast** row with when it should reach 20% and run out ("20% around 16:40 · empty around 18:10"). It starts at the pace your Mac is going now and, over the next hour or so, leans towards how the battery usually goes at those hours, from your own history, so a forecast at 9:00 knows your afternoons are busier. Without a few days of history, it's the current pace, straight on. Turn it off in Settings › Panel.
+- 🪄 **Settings › Rules** ([#44](https://github.com/Pallepadehat/WatchMyBattery/issues/44), [#41](https://github.com/Pallepadehat/WatchMyBattery/issues/41)): things to do by themselves.
+  - **When** the battery drops to a level, charges to one, or the charger is connected or disconnected.
+  - **Do**: turn Low Power Mode on or off, quit apps (picked from what's running, or any app), change the charge limit, **run a shortcut** from the Shortcuts app (picked from your shortcuts), and send a notification saying what it did.
+  - A level rule runs once on the way down (or up), and again only once the battery has gone back past its level, so a reading wobbling between 20% and 21% doesn't set it off over and over. It never runs just because the app opened, or the rule was made, below its level. A loose cable doesn't set off charger rules either.
+  - Two to start with, a click each: Low Power Mode at 20%, and off again when plugged in. **Run Now** tries a rule; each shows when it last ran, and says so if its shortcut didn't run.
+- 📅 **Your week** ([#43](https://github.com/Pallepadehat/WatchMyBattery/issues/43)), at the top of Settings › History: this week so far (against the same days last week) or last week (against the week before). Time on battery, battery used and the Mac's average draw, each with how it changed; the three apps that used the most; the app whose use grew the most ("Figma used 3 times as much as the week before"); and the busiest day. Click an app for its page.
+- 📬 **A weekly summary notification**, if you like, on Monday morning at 9:00 (or when the Mac wakes after): last week's time on battery, how much it used compared with the week before, and the app that used the most. Click it for Settings › History. In Settings › Notifications, off to start with.
+- 🧩 **Widgets** for the desktop and Notification Center ([#39](https://github.com/Pallepadehat/WatchMyBattery/issues/39), [#40](https://github.com/Pallepadehat/WatchMyBattery/issues/40)):
+  - **Battery**, small, medium or large: the level in a ring and the time left, when it should reach 20%, the apps that used the most in the last 24 hours, and a yellow **Low Power** badge while it's on. The large one adds the last day's levels with the forecast. On battery it keeps counting down between updates, along the forecast.
+  - **Batteries**, small or medium: your Mac, AirPods, Magic accessories and iPhone, a ring each, like iPhone's, laid out for however many there are.
+  - Click either for the panel. They're redrawn only when something they show changes.
+- 🎛️ **Controls for Control Center and the menu bar**, on macOS 26: **Low Power Mode**, a toggle, and **Battery**, the level and time left, which opens the panel.
+- ⚡️ **More in Shortcuts**: **Get Battery Forecast** (when it should reach 20%) and **Set Low Power Mode**, also in Spotlight.
+- 🔗 `watchmybattery://` links open the panel (`://panel`), Settings › History (`://history`) or any pane of Settings (`://settings/rules`).
+
+### Changed
+
+- WatchMyBattery has an app group container now, shared with its widgets, where it writes what they show. Builds without a developer team (ad hoc) leave it alone; their widgets show the battery only.
+
+### Fixed
+
+- An iPhone or iPad running low no longer notifies again and again. It's told once, then not until it has charged clearly past the level. Plugging it in and out, a charging flag that flickers, or relaunching WatchMyBattery doesn't repeat it, and a phone that's plugged in counts as charging.
+
 ## [0.4.5] - 2026-11-20
 
 The battery's own history: how warm it runs, how deep it goes, what it takes and gives, and how it wears.
@@ -360,7 +390,8 @@ The first release.
 - Automatic updates with Sparkle, from EdDSA-signed releases.
 - One-command install, and build, packaging and release scripts.
 
-[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.5...HEAD
+[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.5...v0.5.0
 [0.4.5]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.2...v0.4.3
