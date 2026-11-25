@@ -11,7 +11,12 @@
             guard let index = arguments.firstIndex(of: "--render-previews"), arguments.indices.contains(index + 1) else { return }
             let folder = URL(fileURLWithPath: arguments[index + 1], isDirectory: true)
             try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-            render(to: folder)
+            // `--stats-only`: just Settings › Stats and the sidebar, quicker while working on them.
+            if arguments.contains("--stats-only") {
+                renderStats(to: folder)
+            } else {
+                render(to: folder)
+            }
             exit(0)
         }
 
@@ -43,7 +48,42 @@
                 ])
         }
 
+        /// 0.5.1: Settings with its grouped sidebar, and each of Stats' tabs with a month of made-up history, in dark
+        /// and light.
+        private static func renderStats(to folder: URL) {
+            for scheme in [ColorScheme.dark, .light] {
+                let suffix = scheme == .dark ? "dark" : "light"
+                for tab in [nil] + StatsTab.allCases.map(Optional.some) {
+                    let model = AppModel(settings: previewSettings(), history: HistoryRecorder(storeURL: nil, legacyFileURL: nil))
+                    model.settings.historyRetention = .year
+                    model.chargeLimit.preview(limit: 80)
+                    let made = PretendHistory.make(days: 30)
+                    model.history.preview(made.history, profile: made.profile)
+                    model.history.preview(vitals: PretendHistory.makeVitals())
+                    model.battery.preview(
+                        BatterySnapshot(percentage: 81, powerSource: .powerAdapter, chargeState: .charging, timeRemaining: 35 * 60),
+                        health: BatteryHealth(condition: .normal, maximumCapacity: 0.94, cycleCount: 296),
+                        readings: BatteryReadings(temperature: 34.2, voltage: 12.71, current: 2.35))
+                    previewSleep(model.sleep, now: Date())
+                    model.settingsPane = .stats
+                    if let tab {
+                        model.statsTab = tab
+                        let view = StatsPane(model: model).formStyle(.grouped).frame(width: 545, height: 980).environment(\.colorScheme, scheme)
+                        saveInWindow(view, scheme: scheme, scrolledBy: 0, to: folder.appending(path: "stats-\(tab.rawValue)-\(suffix).png"))
+                    } else {
+                        // The panes that 0.5.1 changed, in the whole window with its sidebar.
+                        for pane in [SettingsPane.stats, .general, .charging, .about] {
+                            model.settingsPane = pane
+                            let view = SettingsView(model: model).frame(height: 900).environment(\.colorScheme, scheme)
+                            saveInWindow(view, scheme: scheme, scrolledBy: 0, to: folder.appending(path: "settings-\(pane.rawValue)-\(suffix).png"))
+                        }
+                    }
+                }
+            }
+        }
+
         private static func render(to folder: URL) {
+            renderStats(to: folder)
             renderOnboarding(to: folder)
             renderVitals(to: folder)
             renderEverywhere(to: folder)

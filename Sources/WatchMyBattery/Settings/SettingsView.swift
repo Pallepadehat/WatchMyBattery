@@ -3,100 +3,112 @@ import ServiceManagement
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// The panes of Settings, in the sidebar.
+/// The panes of Settings, in the sidebar: Stats first, where everything WatchMyBattery has measured is, then the
+/// settings, in groups like System Settings'.
 enum SettingsPane: String, CaseIterable, Identifiable {
-    case general, menuBar, panel, history, vitals, charging, sleep, accessories, notifications, rules, updates, about
+    case stats, general, menuBar, panel, charging, accessories, notifications, rules, about
 
     var id: Self { self }
 
+    /// The sidebar's groups, in order.
+    static let groups: [[SettingsPane]] = [[.stats], [.general, .menuBar, .panel], [.charging, .accessories], [.notifications, .rules], [.about]]
+
     var title: String {
         switch self {
+        case .stats: String(localized: "Stats")
         case .general: String(localized: "General")
         case .menuBar: String(localized: "Menu Bar")
         case .panel: String(localized: "Panel")
-        case .history: String(localized: "History")
-        case .vitals: String(localized: "Battery Health")
         case .charging: String(localized: "Charging")
-        case .sleep: String(localized: "Sleep")
         case .accessories: String(localized: "Accessories")
         case .notifications: String(localized: "Notifications")
         case .rules: String(localized: "Rules")
-        case .updates: String(localized: "Updates")
         case .about: String(localized: "About")
         }
     }
 
     var symbol: String {
         switch self {
+        case .stats: "chart.bar.xaxis"
         case .general: "gearshape.fill"
         case .menuBar: "rectangle.topthird.inset.filled"
         case .panel: SettingIcon.battery
-        case .history: "chart.bar.xaxis"
-        case .vitals: "heart.text.square.fill"
         case .charging: "powerplug.fill"
-        case .sleep: "moon.zzz.fill"
         case .accessories: "airpodspro"
         case .notifications: "bell.fill"
         case .rules: "wand.and.stars"
-        case .updates: "arrow.triangle.2.circlepath"
         case .about: "info"
         }
     }
 
     var color: Color {
         switch self {
+        case .stats: .pink
         case .general: .gray
         case .menuBar: .blue
         case .panel: .green
-        case .history: .pink
-        case .vitals: .red
         case .charging: Color(red: 0.2, green: 0.74, blue: 0.62)
-        case .sleep: .purple
         case .accessories: .cyan
         case .notifications: .red
         case .rules: RulesPane.color
-        case .updates: .indigo
         case .about: .orange
+        }
+    }
+
+    /// A pane by name, for `watchmybattery://settings/<name>` and `--settings-pane`, including the names panes had
+    /// before 0.5.1 put History, Battery Health and Sleep in Stats, and Updates in About.
+    static func named(_ name: String?) -> (pane: SettingsPane, tab: StatsTab?)? {
+        guard let name else { return nil }
+        if let pane = SettingsPane(rawValue: name) { return (pane, nil) }
+        if let tab = StatsTab(rawValue: name) { return (.stats, tab) }
+        switch name {
+        case "history": return (.stats, .usage)
+        case "vitals": return (.stats, .health)
+        case "updates": return (.about, nil)
+        default: return nil
         }
     }
 }
 
-/// Settings, laid out like System Settings: a sidebar of panes, each a short grouped form.
+/// Settings, laid out like System Settings: a sidebar of panes in groups, each a short grouped form.
 struct SettingsView: View {
     let model: AppModel
 
     var body: some View {
         @Bindable var model = model
         NavigationSplitView {
-            List(SettingsPane.allCases, selection: $model.settingsPane) { pane in
-                HStack(spacing: 8) {
-                    SettingIcon(symbol: pane.symbol, color: pane.color, size: 22)
-                    Text(pane.title)
+            List(selection: $model.settingsPane) {
+                ForEach(SettingsPane.groups.indices, id: \.self) { index in
+                    Section {
+                        ForEach(SettingsPane.groups[index]) { pane in
+                            HStack(spacing: 8) {
+                                SettingIcon(symbol: pane.symbol, color: pane.color, size: 22)
+                                Text(pane.title)
+                            }
+                            .padding(.vertical, 2)
+                            .tag(pane)
+                        }
+                    }
                 }
-                .padding(.vertical, 2)
-                .tag(pane)
             }
             // One width, like System Settings' sidebar: dragging it wider only squeezed the pane, and the window can't
-            // grow to make up for it. Wide enough for the longest name ("Batteriets tilstand" in Danish).
+            // grow to make up for it. Wide enough for the longest name ("Notifikationer" in Danish).
             .navigationSplitViewColumnWidth(Self.sidebarWidth)
             // SwiftUI's fixed width can still be dragged; the split view's own limits can't.
             .background(FixedSidebarWidth(width: Self.sidebarWidth))
             .toolbar(removing: .sidebarToggle)
         } detail: {
-            let pane = model.settingsPane ?? .general
+            let pane = model.settingsPane ?? .stats
             Group {
                 switch pane {
+                case .stats: StatsPane(model: model)
                 case .general: GeneralPane(model: model)
                 case .menuBar: MenuBarPane(model: model)
                 case .panel: PanelPane(model: model)
-                case .history: HistoryPane(model: model)
-                case .vitals: VitalsPane(model: model)
                 case .charging: ChargingPane(model: model)
-                case .sleep: SleepPane(model: model)
                 case .accessories: AccessoriesPane(model: model)
                 case .notifications: NotificationsPane(model: model)
                 case .rules: RulesPane(model: model)
-                case .updates: UpdatesPane(model: model)
                 case .about: AboutPane(model: model)
                 }
             }
@@ -111,8 +123,9 @@ struct SettingsView: View {
         .frame(minHeight: Self.size.height, maxHeight: .infinity)
     }
 
-    /// The window's one size: wide enough for a row and its subtitle, tall enough for most panes without scrolling.
-    static let size = CGSize(width: 720, height: 560)
+    /// The window's one size: wide enough for a row and its subtitle, and for Stats' charts, tall enough for most
+    /// panes without scrolling.
+    static let size = CGSize(width: 760, height: 600)
     static let sidebarWidth: CGFloat = 215
 }
 
@@ -239,6 +252,22 @@ private struct GeneralPane: View {
                 Text(
                     "Sends a random ID made on this Mac, the app's version and the macOS version. Nothing about you, your battery or your apps, and the server doesn't keep your IP address. Off until you turn it on; turning it off deletes the ID from the server."
                 )
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            }
+
+            Section {
+                HistoryRows(model: model)
+                HistoryKeepRows(model: model)
+                ClearSleepsRow(model: model)
+            } header: {
+                Text("History")
+            } footer: {
+                HStack(spacing: 4) {
+                    Text("Everything the history has kept is in")
+                    Button("Stats") { model.settingsPane = .stats }
+                        .buttonStyle(.link)
+                }
                 .font(.callout)
                 .foregroundStyle(.secondary)
             }
@@ -457,12 +486,17 @@ private struct PanelPane: View {
                         Text("On battery, the last 24 hours' chart goes on past now with where the level is headed, and when it should reach 20%.")
                     }
                 }
+                Toggle(isOn: $settings.showsSleep) {
+                    SettingLabel("Sleep", symbol: "moon.zzz.fill", color: .purple) {
+                        Text("The last sleep and how much it used, and what's keeping the Mac awake.")
+                    }
+                }
             } header: {
                 Text("Insights")
             } footer: {
                 HStack(spacing: 4) {
-                    Text("Keeping, exporting and clearing the battery history is in")
-                    Button("History") { model.settingsPane = .history }
+                    Text("The whole history, charging and battery health are in")
+                    Button("Stats") { model.settingsPane = .stats }
                         .buttonStyle(.link)
                 }
                 .font(.callout)
@@ -606,30 +640,6 @@ private struct AccessoriesPane: View {
     }
 }
 
-private struct UpdatesPane: View {
-    let model: AppModel
-
-    var body: some View {
-        @Bindable var updater = model.updater
-        Form {
-            Section {
-                UpdateCheckRow(updater: model.updater)
-            }
-            Section {
-                Toggle(isOn: $updater.checksAutomatically) {
-                    SettingLabel("Check for Updates Automatically", symbol: "arrow.triangle.2.circlepath", color: .blue) {
-                        Text("Once a day. Nothing about you is sent.")
-                    }
-                }
-                Toggle(isOn: $updater.downloadsAutomatically) {
-                    SettingLabel("Install Updates Automatically", symbol: "square.and.arrow.down.fill", color: .blue)
-                }
-                .disabled(!updater.checksAutomatically)
-            }
-        }
-    }
-}
-
 private struct AboutPane: View {
     let model: AppModel
 
@@ -651,6 +661,11 @@ private struct AboutPane: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
+            }
+            Section {
+                UpdateRows(updater: model.updater)
+            } header: {
+                Text("Updates")
             }
             Section {
                 SupportCard()
@@ -750,6 +765,24 @@ private struct AboutLink: View {
 }
 
 // MARK: - Updates
+
+/// Check Now, and checking and installing by itself.
+private struct UpdateRows: View {
+    @Bindable var updater: Updater
+
+    var body: some View {
+        UpdateCheckRow(updater: updater)
+        Toggle(isOn: $updater.checksAutomatically) {
+            SettingLabel("Check for Updates Automatically", symbol: "arrow.triangle.2.circlepath", color: .blue) {
+                Text("Once a day. Nothing about you is sent.")
+            }
+        }
+        Toggle(isOn: $updater.downloadsAutomatically) {
+            SettingLabel("Install Updates Automatically", symbol: "square.and.arrow.down.fill", color: .blue)
+        }
+        .disabled(!updater.checksAutomatically)
+    }
+}
 
 /// "Check Now", with the answer right in the row: checking, up to date, a new version, or what went wrong.
 private struct UpdateCheckRow: View {

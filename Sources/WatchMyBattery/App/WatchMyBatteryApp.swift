@@ -40,9 +40,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 // `--settings-pane updates` (say) opens that pane.
                 let arguments = CommandLine.arguments
                 let pane = arguments.firstIndex(of: "--settings-pane").flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil }
-                // `--history-app com.apple.Safari` opens that app's page in Settings › History.
+                // `--history-app com.apple.Safari` opens that app's page in Settings › Stats.
                 model.historyApp = arguments.firstIndex(of: "--history-app").flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil }
-                model.openSettings(pane.flatMap(SettingsPane.init(rawValue:)))
+                model.openSettings(named: pane)
                 // `--check-now` presses Check Now, once Sparkle is ready (with `--start-updater`).
                 if arguments.contains("--check-now") {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { self.model.updater.checkNow() }

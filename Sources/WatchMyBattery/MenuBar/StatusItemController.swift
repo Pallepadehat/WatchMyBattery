@@ -87,7 +87,7 @@ final class StatusItemController: NSObject {
         @objc private func resetOnboarding() { model.resetOnboarding() }
     #endif
     @objc private func checkForUpdates() {
-        model.openSettings(.updates)
+        model.openSettings(.about)
         model.updater.checkNow()
     }
 
