@@ -45,9 +45,11 @@ final class AppModel {
     private(set) var isPanelShortcutTaken = false
 
     /// The pane Settings shows.
-    var settingsPane: SettingsPane? = .general
+    var settingsPane: SettingsPane? = .stats
+    /// The tab Settings › Stats shows.
+    var statsTab: StatsTab = .usage
 
-    /// An app for Settings › History to open, set from the panel; the pane takes it once it's there.
+    /// An app for Settings › Stats › Usage to open, set from the panel; the pane takes it once it's there.
     var historyApp: String?
 
     /// The panel is on screen, so its animations may run.
@@ -103,7 +105,7 @@ final class AppModel {
         guard url.scheme == "watchmybattery" else { return }
         switch url.host() {
         case "history": openHistory()
-        case "settings": openSettings(SettingsPane(rawValue: url.pathComponents.dropFirst().first ?? ""))
+        case "settings": openSettings(named: url.pathComponents.dropFirst().first)
         default: showPanel()
         }
     }
@@ -204,15 +206,22 @@ final class AppModel {
         if shown != isBuiltInBatteryShown { isBuiltInBatteryShown = shown }
     }
 
-    func openSettings(_ pane: SettingsPane? = nil) {
+    func openSettings(_ pane: SettingsPane? = nil, tab: StatsTab? = nil) {
         if let pane { settingsPane = pane }
+        if let tab { statsTab = tab }
         settingsWindow.show()
     }
 
-    /// Settings › History, at an app's own history when a key (``BatteryHistory/AppIdentity/key``) is given.
+    /// Settings by name (``SettingsPane/named(_:)``), for links and the command line.
+    func openSettings(named name: String?) {
+        let found = SettingsPane.named(name)
+        openSettings(found?.pane, tab: found?.tab)
+    }
+
+    /// Settings › Stats › Usage, at an app's own history when a key (``BatteryHistory/AppIdentity/key``) is given.
     func openHistory(app key: String? = nil) {
         historyApp = key
-        openSettings(.history)
+        openSettings(.stats, tab: .usage)
     }
 
     /// System Settings › Battery.

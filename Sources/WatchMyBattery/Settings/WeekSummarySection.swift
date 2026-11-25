@@ -1,7 +1,7 @@
 import BatteryKit
 import SwiftUI
 
-/// Settings › History's "Your Week": this week so far, or last week, against the week before. Time on battery, battery
+/// Settings › Stats › Usage's "Your Week": this week so far, or last week, against the week before. Time on battery, battery
 /// used and the Mac's average draw, each with how it changed; the apps that used the most; the app that grew the most;
 /// and the busiest day. What the Monday notification sums up, in full.
 struct WeekSummarySection: View {
@@ -21,7 +21,7 @@ struct WeekSummarySection: View {
                 VStack(alignment: .leading, spacing: 14) {
                     MetricRow(metrics: metrics(summary))
                     if !summary.topApps.isEmpty {
-                        TopApps(apps: summary.topApps, open: open)
+                        TopApps(apps: summary.topApps, rate: model.history.pointsPerJoule, open: open)
                     }
                     let notes = notes(summary)
                     if !notes.isEmpty {
@@ -147,6 +147,7 @@ struct WeekSummarySection: View {
 /// The week's three hungriest apps, side by side, each with its share.
 private struct TopApps: View {
     let apps: [UsageReport.App]
+    let rate: Double?
     let open: (String) -> Void
 
     var body: some View {
@@ -164,7 +165,7 @@ private struct TopApps: View {
                             Text(app.app.name)
                                 .font(.callout.weight(.medium))
                                 .lineLimit(1)
-                            Text("\(HistoryText.share(app.share)) of apps' use")
+                            HistoryText.appUse(joules: app.joules, share: app.share, rate: rate)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                                 .monospacedDigit()

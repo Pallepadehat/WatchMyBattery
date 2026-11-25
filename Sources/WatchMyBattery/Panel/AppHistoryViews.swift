@@ -2,7 +2,7 @@ import BatteryKit
 import Charts
 import SwiftUI
 
-// The pieces an app's history is shown with, in the panel and in Settings › History.
+// The pieces an app's history is shown with, in the panel and in Settings › Stats.
 
 /// The words and numbers the history uses, the same everywhere.
 enum HistoryText {
@@ -18,6 +18,36 @@ enum HistoryText {
     static func cost(_ time: TimeInterval?) -> String? {
         guard let time else { return nil }
         return time < 60 ? String(localized: "under 1m") : duration(time)
+    }
+
+    /// "6%", or "<1%" for a sliver: how much of the battery some energy was, at this Mac's rate
+    /// (``HistoryRecorder/pointsPerJoule``); `nil` until there's a rate.
+    static func batteryUse(joules: Double, rate: Double?) -> String? {
+        guard let points = BatteryUse.points(joules: joules, rate: rate) else { return nil }
+        return batteryPoints(points)
+    }
+
+    /// "6%", or "<1%" for a sliver: percentage points of the battery, however small. Past a whole battery, it's
+    /// charges: "1.7 charges" reads better than "171%".
+    static func batteryPoints(_ points: Double) -> String {
+        guard points >= 0.5 else { return "<" + (0.01).formatted(.percent.precision(.fractionLength(0))) }
+        if points >= 100 { return charges(points) }
+        return (points / 100).formatted(.percent.precision(.fractionLength(0)))
+    }
+
+    /// "1.7 charges", "12 charges".
+    static func charges(_ points: Double) -> String {
+        let charges = points / 100
+        return String(localized: "\(charges.formatted(.number.precision(.fractionLength(charges < 10 ? 1 : 0)))) charges")
+    }
+
+    /// An app's use for its row: "6% of battery", "1.7 charges", or until there's a rate, "18% of apps".
+    static func appUse(joules: Double, share: Double, rate: Double?) -> Text {
+        if let points = BatteryUse.points(joules: joules, rate: rate) {
+            if points >= 100 { return Text("\(Text(charges(points)).foregroundStyle(.primary).fontWeight(.medium))") }
+            return Text("\(Text(batteryPoints(points)).foregroundStyle(.primary).fontWeight(.medium)) of battery")
+        }
+        return Text("\(Text(Self.share(share)).foregroundStyle(.primary).fontWeight(.medium)) of apps")
     }
 
     /// "18%", or "<1%" for a sliver.
@@ -66,11 +96,13 @@ enum HistoryText {
     }
 }
 
-/// An app's use over the report's periods, a bar each, in the app's colour. Bars show battery time when the Mac's
-/// power draw is known, energy otherwise; only their heights matter, so the compact one has no axis.
+/// An app's use over the report's periods, a bar each, in the app's colour. Bars show how much of the battery it used
+/// when this Mac's rate is known, energy otherwise; only their heights matter, so the compact one has no axis.
 struct AppUsageBars: View {
     let report: AppUsageReport
     let tint: Color
+    /// Percentage points of the battery per joule (``HistoryRecorder/pointsPerJoule``).
+    var rate: Double?
     var height: CGFloat = 40
     var showsAxes = false
     /// A period picked by clicking its bar; `nil` when the bars can't be picked.
@@ -157,16 +189,18 @@ struct AppUsageBars: View {
         return used.reduce(0, +) / Double(used.count)
     }
 
-    /// Battery time in minutes when it's known, watt-hours otherwise.
-    private var usesTime: Bool { report.periods.contains { $0.batteryTime != nil } }
+    /// Percentage points of the battery when the rate is known, watt-hours otherwise.
+    private var usesBattery: Bool { rate != nil }
 
     private func value(_ period: AppUsageReport.Period) -> Double {
-        usesTime ? (period.batteryTime ?? 0) / 60 : period.joules / 3600
+        if let rate { return period.joules * rate }
+        return period.joules / 3600
     }
 
     private func axisLabel(_ amount: Double) -> String {
-        if amount == 0 { return usesTime ? "0" : "0 Wh" }
-        return usesTime ? HistoryText.duration(amount * 60) : amount.formatted(.number.precision(.significantDigits(2))) + " Wh"
+        if amount == 0 { return usesBattery ? "0%" : "0 Wh" }
+        if usesBattery { return (amount / 100).formatted(.percent.precision(.significantDigits(1...2))) }
+        return amount.formatted(.number.precision(.significantDigits(2))) + " Wh"
     }
 
     private func color(for period: AppUsageReport.Period) -> Color {

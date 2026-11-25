@@ -138,7 +138,9 @@ extension HistorySection {
         title: LocalizedStringKey, apps: [BatteryHistory.AppEnergy], sampledTime: TimeInterval, from: Date, to: Date,
         granularity: UsageReport.Granularity
     ) -> some View {
-        AppHistoryList(title: title, apps: apps, sampledTime: sampledTime, openApp: $openApp, showsMore: $showsMoreApps) { app in
+        AppHistoryList(
+            title: title, apps: apps, sampledTime: sampledTime, rate: recorder.pointsPerJoule, openApp: $openApp, showsMore: $showsMoreApps
+        ) { app in
             AppHistoryPeek(
                 report: recorder.profile.appReport(for: app.id, from: from, to: to, granularity: granularity), app: app.app,
                 more: { openHistory(app.id) })
@@ -556,13 +558,15 @@ private struct ForecastRow: View {
 
 // MARK: - Apps
 
-/// The apps that used the most battery, with a bar for their share and the battery time it cost. Three to start
+/// The apps that used the most battery, with a bar for their share and how much of the battery each used. Three to start
 /// with, more on request; click one to open a closer look under it.
 private struct AppHistoryList<Peek: View>: View {
     let title: LocalizedStringKey
     let apps: [BatteryHistory.AppEnergy]
     /// How much time on battery was measured; with little of it, there's not much to say yet.
     let sampledTime: TimeInterval
+    /// Percentage points of the battery per joule, to say how much of it each app used.
+    let rate: Double?
     @Binding var openApp: String?
     @Binding var showsMore: Bool
     @ViewBuilder let peek: (BatteryHistory.AppEnergy) -> Peek
@@ -599,12 +603,15 @@ private struct AppHistoryList<Peek: View>: View {
             } else {
                 let shown = Array(apps.prefix(showsMore ? Self.moreCount : Self.count))
                 let most = shown.first?.joules ?? 1
+                let all = apps.reduce(0) { $0 + $1.joules }
                 ForEach(shown) { app in
                     VStack(alignment: .leading, spacing: 6) {
                         Button {
                             withAnimation(.snappy(duration: 0.3)) { openApp = openApp == app.id ? nil : app.id }
                         } label: {
-                            AppHistoryRow(app: app, fraction: most > 0 ? app.joules / most : 0, isOpen: openApp == app.id)
+                            AppHistoryRow(
+                                app: app, fraction: most > 0 ? app.joules / most : 0, share: all > 0 ? app.joules / all : 0, rate: rate,
+                                isOpen: openApp == app.id)
                         }
                         .buttonStyle(.plain)
                         if openApp == app.id {
@@ -623,6 +630,9 @@ private struct AppHistoryRow: View {
     let app: BatteryHistory.AppEnergy
     /// Its energy compared with the hungriest app's, 0–1.
     let fraction: Double
+    /// Its share of what the apps used, 0–1, for when there's no rate yet.
+    let share: Double
+    let rate: Double?
     let isOpen: Bool
 
     @State private var isHovered = false
@@ -638,11 +648,10 @@ private struct AppHistoryRow: View {
                     Text(app.app.name)
                         .lineLimit(1)
                     Spacer(minLength: 6)
-                    if let cost {
-                        Text(cost)
-                            .monospacedDigit()
-                            .foregroundStyle(.secondary)
-                    }
+                    Text(used)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                        .help(usedHelp)
                     Image(systemName: "chevron.right")
                         .font(.system(size: 8, weight: .bold))
                         .foregroundStyle(.tertiary)
@@ -662,12 +671,18 @@ private struct AppHistoryRow: View {
         .onHover { isHovered = $0 }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(app.app.name)
-        .accessibilityValue(cost.map { Text("Cost \($0) of battery") } ?? Text(verbatim: ""))
+        .accessibilityValue(usedHelp)
         .accessibilityHint(isOpen ? Text("Hides its history.") : Text("Shows its history."))
         .accessibilityAddTraits(.isButton)
     }
 
-    private var cost: String? { HistoryText.cost(app.batteryTime) }
+    /// "6%" of the battery; until this Mac's rate is known, its share of what the apps used.
+    private var used: String { HistoryText.batteryUse(joules: app.joules, rate: rate) ?? HistoryText.share(share) }
+
+    private var usedHelp: Text {
+        if let use = HistoryText.batteryUse(joules: app.joules, rate: rate) { return Text("Used about \(use) of the battery") }
+        return Text("\(HistoryText.share(share)) of what the apps used")
+    }
 }
 
 /// A closer look at one app, under its row: its use over the same time, a line about it, and the way to its full

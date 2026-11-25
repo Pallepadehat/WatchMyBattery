@@ -3,7 +3,7 @@ import Charts
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Settings › Battery Health: the battery's vital signs right now, and their history. Laid out like System Settings:
+/// Settings › Stats › Health: the battery's vital signs right now, and their history. Laid out like System Settings:
 /// a short list, a row for each sign (temperature, charge level, power, voltage, health) with a line about it and a
 /// sparkline, and a page of its own behind each row, with its chart, its numbers and what to show.
 ///
@@ -134,13 +134,7 @@ struct VitalsPane: View {
                         VitalsExportRow(model: model)
                     }
                 } else {
-                    Section {
-                        HistoryRows(model: model)
-                    } footer: {
-                        Text("Turn on the history to keep the battery's temperature, voltage, power and health over time.")
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                    }
+                    HistoryOffSection(model: model)
                 }
             }
         }
@@ -262,12 +256,12 @@ struct VitalsPane: View {
                         HStack(spacing: 2) {
                             Image(systemName: "chevron.left")
                                 .font(.system(size: 11, weight: .semibold))
-                            Text("Battery Health")
+                            Text("Health")
                         }
                     }
                     .buttonStyle(.link)
                     .keyboardShortcut("[", modifiers: .command)
-                    .help("Back to Battery Health (⌘[)")
+                    .help("Back to Health (⌘[)")
                     Spacer()
                     periodPicker
                 }
@@ -616,7 +610,7 @@ private enum ChartMode: Hashable {
 }
 
 /// 24 hours, by the hour, then the History pane's periods.
-private struct VitalsPeriod {
+struct VitalsPeriod {
     let days: Int
 
     /// "24H", "7D", "3M", "1Y": short, like the Health app's.

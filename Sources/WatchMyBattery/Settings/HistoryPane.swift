@@ -2,9 +2,9 @@ import BatteryKit
 import Charts
 import SwiftUI
 
-/// Settings › History: everything the history has kept, for as long as it's kept. How much battery each day (or
-/// week) used, every app that used it, and, for each app, its days, its hours and how it compares with before. Then
-/// keeping, exporting and clearing the history.
+/// Settings › Stats › Usage: everything the history has kept, for as long as it's kept. How much battery each day (or
+/// week) used, every app that used it, and, for each app, its days, its hours and how it compares with before.
+/// Keeping, exporting and clearing the history is in Settings › General.
 ///
 /// Laid out like Screen Time: a few numbers, a chart under them, and the apps. Each report is worked out once, when
 /// the period or the history changes, never while drawing.
@@ -91,13 +91,8 @@ private struct HistoryOverview: View {
                 }
 
                 if let report { appsSection(report) }
-            }
-
-            Section {
-                HistoryRows(model: model)
-                HistoryKeepRows(model: model)
-            } header: {
-                Text("Keeping History")
+            } else {
+                HistoryOffSection(model: model)
             }
         }
         .task(id: ReportKey(period: period, revision: model.history.revision, day: Calendar.current.startOfDay(for: now))) {
@@ -178,8 +173,9 @@ private struct HistoryOverview: View {
             } else {
                 let shown = showsAllApps ? apps : Array(apps.prefix(Self.appCount))
                 let most = apps.first?.joules ?? 1
+                let rate = model.history.pointsPerJoule
                 ForEach(shown) { app in
-                    AppRankRow(app: app, fraction: most > 0 ? app.joules / most : 0) { open(app.id) }
+                    AppRankRow(app: app, fraction: most > 0 ? app.joules / most : 0, rate: rate) { open(app.id) }
                 }
                 if apps.count > Self.appCount {
                     Button(showsAllApps ? String(localized: "Show Fewer") : String(localized: "Show All \(apps.count) Apps")) {
@@ -195,9 +191,13 @@ private struct HistoryOverview: View {
                 Text("Apps")
             }
         } footer: {
-            Text("Measured every few minutes on battery. Time is what each app's energy is worth at this Mac's average draw.")
-                .font(.callout)
-                .foregroundStyle(.secondary)
+            Text(
+                model.history.pointsPerJoule == nil
+                    ? "Measured every few minutes on battery. Each app's share of what the apps used; how much of the battery that was shows once there's more history."
+                    : "Measured every few minutes on battery: about how much of a full battery each app used."
+            )
+            .font(.callout)
+            .foregroundStyle(.secondary)
         }
     }
 }
@@ -415,10 +415,12 @@ private struct BatteryUseChart: View {
 
 // MARK: - Apps
 
-/// An app's row, like Screen Time's: its icon, its name over a bar for its share, and the battery time it cost.
+/// An app's row, like Screen Time's: its icon, its name over a bar for its share, and how much of the battery it used.
 private struct AppRankRow: View {
     let app: UsageReport.App
     let fraction: Double
+    /// Percentage points of the battery per joule; `nil` until it's known.
+    let rate: Double?
     let open: () -> Void
 
     @State private var isHovered = false
@@ -436,14 +438,9 @@ private struct AppRankRow: View {
                         Text(app.app.name)
                             .lineLimit(1)
                         Spacer(minLength: 8)
-                        Text(HistoryText.share(app.share))
-                            .font(.callout)
-                            .foregroundStyle(.tertiary)
-                            .monospacedDigit()
-                        Text(HistoryText.cost(app.batteryTime) ?? "")
+                        HistoryText.appUse(joules: app.joules, share: app.share, rate: rate)
                             .foregroundStyle(.secondary)
                             .monospacedDigit()
-                            .frame(minWidth: 52, alignment: .trailing)
                     }
                     ShareBar(fraction: fraction, tint: look.tint)
                 }
@@ -463,8 +460,9 @@ private struct AppRankRow: View {
     }
 
     private var accessibilityValue: String {
-        var parts = [String(localized: "\(HistoryText.share(app.share)) of what apps used")]
-        if let cost = HistoryText.cost(app.batteryTime) { parts.append(String(localized: "Cost \(cost) of battery")) }
+        var parts = [String]()
+        if let use = HistoryText.batteryUse(joules: app.joules, rate: rate) { parts.append(String(localized: "Used about \(use) of the battery")) }
+        parts.append(String(localized: "\(HistoryText.share(app.share)) of what apps used"))
         return parts.joined(separator: ", ")
     }
 }
@@ -518,8 +516,11 @@ private struct AppHistoryPage: View {
                         chartHeader(report)
                         switch mode {
                         case .days:
-                            AppUsageBars(report: report, tint: AppLook.of(report.app).tint, height: 140, showsAxes: true, selection: $selection)
-                                .transition(.opacity)
+                            AppUsageBars(
+                                report: report, tint: AppLook.of(report.app).tint, rate: model.history.pointsPerJoule, height: 140, showsAxes: true,
+                                selection: $selection
+                            )
+                            .transition(.opacity)
                         case .hours:
                             HourOfDayChart(report: report, tint: AppLook.of(report.app).tint)
                                 .transition(.opacity)
@@ -596,7 +597,9 @@ private struct AppHistoryPage: View {
 
     private func metrics(_ report: AppUsageReport, period: HistoryPeriod) -> [MetricItem] {
         [
-            MetricItem(title: Text("Battery Time"), value: HistoryText.cost(report.batteryTime) ?? "–"),
+            HistoryText.batteryUse(joules: report.joules, rate: model.history.pointsPerJoule).map {
+                MetricItem(title: Text("Battery Used"), value: $0, help: Text("About how much of a full battery it used."))
+            } ?? MetricItem(title: Text("Share"), value: HistoryText.share(report.share), unit: Text("of apps")),
             MetricItem(title: Text("Average Draw"), value: report.averageWatts.map(HistoryText.watts) ?? "–"),
             MetricItem(title: Text("Active"), value: report.activeDays.formatted(), unit: Text("of \(report.dayCount) days")),
             trend(report, period: period),
@@ -644,7 +647,7 @@ private struct AppHistoryPage: View {
                     : period.start.formatted(.dateTime.weekday(.wide).day().month(.abbreviated))
                 Text("\(Text(name).foregroundStyle(.primary))  \(periodCost(period))")
             } else {
-                Text("Battery time it cost")
+                Text(model.history.pointsPerJoule == nil ? "Energy it used" : "Battery it used")
             }
         case .hours:
             if let hour = report.busiestHour {
@@ -659,7 +662,7 @@ private struct AppHistoryPage: View {
 
     private func periodCost(_ period: AppUsageReport.Period) -> String {
         if period.joules <= 0 { return String(localized: "not used") }
-        if let cost = HistoryText.cost(period.batteryTime) { return cost }
+        if let use = HistoryText.batteryUse(joules: period.joules, rate: model.history.pointsPerJoule) { return use }
         return (period.joules / 3600).formatted(.number.precision(.significantDigits(2))) + " Wh"
     }
 }

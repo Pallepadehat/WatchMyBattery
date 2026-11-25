@@ -55,9 +55,9 @@ struct ChargingPane: View {
             .animation(.snappy, value: chargeLimit.isToppingUp)
 
             Section {
-                ChargedNotificationRows(model: model)
+                ChargingStatsLink(model: model)
             } header: {
-                Text("Notification")
+                Text("Your Charging")
             }
 
             Section {
@@ -80,6 +80,14 @@ struct ChargingPane: View {
                         Text("Optimized Battery Charging and more, in System Settings.")
                     }
                 }
+            } footer: {
+                HStack(spacing: 4) {
+                    Text("A notification when it's charged is in")
+                    Button("Notifications") { model.settingsPane = .notifications }
+                        .buttonStyle(.link)
+                }
+                .font(.callout)
+                .foregroundStyle(.secondary)
             }
         }
         .onAppear { chargeLimit.refresh() }
@@ -279,29 +287,38 @@ struct ChargedNotificationRows: View {
 
 // MARK: - Sleep
 
-/// Recent sleeps and how much each used, what's keeping the Mac awake now, and the sleep notification.
-struct SleepPane: View {
+/// Stats › Sleep: how the last sleeps went and how much each used, and what's keeping the Mac awake now.
+struct SleepStats: View {
     let model: AppModel
-    @State private var isConfirmingClear = false
 
     var body: some View {
-        @Bindable var settings = model.settings
         let log = model.sleep.log
+        let recent = Array(log.recent(since: .distantPast).prefix(14))
         Form {
+            if !recent.isEmpty {
+                Section {
+                    MetricRow(metrics: metrics(recent, typical: log.typicalPerHour))
+                        .padding(.vertical, 4)
+                } header: {
+                    Text("Recent Sleeps")
+                }
+            }
+
             Section {
-                if log.isEmpty {
-                    Text("Nothing yet. Sleeps show here once your Mac has slept and woken with WatchMyBattery running.")
-                        .foregroundStyle(.secondary)
+                if recent.isEmpty {
+                    StatsEmptyState(
+                        symbol: "moon.zzz.fill", color: .purple, title: "No Sleeps Yet",
+                        message: "Each sleep shows here once your Mac has slept and woken with WatchMyBattery running, with how much battery it used.")
                 } else {
-                    ForEach(log.recent(since: .distantPast).prefix(14)) { session in
+                    ForEach(recent) { session in
                         SleepHistoryRow(session: session)
                     }
                 }
             } header: {
-                Text("Recent Sleeps")
+                if recent.isEmpty { Text("Recent Sleeps") }
             } footer: {
-                if let typical = log.typicalPerHour {
-                    Text("Typically \(typical.formatted(.number.precision(.fractionLength(1))))% an hour asleep on battery. About 1% or less is normal.")
+                if log.typicalPerHour != nil {
+                    Text("About 1% an hour or less is normal asleep on battery.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }
@@ -327,12 +344,6 @@ struct SleepPane: View {
             }
 
             Section {
-                Toggle(isOn: $settings.showsSleep) {
-                    SettingLabel("Sleep in the Panel", symbol: "moon.zzz.fill", color: .purple) {
-                        Text("The last sleep, and what's keeping the Mac awake.")
-                    }
-                }
-                SleepDrainNotificationRows(model: model)
                 LabeledContent {
                     Button("Open…") { model.openBatterySettings() }
                 } label: {
@@ -340,19 +351,47 @@ struct SleepPane: View {
                         Text("Often why a Mac uses battery asleep. Turn it off in System Settings › Battery › Options.")
                     }
                 }
-                LabeledContent {
-                    Button("Clear…") { isConfirmingClear = true }
-                        .disabled(log.isEmpty)
-                } label: {
-                    SettingLabel("Clear Sleeps", symbol: "trash.fill", color: .gray)
-                }
-                .confirmationDialog("Clear the sleeps?", isPresented: $isConfirmingClear) {
-                    Button("Clear Sleeps", role: .destructive) { model.sleep.clear() }
-                }
+            } header: {
+                Text("Tip")
             }
         }
         .onAppear { model.sleep.startReadingHolders(for: .settings) }
         .onDisappear { model.sleep.stopReadingHolders(for: .settings) }
+    }
+
+    private func metrics(_ sessions: [SleepSession], typical: Double?) -> [MetricItem] {
+        let used = sessions.compactMap(\.used)
+        let asleep = sessions.reduce(0) { $0 + $1.duration } / Double(max(sessions.count, 1))
+        let heavy = sessions.filter { $0.drain == .heavy || $0.drain == .elevated }.count
+        return [
+            MetricItem(
+                title: Text("Typical Drain"), value: typical.map { String(localized: "\($0.formatted(.number.precision(.fractionLength(1))))%/h") } ?? "–"),
+            MetricItem(title: Text("Average Sleep"), value: DurationText.short(asleep)),
+            MetricItem(
+                title: Text("Used Asleep"), value: HistoryText.points(Double(used.reduce(0, +))),
+                unit: Text("in \(sessions.count) sleeps")),
+            MetricItem(
+                title: Text("Heavy"), value: heavy.formatted(), color: heavy > 0 ? .orange : .primary,
+                help: Text("Sleeps that used more than they should.")),
+        ]
+    }
+}
+
+/// Clearing the sleeps, in Settings › General's History.
+struct ClearSleepsRow: View {
+    let model: AppModel
+    @State private var isConfirmingClear = false
+
+    var body: some View {
+        LabeledContent {
+            Button("Clear…") { isConfirmingClear = true }
+                .disabled(model.sleep.log.isEmpty)
+        } label: {
+            SettingLabel("Clear Sleeps", symbol: "moon.zzz.fill", color: .gray)
+        }
+        .confirmationDialog("Clear the sleeps?", isPresented: $isConfirmingClear) {
+            Button("Clear Sleeps", role: .destructive) { model.sleep.clear() }
+        }
     }
 }
 

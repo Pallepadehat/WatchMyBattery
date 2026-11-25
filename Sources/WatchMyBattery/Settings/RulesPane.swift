@@ -33,7 +33,7 @@ struct RulesPane: View {
                 Text("Rules")
             } footer: {
                 HStack {
-                    Text("Rules run by themselves, on this Mac, while WatchMyBattery is open.")
+                    Text("Rules work automatically whenever WatchMyBattery is running.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                     Spacer()
@@ -148,10 +148,10 @@ private struct EmptyRules: View {
             HStack(spacing: 10) {
                 SettingIcon(symbol: "wand.and.stars", color: RulesPane.color, size: 32)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Let the battery look after itself")
+                    Text("Automate Your Battery")
                         .font(.headline)
                     Text(
-                        "When the battery drops to a level, charges to one, or the charger comes and goes: turn on Low Power Mode, quit apps, change the charge limit or run a shortcut."
+                        "Pick a moment, like the battery getting low or the charger being plugged in, and what should happen then: turn on Low Power Mode, quit apps, change the charge limit or run a shortcut."
                     )
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -173,8 +173,8 @@ private struct EmptyRules: View {
 
     private static func title(_ rule: BatteryRule) -> String {
         switch rule.trigger {
-        case .dropsTo(let level): String(localized: "Low Power Mode at \(RuleText.percent(level))")
-        case .pluggedIn: String(localized: "Low Power Mode off when plugged in")
+        case .dropsTo(let level): String(localized: "Save Power at \(RuleText.percent(level))")
+        case .pluggedIn: String(localized: "Full Power When Charging")
         default: RuleText.trigger(rule.trigger)
         }
     }
@@ -213,9 +213,9 @@ private struct ShortcutsTips: View {
                 }
             }
         } label: {
-            SettingLabel("Run a Shortcut From a Rule", symbol: "square.2.layers.3d.top.filled", color: .pink) {
+            SettingLabel("Use Your Own Shortcuts", symbol: "square.2.layers.3d.top.filled", color: .pink) {
                 Text(
-                    "A rule can run any shortcut, by name. WatchMyBattery's own actions (the battery level, the time left, the forecast, Low Power Mode) are in Shortcuts too."
+                    "Any rule can run one of your shortcuts. WatchMyBattery also adds its own actions to the Shortcuts app: get the battery level, the time left or the forecast, and switch Low Power Mode."
                 )
             }
         }

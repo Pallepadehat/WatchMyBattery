@@ -49,10 +49,14 @@ public struct VitalsReading: Sendable, Equatable {
     /// The charge level, 0–100.
     public var percentage: Int?
     public var isPluggedIn: Bool
+    /// Plugged in but not charging: held at a charge limit, by Optimized Battery Charging, or full.
+    public var isHolding: Bool
+    /// It started holding since the reading before: it just reached its limit (or full).
+    public var reachedLimit: Bool
 
     public init(
         temperature: Double? = nil, voltage: Double? = nil, batteryWatts: Double? = nil, systemWatts: Double? = nil, chargerWatts: Double? = nil,
-        percentage: Int? = nil, isPluggedIn: Bool = false
+        percentage: Int? = nil, isPluggedIn: Bool = false, isHolding: Bool = false, reachedLimit: Bool = false
     ) {
         self.temperature = temperature
         self.voltage = voltage
@@ -61,13 +65,18 @@ public struct VitalsReading: Sendable, Equatable {
         self.chargerWatts = chargerWatts
         self.percentage = percentage
         self.isPluggedIn = isPluggedIn
+        self.isHolding = isPluggedIn && isHolding
+        self.reachedLimit = isPluggedIn && isHolding && reachedLimit
     }
 
     /// From what the battery controller reads.
-    public init(readings: BatteryReadings, flow: PowerFlow?, percentage: Int?, isPluggedIn: Bool) {
+    public init(
+        readings: BatteryReadings, flow: PowerFlow?, percentage: Int?, isPluggedIn: Bool, isHolding: Bool = false, reachedLimit: Bool = false
+    ) {
         self.init(
             temperature: readings.temperature, voltage: readings.voltage, batteryWatts: readings.batteryWatts, systemWatts: flow?.systemWatts,
-            chargerWatts: isPluggedIn ? flow?.chargerWatts : nil, percentage: percentage, isPluggedIn: isPluggedIn)
+            chargerWatts: isPluggedIn ? flow?.chargerWatts : nil, percentage: percentage, isPluggedIn: isPluggedIn, isHolding: isHolding,
+            reachedLimit: reachedLimit)
     }
 }
 
@@ -96,6 +105,19 @@ public struct VitalsStats: Codable, Sendable, Equatable {
     public private(set) var level = ReadingStats()
     /// Readings with the battery at ``BatteryReadings/Warmth/warmFrom`` or above.
     public private(set) var warm = 0
+    /// Readings plugged in but not charging: held at a limit, or full.
+    public private(set) var holding = 0
+    /// Of those, the ones held at full (``fullFrom`` or more), where a battery wears fastest.
+    public private(set) var holdingFull = 0
+    /// How many times it reached its limit (or full) and started holding.
+    public private(set) var limitReached = 0
+
+    /// Holding at this level or above counts as sitting full.
+    public static let fullFrom = 99
+
+    /// Whether ``holding`` and ``limitReached`` were counted: hours from before 0.5.1 didn't, so their zeros say
+    /// nothing.
+    public private(set) var tracksHolding = false
 
     public init() {}
 
@@ -112,6 +134,12 @@ public struct VitalsStats: Codable, Sendable, Equatable {
         charger.add(reading.chargerWatts)
         level.add(reading.percentage.map(Double.init))
         if let celsius = reading.temperature, celsius >= BatteryReadings.Warmth.warmFrom { warm += 1 }
+        tracksHolding = true
+        if reading.isHolding {
+            holding += 1
+            if (reading.percentage ?? 0) >= Self.fullFrom { holdingFull += 1 }
+        }
+        if reading.reachedLimit { limitReached += 1 }
     }
 
     public mutating func merge(_ other: VitalsStats) {
@@ -124,6 +152,33 @@ public struct VitalsStats: Codable, Sendable, Equatable {
         charger.merge(other.charger)
         level.merge(other.level)
         warm += other.warm
+        if other.tracksHolding { tracksHolding = true }
+        holding += other.holding
+        holdingFull += other.holdingFull
+        limitReached += other.limitReached
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case readings, temperature, voltage, charging, discharging, system, charger, level, warm
+        case holding, holdingFull, limitReached, tracksHolding
+    }
+
+    /// Hours saved before 0.5.1 have no holding counts, and say so with ``tracksHolding``.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        readings = try container.decode(Int.self, forKey: .readings)
+        temperature = try container.decode(ReadingStats.self, forKey: .temperature)
+        voltage = try container.decode(ReadingStats.self, forKey: .voltage)
+        charging = try container.decode(ReadingStats.self, forKey: .charging)
+        discharging = try container.decode(ReadingStats.self, forKey: .discharging)
+        system = try container.decode(ReadingStats.self, forKey: .system)
+        charger = try container.decode(ReadingStats.self, forKey: .charger)
+        level = try container.decode(ReadingStats.self, forKey: .level)
+        warm = try container.decode(Int.self, forKey: .warm)
+        holding = try container.decodeIfPresent(Int.self, forKey: .holding) ?? 0
+        holdingFull = try container.decodeIfPresent(Int.self, forKey: .holdingFull) ?? 0
+        limitReached = try container.decodeIfPresent(Int.self, forKey: .limitReached) ?? 0
+        tracksHolding = try container.decodeIfPresent(Bool.self, forKey: .tracksHolding) ?? false
     }
 
     /// A battery moving less than this is resting: neither charging nor running the Mac.
@@ -299,6 +354,50 @@ public struct BatteryVitals: Codable, Sendable, Equatable {
     }
 }
 
+/// How long the Mac spent on battery and on the charger, and what the battery did there, over some hours.
+public struct ChargeTime: Sendable, Equatable {
+    public var onBattery = 0.0
+    public var charging = 0.0
+    /// Plugged in and held below full: at a charge limit, or by Optimized Battery Charging.
+    public var holding = 0.0
+    /// Plugged in and held full.
+    public var full = 0.0
+    /// Times it reached its limit (or full) and started holding.
+    public var limitReached = 0
+
+    public init() {}
+
+    public var pluggedIn: Double { charging + holding + full }
+    public var total: Double { onBattery + pluggedIn }
+    public var isEmpty: Bool { total <= 0 }
+
+    /// About how long it stays on the charger once it's reached its limit (or full); `nil` before it has.
+    public var heldPerArrival: Double? { limitReached > 0 ? (holding + full) / Double(limitReached) : nil }
+
+    /// The time one reading stands for.
+    public static let readingInterval: TimeInterval = 5 * 60
+
+    mutating func add(_ hour: BatteryVitals.Hour) {
+        guard hour.readings > 0, hour.pluggedIn.tracksHolding || hour.pluggedIn.readings == 0, hour.onBattery.tracksHolding || hour.onBattery.readings == 0
+        else { return }
+        let each = min(Self.readingInterval, 3600 / Double(hour.readings))
+        let plugged = hour.pluggedIn
+        onBattery += each * Double(hour.onBattery.readings)
+        full += each * Double(plugged.holdingFull)
+        holding += each * Double(plugged.holding - plugged.holdingFull)
+        charging += each * Double(max(plugged.readings - plugged.holding, 0))
+        limitReached += plugged.limitReached
+    }
+
+    mutating func merge(_ other: ChargeTime) {
+        onBattery += other.onBattery
+        charging += other.charging
+        holding += other.holding
+        full += other.full
+        limitReached += other.limitReached
+    }
+}
+
 /// ``BatteryVitals`` over a stretch of time, for charts: each hour, day or week, and the whole.
 public struct VitalsReport: Sendable, Equatable {
     public struct Period: Sendable, Equatable, Identifiable {
@@ -313,6 +412,10 @@ public struct VitalsReport: Sendable, Equatable {
         /// of its hour.
         public var warmSeconds = 0.0
         public var coveredSeconds = 0.0
+        /// Where the time went, whatever the filter, from the hours that counted it (from 0.5.1): about how long the
+        /// Mac was awake on battery, charging, holding below full, and holding full. Each reading stands for the five
+        /// minutes until the next, or its share of the hour when there were more.
+        public var charge = ChargeTime()
 
         public init(start: Date, end: Date) {
             self.start = start
@@ -328,6 +431,7 @@ public struct VitalsReport: Sendable, Equatable {
             stats.merge(shown)
             allReadings += hour.readings
             pluggedInReadings += hour.pluggedIn.readings
+            charge.add(hour)
             guard hour.readings > 0 else { return }
             coveredSeconds += 3600 * Double(shown.readings) / Double(hour.readings)
             warmSeconds += 3600 * Double(shown.warm) / Double(hour.readings)

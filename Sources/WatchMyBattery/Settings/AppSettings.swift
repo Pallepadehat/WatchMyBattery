@@ -185,7 +185,7 @@ enum HistoryRetention: Int, CaseIterable, Identifiable {
     }
 }
 
-/// How far back Settings › History looks. Never further than the history is kept (see ``HistoryRetention``).
+/// How far back Settings › Stats › Usage looks. Never further than the history is kept (see ``HistoryRetention``).
 enum HistoryPeriod: Int, CaseIterable, Identifiable {
     case week = 7
     case twoWeeks = 14
@@ -435,7 +435,7 @@ final class AppSettings {
         didSet { defaults.set(historyRetention.rawValue, forKey: Key.historyRetention) }
     }
 
-    /// How far back Settings › History looks.
+    /// How far back Settings › Stats › Usage looks.
     var historyPeriod: HistoryPeriod {
         didSet { defaults.set(historyPeriod.rawValue, forKey: Key.historyPeriod) }
     }

@@ -4,6 +4,22 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-11-25
+
+Everything in one place, and numbers that read at a glance.
+
+### Added
+
+- 📊 **Settings › Stats**, first in the sidebar: everything WatchMyBattery has measured, in four tabs. **Usage** (your week, battery used each day, and the apps), **Charging**, **Health** (what was Battery Health) and **Sleep**.
+- 🔌 **Charging stats**, in Stats › Charging: where the time went over 24 hours to a year, as one bar and a chart a day: on battery, charging, **held at your charge limit**, or **sitting full** at 100%. How many times it reached its limit, and **how long it stays plugged in after**, on average. Then a few lines of battery care: how long it sat full (with a button to set a charge limit when there isn't one), and how long your limit spared it. Counted from 0.5.1 on, from the readings the history already takes every five minutes.
+- A glance at the last week on the charger in Settings › Charging, with a button to the stats.
+
+### Changed
+
+- 🔋 **Apps say how much of the battery they used**: "Safari 6% of battery" rather than "1m" of battery time, in the panel, in Stats and on each app's page, with "1.7 charges" past a whole battery. It's worked out from your Mac's own history: how many percent went for each joule the whole Mac used, so it takes in the battery's size and wear. Until there's a little history, rows show each app's share of what the apps used.
+- ⚙️ **A tidier Settings**: nine panes in groups, like System Settings, rather than twelve in a row. History, Battery Health and Sleep are tabs in Stats; keeping, exporting and clearing the history (and the sleeps) is in General; Updates is in About; sleep in the panel is in Panel; and the "when it's charged" notification is only in Notifications, not twice. Old `watchmybattery://settings/…` links still open the right place.
+- Clearer words in Settings › Rules, and shorter suggestions to start with: **Save Power at 20%** and **Full Power When Charging**.
+
 ## [0.5.0] - 2026-11-23
 
 Everywhere: on your desktop, in Control Center, ahead of time and on autopilot. Where the battery's headed, what your week looked like, widgets, and rules that look after the battery for you.
@@ -390,7 +406,8 @@ The first release.
 - Automatic updates with Sparkle, from EdDSA-signed releases.
 - One-command install, and build, packaging and release scripts.
 
-[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.5...v0.5.0
 [0.4.5]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/Pallepadehat/WatchMyBattery/compare/v0.4.3...v0.4.4
