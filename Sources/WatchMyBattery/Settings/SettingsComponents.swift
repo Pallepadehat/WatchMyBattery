@@ -151,10 +151,10 @@ struct NotificationsDeniedRow: View {
     }
 }
 
-/// "Needs Battery History, in Settings › Panel.", under a switch that does nothing without it.
+/// "Needs Battery History, in Settings › General.", under a switch that does nothing without it.
 struct NeedsHistoryNote: View {
     var body: some View {
-        Label("Needs Battery History, in Settings › Panel.", systemImage: "info.circle.fill")
+        Label("Needs Battery History, in Settings › General.", systemImage: "info.circle.fill")
             .labelStyle(InlineIconLabelStyle(color: .secondary))
             .font(.caption)
             .padding(.leading, 34)

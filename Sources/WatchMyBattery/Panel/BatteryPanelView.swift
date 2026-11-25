@@ -69,12 +69,14 @@ struct BatteryPanelView: View {
     /// Why charging is paused or slow, when there's something to say.
     private var chargingNote: ChargingNote? { model.chargingNote }
 
-    /// What an app cost the battery over the last day, from the history, for its card: `nil` when it used none.
-    private func lastDayCost(of app: AppUsage) -> TimeInterval? {
+    /// How much of the battery an app used over the last day, from the history, for its card: `nil` when it used
+    /// none, or before this Mac's rate is known.
+    private func lastDayCost(of app: AppUsage) -> String? {
         let key = BatteryHistory.AppIdentity(name: app.name, bundleIdentifier: app.bundleIdentifier).key
         let history = model.history.history
         let start = Date().addingTimeInterval(-BatteryHistory.retention)
-        return history.appEnergy(since: start).first { $0.id == key }?.batteryTime
+        guard let joules = history.appEnergy(since: start).first(where: { $0.id == key })?.joules, joules > 0 else { return nil }
+        return HistoryText.batteryUse(joules: joules, rate: model.history.pointsPerJoule)
     }
 
     /// The gauge, the details and the sections: the part that scrolls when the screen is short.

@@ -26,7 +26,12 @@ import Observation
 @Observable
 final class HistoryRecorder {
     private(set) var history: BatteryHistory
-    private(set) var profile: UsageProfile
+    private(set) var profile: UsageProfile {
+        didSet { pointsPerJoule = profile.pointsPerJoule }
+    }
+    /// How much of the battery a joule is on this Mac (``UsageProfile/pointsPerJoule``), kept with the profile so
+    /// every app row doesn't work it out again: "Safari used 6% of the battery".
+    private(set) var pointsPerJoule: Double?
     /// Goes up whenever the profile changes, for views that work something out from it once and keep it (Settings ›
     /// History), rather than comparing whole profiles.
     private(set) var revision = 0
@@ -49,6 +54,8 @@ final class HistoryRecorder {
     @ObservationIgnored private var detector = RunawayDetector()
     @ObservationIgnored private var task: Task<Void, Never>?
     @ObservationIgnored private var lastSaved = Date.distantPast
+    /// Whether the last vitals reading found the battery holding, to notice when it reaches its limit.
+    @ObservationIgnored private var wasHolding: Bool?
 
     static let interval: Duration = .seconds(5 * 60)
     private static let leeway: Duration = .seconds(60)
@@ -68,6 +75,7 @@ final class HistoryRecorder {
         if store.isOnDisk, let legacyFileURL { Self.importLegacy(from: legacyFileURL, into: store) }
         history = store.history
         profile = store.profile
+        pointsPerJoule = store.profile.pointsPerJoule
         let vitalsURL = storeURL == nil ? nil : Self.vitalsStoreURL
         vitalsStore = VitalsStore.open(at: vitalsURL, retention: retention) { error in
             Logger.app.error("Couldn't open the battery vitals, starting them over: \(error.localizedDescription, privacy: .public)")
@@ -294,8 +302,12 @@ final class HistoryRecorder {
         guard let model, !LaunchOptions.pretendsHistory else { return }
         let snapshot = model.battery.snapshot
         guard snapshot.hasBattery else { return }
+        // Plugged in and not charging: held at the charge limit (or by Optimized Charging), or full.
+        let isHolding = snapshot.isPluggedIn && (snapshot.chargeState == .charged || snapshot.chargeState == .notCharging)
         let reading = VitalsReading(
-            readings: readingsReader.read(), flow: systemPower.currentFlow(), percentage: snapshot.percentage, isPluggedIn: snapshot.isPluggedIn)
+            readings: readingsReader.read(), flow: systemPower.currentFlow(), percentage: snapshot.percentage, isPluggedIn: snapshot.isPluggedIn,
+            isHolding: isHolding, reachedLimit: isHolding && wasHolding == false)
+        wasHolding = isHolding
         vitalsStore.record(reading)
         publish()
         saveVitals()

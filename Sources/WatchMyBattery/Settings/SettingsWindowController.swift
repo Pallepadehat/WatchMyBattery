@@ -17,7 +17,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         model.launchAtLogin.refresh()
         // Closing the window may not take the Sleep pane off screen as far as SwiftUI is concerned, so its list of
         // what's keeping the Mac awake is started and stopped with the window too.
-        if model.settingsPane == .sleep { model.sleep.startReadingHolders(for: .settings) }
+        if model.settingsPane == .stats, model.statsTab == .sleep { model.sleep.startReadingHolders(for: .settings) }
         if !window.isVisible { window.center() }
         // An accessory app has to step forward for its window to take focus.
         NSApp.setActivationPolicy(.regular)

@@ -9,7 +9,8 @@ struct AppDetailCard: View {
     let app: AppUsage
     let processes: [ProcessEnergy]
     /// The battery time it cost over the last 24 hours, from the history; `nil` when it used none, or there's no history.
-    var lastDay: TimeInterval?
+    /// How much of the battery it used in the last day: "6%".
+    var lastDay: String?
     /// Opens its history in Settings; `nil` without a history.
     var openHistory: (() -> Void)?
     let quit: () -> Void
@@ -43,8 +44,8 @@ struct AppDetailCard: View {
                     }
                 }
                 processList
-                if let lastDay, let cost = HistoryText.cost(lastDay) {
-                    Text("Used \(cost) of battery in the last 24 hours")
+                if let lastDay {
+                    Text("Used \(lastDay) of the battery in the last 24 hours")
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)

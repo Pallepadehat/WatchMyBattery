@@ -129,27 +129,30 @@
             let today = calendar.startOfDay(for: now)
             var random = SplitMix(seed: 4711)
             var level = 100.0
+            var wasHolding = false
             for dayIndex in 0..<days {
                 guard let day = calendar.date(byAdding: .day, value: dayIndex - days + 1, to: today) else { continue }
                 let isWeekend = calendar.isDateInWeekend(day)
                 let worn = Double(dayIndex) / Double(days)
                 for hour in 0..<24 {
-                    for minute in [5, 25, 45] {
+                    for minute in stride(from: 2, to: 60, by: 5) {
                         guard let date = calendar.date(byAdding: .minute, value: hour * 60 + minute, to: day), date <= now else { continue }
                         let onBattery = isWeekend ? (11...16).contains(hour) : (9...17).contains(hour)
-                        let charging = !onBattery && level < 99
+                        // A charge limit of 80% on weekdays; at the weekend it charges all the way and sits full.
+                        let target = isWeekend ? 100.0 : 80
+                        let charging = !onBattery && level < target - 0.5
                         let busy = onBattery ? 6 + random.next() * (isWeekend ? 5 : 9) : 4 + random.next() * 3
                         let batteryWatts: Double
                         let charger: Double?
                         if onBattery {
                             batteryWatts = -busy
                             charger = nil
-                            level = max(level - busy / 3, 8)
+                            level = max(level - busy / 12, 8)
                         } else if charging {
                             let rate = level < 80 ? 45 + random.next() * 15 : 12 + random.next() * 6
                             batteryWatts = rate
                             charger = rate + busy
-                            level = min(level + rate / 4.5, 100)
+                            level = min(level + rate / 18, target)
                         } else {
                             batteryWatts = 0
                             charger = busy
@@ -160,7 +163,8 @@
                         let reading = VitalsReading(
                             temperature: temperature, voltage: 11.4 + level / 100 * 1.6 + (charging ? 0.15 : 0) - random.next() * 0.05,
                             batteryWatts: batteryWatts, systemWatts: busy, chargerWatts: charger, percentage: Int(level.rounded()),
-                            isPluggedIn: !onBattery)
+                            isPluggedIn: !onBattery, isHolding: !onBattery && !charging, reachedLimit: !onBattery && !charging && !wasHolding)
+                        wasHolding = !onBattery && !charging
                         vitals.record(reading, at: date, calendar: calendar)
                     }
                 }
